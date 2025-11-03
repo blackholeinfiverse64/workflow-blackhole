@@ -409,7 +409,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Premium Overview Card */}
-      <Card className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+      <Card className="mb-8 border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
         <CardHeader className="pb-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -428,50 +428,102 @@ const AdminDashboard = () => {
           </div>
         </CardHeader>
         <CardContent className="pb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Premium KPI Card 1 - Departments */}
-            <Card className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
+            <Card className="group relative overflow-hidden border-l-4 border-l-transparent hover:border-l-primary bg-gradient-to-br from-primary/5 via-card to-card shadow-xl hover:shadow-glow-primary transition-all duration-300 cursor-pointer hover:scale-105">
+              {/* Animated background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Departments</p>
-                    <p className="text-3xl font-heading font-bold text-foreground mt-2">{departments.length}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Total Departments</p>
+                    <p className="text-4xl font-heading font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent">
+                      {departments.length}
+                    </p>
+                    <div className="mt-2 flex items-center gap-1 text-xs text-success">
+                      <span className="inline-flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        Active
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-glow-primary">
-                    <Building2 className="h-6 w-6 text-primary-foreground" />
+                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-glow-primary group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                    <Building2 className="h-7 w-7 text-primary-foreground" />
                   </div>
+                </div>
+                
+                {/* Progress indicator */}
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-primary to-primary/50 rounded-full animate-pulse-slow" style={{width: '70%'}}></div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Premium KPI Card 2 - Users */}
-            <Card className="border-l-4 border-transparent hover:border-secondary bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
+            <Card className="group relative overflow-hidden border-l-4 border-l-transparent hover:border-l-secondary bg-gradient-to-br from-secondary/5 via-card to-card shadow-xl hover:shadow-glow-secondary transition-all duration-300 cursor-pointer hover:scale-105">
+              {/* Animated background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Users</p>
-                    <p className="text-3xl font-heading font-bold text-foreground mt-2">{users.length}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Total Users</p>
+                    <p className="text-4xl font-heading font-extrabold bg-gradient-to-br from-secondary to-secondary/70 bg-clip-text text-transparent">
+                      {users.length}
+                    </p>
+                    <div className="mt-2 flex items-center gap-1 text-xs text-info">
+                      <span className="inline-flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Registered
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-12 h-12 rounded-xl gradient-secondary flex items-center justify-center shadow-lg shadow-glow-secondary">
-                    <Users className="h-6 w-6 text-secondary-foreground" />
+                  <div className="w-14 h-14 rounded-2xl gradient-secondary flex items-center justify-center shadow-lg shadow-glow-secondary group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                    <Users className="h-7 w-7 text-secondary-foreground" />
                   </div>
+                </div>
+                
+                {/* Progress indicator */}
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-secondary to-secondary/50 rounded-full animate-pulse-slow" style={{width: '85%'}}></div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Premium KPI Card 3 - Managers */}
-            <Card className="border-l-4 border-transparent hover:border-accent bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
+            <Card className="group relative overflow-hidden border-l-4 border-l-transparent hover:border-l-accent bg-gradient-to-br from-accent/5 via-card to-card shadow-xl hover:shadow-glow-accent transition-all duration-300 cursor-pointer hover:scale-105">
+              {/* Animated background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Managers</p>
-                    <p className="text-3xl font-heading font-bold text-foreground mt-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Managers</p>
+                    <p className="text-4xl font-heading font-extrabold bg-gradient-to-br from-accent to-accent/70 bg-clip-text text-transparent">
                       {users.filter((user) => user.role === "Manager").length}
                     </p>
+                    <div className="mt-2 flex items-center gap-1 text-xs text-warning">
+                      <span className="inline-flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Leading
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-glow-accent">
-                    <UserCog className="h-6 w-6 text-accent-foreground" />
+                  <div className="w-14 h-14 rounded-2xl gradient-accent flex items-center justify-center shadow-lg shadow-glow-accent group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                    <UserCog className="h-7 w-7 text-accent-foreground" />
                   </div>
+                </div>
+                
+                {/* Progress indicator */}
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-accent to-accent/50 rounded-full animate-pulse-slow" style={{width: '60%'}}></div>
                 </div>
               </CardContent>
             </Card>
