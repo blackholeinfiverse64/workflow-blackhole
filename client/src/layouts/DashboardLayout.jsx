@@ -63,7 +63,7 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen h-screen bg-gradient-to-br from-background via-background to-muted/20 flex overflow-hidden">
+    <div className="h-screen w-screen bg-gradient-to-br from-background via-background to-muted/20 flex overflow-hidden">
       {/* Premium Background Elements */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.05),transparent)] pointer-events-none"></div>
 
@@ -99,7 +99,7 @@ export function DashboardLayout() {
         {/* Main Content Area - Full Page */}
         <main className="flex-1 overflow-auto relative">
           <div className="h-full min-h-full p-4 md:p-6 lg:p-8">
-            <div className="w-full max-w-[1600px] mx-auto animate-fade-in">
+            <div className="w-full animate-fade-in">
               <Outlet />
             </div>
           </div>
