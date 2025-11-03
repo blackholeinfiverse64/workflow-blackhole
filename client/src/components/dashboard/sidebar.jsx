@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, CheckSquare, Network, Users, Sparkles, Settings, LogOut, CheckCircle, BarChart, Airplay, LayoutDashboardIcon, Target, Monitor, DollarSign, Calendar, Clock, UserCog, UserCheck, ShoppingCart, Mail } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Network, Users, Sparkles, Settings, LogOut, CheckCircle, BarChart, Airplay, LayoutDashboardIcon, Target, Monitor, DollarSign, Calendar, Clock, UserCog, UserCheck, ShoppingCart, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../context/auth-context";
 
 export function DashboardSidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const baseRoutes = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -61,127 +63,192 @@ export function DashboardSidebar() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background neo-card border-r border-border/50 shadow-neo-light overflow-hidden">
-      {/* Enhanced Cyber Header */}
-      <div className="border-b border-border/50 bg-card relative overflow-hidden flex-shrink-0">
-        <div className="absolute inset-0 bg-cyber-grid opacity-30"></div>
-        <div className="flex items-center px-6 py-6 relative z-10">
-          <div className="flex items-center gap-4 font-bold text-2xl">
-            <div className="relative">
-              <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center glow-primary animate-glow-pulse transform rotate-12 hover:rotate-0 transition-cyber">
-                <Sparkles className="h-6 w-6 text-primary-foreground" />
+    <aside className={`h-screen flex flex-col bg-card/95 backdrop-blur-sm border-r border-border shadow-xl transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`}>
+      {/* Premium Header with Logo & Toggle */}
+      <div className="border-b border-border bg-gradient-to-br from-card to-card/50 relative flex-shrink-0">
+        <div className={`flex items-center justify-between py-4 relative z-10 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
+            <div className="relative group">
+              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-glow-primary transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
-            <span className="text-foreground font-bold">
-              Infiverse
-            </span>
+            {!isCollapsed && (
+              <span className="text-xl font-heading font-bold tracking-tight text-foreground transition-opacity duration-300">
+                Infiverse
+              </span>
+            )}
           </div>
+          
+          {/* Collapse Toggle Button - Desktop Only */}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-primary text-primary-foreground items-center justify-center shadow-lg hover:scale-110 hover:shadow-glow-primary transition-all duration-300 z-20 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+          </button>
         </div>
       </div>
 
-      {/* Enhanced Navigation */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-        <div className="p-6">
-          <div className="mb-8">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Navigation
-            </div>
-            <nav className="space-y-3">
+      {/* Navigation Section - Scrollable */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent hover:scrollbar-thumb-border">
+        <div className={`${isCollapsed ? 'p-2' : 'p-4'} space-y-6`}>
+          {/* Main Navigation */}
+          <div>
+            {!isCollapsed && (
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                Navigation
+              </h3>
+            )}
+            <div className="space-y-1">
               {renderRoutes.map((route) => {
                 const isActive = location.pathname === route.href;
                 return (
                   <Link
                     key={route.href}
                     to={route.href}
-                    className={`group flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-semibold transition-cyber relative overflow-hidden hover-cyber ${
+                    className={`group flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-3 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden ${
                       isActive
-                        ? "gradient-primary text-primary-foreground glow-primary"
-                        : "neo-inset hover:neo-card hover:text-primary text-foreground/90"
+                        ? "gradient-primary text-primary-foreground shadow-glow-primary"
+                        : "hover:bg-primary/5 hover:text-primary text-foreground/70"
                     }`}
+                    title={isCollapsed ? route.title : undefined}
                   >
-                    {/* Cyber Active indicator */}
-                    {isActive && (
-                      <div className="absolute inset-0 bg-white/10 rounded-2xl animate-pulse-cyber"></div>
+                    {/* Active indicator */}
+                    {isActive && !isCollapsed && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-foreground rounded-r-full"></div>
                     )}
 
-                    {/* Enhanced Icon */}
-                    <div className={`relative z-10 p-2 rounded-lg transition-cyber ${
+                    {/* Icon Container */}
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 flex-shrink-0 ${
                       isActive
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-primary/10 text-primary/80 group-hover:bg-primary/20 group-hover:text-primary'
+                        ? 'bg-primary-foreground/20'
+                        : 'bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110'
                     }`}>
-                      <route.icon className="h-5 w-5" />
+                      <route.icon className="h-4 w-4" />
                     </div>
 
-                    {/* Text with cyber styling */}
-                    <span className="relative z-10 transition-cyber">
-                      {route.title}
-                    </span>
+                    {/* Text Label */}
+                    {!isCollapsed && (
+                      <span className="flex-1 truncate transition-opacity duration-300">
+                        {route.title}
+                      </span>
+                    )}
 
-                    {/* Cyber glow effect */}
-                    {isActive && (
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-primary-foreground rounded-full animate-pulse-cyber"></div>
+                    {/* Hover tooltip for collapsed state */}
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                        {route.title}
+                      </div>
                     )}
                   </Link>
                 );
               })}
-            </nav>
+            </div>
           </div>
 
-          {/* Enhanced Workspace Section */}
-          <div className="mt-8">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Workspace
-            </div>
-            <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-primary/10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">Default Workspace</div>
-                  <div className="text-xs text-muted-foreground">Active</div>
+          {/* Workspace Section - Hidden when collapsed */}
+          {!isCollapsed && (
+            <div className="pt-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+                Workspace
+              </h3>
+              <div className="px-3 py-3 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-colors duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                    <svg className="w-4 h-4 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">Default Workspace</div>
+                    <div className="text-xs text-muted-foreground">Active</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </nav>
 
-      {/* Enhanced Footer Section */}
-      <div className="border-t border-border/50 p-6 bg-gradient-to-r from-background to-primary/5 flex-shrink-0">
+      {/* Footer Section - User Profile & Settings */}
+      <footer className={`border-t border-border ${isCollapsed ? 'p-2' : 'p-4'} bg-gradient-to-br from-card to-card/50 flex-shrink-0`}>
         <div className="space-y-2">
+          {/* Settings Link */}
           <Link
             to="/settings"
-            className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium hover:bg-primary/5 hover:text-primary text-foreground/70 transition-all duration-300 hover-lift"
+            className={`group flex items-center ${isCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 rounded-lg text-sm font-medium hover:bg-primary/5 hover:text-primary text-foreground/70 transition-all duration-300`}
+            title={isCollapsed ? "Settings" : undefined}
           >
-            <Settings className="h-5 w-5 transition-colors duration-300" />
-            <span>Settings</span>
+            <div className="w-8 h-8 flex items-center justify-center">
+              <Settings className="h-4 w-4" />
+            </div>
+            {!isCollapsed && <span className="flex-1">Settings</span>}
+            
+            {/* Tooltip for collapsed */}
+            {isCollapsed && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                Settings
+              </div>
+            )}
           </Link>
 
-          {/* Enhanced User Profile Card */}
-          <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/20">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0) || "U"}
+          {/* User Profile Card */}
+          <div className={`${isCollapsed ? 'p-2' : 'p-3'} rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 shadow-lg`}>
+            {isCollapsed ? (
+              /* Collapsed User Avatar */
+              <div className="relative group">
+                <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-primary-foreground font-heading font-semibold shadow-glow-primary cursor-pointer">
+                  {user?.name?.charAt(0) || "U"}
+                </div>
+                
+                {/* User Info Tooltip */}
+                <div className="absolute left-full ml-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 bottom-0">
+                  <div className="font-semibold">{user?.name || "User"}</div>
+                  <div className="text-muted-foreground">{user?.role || "User"}</div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold truncate">{user?.name || "User"}</div>
-                <div className="text-xs text-muted-foreground truncate">{user?.role || "User"}</div>
-              </div>
-            </div>
-            <button
-              onClick={logout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all duration-300 hover-lift"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
+            ) : (
+              /* Expanded User Profile */
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-primary-foreground font-heading font-semibold shadow-glow-primary flex-shrink-0">
+                    {user?.name?.charAt(0) || "U"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">{user?.name || "User"}</div>
+                    <div className="text-xs text-muted-foreground truncate">{user?.role || "User"}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover:shadow-lg hover:scale-105"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </>
+            )}
+            
+            {/* Collapsed Sign Out Button */}
+            {isCollapsed && (
+              <button
+                onClick={logout}
+                className="w-full flex items-center justify-center mt-2 p-2 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 group relative"
+                title="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+                
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                  Sign Out
+                </div>
+              </button>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+      </footer>
+    </aside>
   );
 }

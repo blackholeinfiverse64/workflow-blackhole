@@ -63,56 +63,55 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex overflow-hidden">
-      {/* Cyber Background Elements */}
-      <div className="fixed inset-0 bg-cyber-grid opacity-20 pointer-events-none"></div>
-      <div className="fixed inset-0 gradient-cyber opacity-5 pointer-events-none"></div>
+    <div className="min-h-screen h-screen bg-gradient-to-br from-background via-background to-muted/20 flex overflow-hidden">
+      {/* Premium Background Elements */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.05),transparent)] pointer-events-none"></div>
 
-      {/* Enhanced Cyber Overlay for mobile */}
+      {/* Enhanced Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-lg transition-cyber animate-fade-in"
+          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-lg transition-all duration-300 animate-fade-in"
           onClick={() => toggleSidebar()}
         />
       )}
 
       {/* Fixed Sidebar for Desktop */}
-      <div className="hidden md:flex md:flex-shrink-0">
-        <div className="flex flex-col w-80">
-          <DashboardSidebar />
-        </div>
-      </div>
+      <aside className="hidden md:flex md:flex-shrink-0 relative z-30">
+        <DashboardSidebar />
+      </aside>
 
       {/* Mobile Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-80 transform transition-cyber md:hidden ${
-          sidebarOpen ? 'translate-x-0 glow-primary' : '-translate-x-full'
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 md:hidden ${
+          sidebarOpen ? 'translate-x-0 shadow-glow-primary' : '-translate-x-full'
         }`}
       >
         <DashboardSidebar />
-      </div>
+      </aside>
 
       {/* Main Content Container */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Fixed Header */}
-        <div className="flex-shrink-0 z-40">
+        <header className="flex-shrink-0 z-20 sticky top-0">
           <DashboardHeader sidebarOpen={sidebarOpen} onSidebarToggle={toggleSidebar} />
-        </div>
+        </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-auto bg-background">
-          <div className="h-full p-4 md:p-6 lg:p-8">
-            <div className="max-w-full mx-auto animate-fade-in">
+        {/* Main Content Area - Full Page */}
+        <main className="flex-1 overflow-auto relative">
+          <div className="h-full min-h-full p-4 md:p-6 lg:p-8">
+            <div className="w-full max-w-[1600px] mx-auto animate-fade-in">
               <Outlet />
-              <EnhancedStartDayDialog
-                isOpen={showStartDayDialog}
-                onClose={() => setShowStartDayDialog(false)}
-                onSuccess={handleStartDaySuccess}
-              />
             </div>
           </div>
         </main>
       </div>
+
+      {/* Start Day Dialog */}
+      <EnhancedStartDayDialog
+        isOpen={showStartDayDialog}
+        onClose={() => setShowStartDayDialog(false)}
+        onSuccess={handleStartDaySuccess}
+      />
     </div>
   )
 }

@@ -51,13 +51,13 @@ const roleOptions = [
 ]
 
 const AdminDashboard = () => {
-  const { user, token } = useAuth()
+  const { token } = useAuth()
   const { toast } = useToast()
   const [users, setUsers] = useState([])
   const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("departments")
+  const [setActiveTab] = useState("departments")
 
   // Department form state
   const [newDepartment, setNewDepartment] = useState({
@@ -92,6 +92,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchUsers()
     fetchDepartments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchUsers = async () => {
@@ -386,199 +387,205 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Admin Dashboard</h2>
-            <p className="text-slate-500 dark:text-slate-400">Manage departments and users</p>
-          </div>
-          <div className="flex space-x-4 mt-4 md:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => {
-                fetchUsers()
-                fetchDepartments()
-              }}
-              className="border-slate-300 dark:border-slate-600"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Refresh Data
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* Premium Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Manage departments and users</p>
         </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => {
+              fetchUsers()
+              fetchDepartments()
+            }}
+            className="border-border hover:bg-primary/5 hover:text-primary transition-all duration-300"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" /> Refresh Data
+          </Button>
+        </div>
+      </div>
 
-        <div className="flex flex-col space-y-6">
-          <Card className="border-none shadow-lg bg-white dark:bg-slate-800">
-            <CardHeader className="pb-4">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div>
-                  <CardTitle className="text-xl text-slate-800 dark:text-slate-100">Dashboard Overview</CardTitle>
-                  <CardDescription>Key metrics at a glance</CardDescription>
+      {/* Premium Overview Card */}
+      <Card className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <CardTitle className="text-2xl font-heading font-bold tracking-tight">Dashboard Overview</CardTitle>
+              <CardDescription className="text-muted-foreground mt-1">Key metrics at a glance</CardDescription>
+            </div>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-full"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Premium KPI Card 1 - Departments */}
+            <Card className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Departments</p>
+                    <p className="text-3xl font-heading font-bold text-foreground mt-2">{departments.length}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-glow-primary">
+                    <Building2 className="h-6 w-6 text-primary-foreground" />
+                  </div>
                 </div>
-                <div className="mt-4 md:mt-0 relative w-full md:w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+              </CardContent>
+            </Card>
+
+            {/* Premium KPI Card 2 - Users */}
+            <Card className="border-l-4 border-transparent hover:border-secondary bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total Users</p>
+                    <p className="text-3xl font-heading font-bold text-foreground mt-2">{users.length}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl gradient-secondary flex items-center justify-center shadow-lg shadow-glow-secondary">
+                    <Users className="h-6 w-6 text-secondary-foreground" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Premium KPI Card 3 - Managers */}
+            <Card className="border-l-4 border-transparent hover:border-accent bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Managers</p>
+                    <p className="text-3xl font-heading font-bold text-foreground mt-2">
+                      {users.filter((user) => user.role === "Manager").length}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center shadow-lg shadow-glow-accent">
+                    <UserCog className="h-6 w-6 text-accent-foreground" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Premium Tabs */}
+      <Tabs defaultValue="departments" className="w-full" onValueChange={setActiveTab}>
+        <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger value="departments" className="text-sm font-medium rounded-md data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+            <Building2 className="mr-2 h-4 w-4" /> Departments
+          </TabsTrigger>
+          <TabsTrigger value="users" className="text-sm font-medium rounded-md data-[state=active]:gradient-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+            <Users className="mr-2 h-4 w-4" /> Users
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="departments" className="mt-6 space-y-6">
+          {/* Premium Add Department Card */}
+          <Card className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-2xl font-heading font-bold tracking-tight">Add New Department</CardTitle>
+              <CardDescription className="text-muted-foreground mt-1">Create a new department in the system</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-foreground">Department Name</Label>
                   <Input
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 w-full"
+                    type="text"
+                    placeholder="Enter department name"
+                    value={newDepartment.name}
+                    onChange={(e) => setNewDepartment({ ...newDepartment, name: e.target.value })}
+                    className="w-full"
                   />
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pb-2">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-none shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Departments</p>
-                        <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{departments.length}</p>
-                      </div>
-                      <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
-                        <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-none shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Users</p>
-                        <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{users.length}</p>
-                      </div>
-                      <div className="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-full">
-                        <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-none shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Managers</p>
-                        <p className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                          {users.filter((user) => user.role === "Manager").length}
-                        </p>
-                      </div>
-                      <div className="bg-emerald-100 dark:bg-emerald-900/50 p-3 rounded-full">
-                        <UserCog className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-foreground">Color</Label>
+                  <Select
+                    value={newDepartment.color}
+                    onValueChange={(value) => setNewDepartment({ ...newDepartment, color: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {colorOptions.map((color) => (
+                        <SelectItem key={color.value} value={color.value}>
+                          <div className="flex items-center">
+                            <div className={`w-4 h-4 rounded-full mr-2 ${color.value}`}></div>
+                            {color.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-sm font-semibold text-foreground">Description</Label>
+                  <Textarea
+                    placeholder="Enter department description"
+                    value={newDepartment.description}
+                    onChange={(e) => setNewDepartment({ ...newDepartment, description: e.target.value })}
+                    className="w-full"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-foreground">Department Lead</Label>
+                  <Select
+                    value={newDepartment.lead}
+                    onValueChange={(value) => setNewDepartment({ ...newDepartment, lead: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a lead (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users
+                        .filter((user) => user.role === "Manager" || user.role === "Admin")
+                        .map((user) => (
+                          <SelectItem key={user._id} value={user._id}>
+                            {user.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
+            <CardFooter>
+              <Button
+                onClick={handleAddDepartment}
+                disabled={isLoading || !newDepartment.name}
+                className="gradient-primary text-primary-foreground shadow-glow-primary hover:shadow-lg hover:scale-105 transition-all duration-300"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Department
+              </Button>
+            </CardFooter>
           </Card>
 
-          <Tabs defaultValue="departments" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 mb-6">
-              <TabsTrigger value="departments" className="text-sm">
-                <Building2 className="mr-2 h-4 w-4" /> Departments
-              </TabsTrigger>
-              <TabsTrigger value="users" className="text-sm">
-                <Users className="mr-2 h-4 w-4" /> Users
-              </TabsTrigger>
-            </TabsList>
+          {/* Premium Manage Departments Section */}
+          <div className="mt-8">
+            <h3 className="text-2xl font-heading font-bold tracking-tight text-foreground mb-4">Manage Departments</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDepartments.map((department) => {
+                const departmentLead = getDepartmentLead(department.lead)
+                const membersCount = getUsersInDepartment(department._id).length
 
-            <TabsContent value="departments" className="mt-0">
-              <Card className="border-none shadow-lg bg-white dark:bg-slate-800">
-                <CardHeader>
-                  <CardTitle className="text-xl text-slate-800 dark:text-slate-100">Add New Department</CardTitle>
-                  <CardDescription>Create a new department in the system</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-500 dark:text-slate-400">Department Name</Label>
-                      <Input
-                        type="text"
-                        placeholder="Enter department name"
-                        value={newDepartment.name}
-                        onChange={(e) => setNewDepartment({ ...newDepartment, name: e.target.value })}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-500 dark:text-slate-400">Color</Label>
-                      <Select
-                        value={newDepartment.color}
-                        onValueChange={(value) => setNewDepartment({ ...newDepartment, color: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a color" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {colorOptions.map((color) => (
-                            <SelectItem key={color.value} value={color.value}>
-                              <div className="flex items-center">
-                                <div className={`w-4 h-4 rounded-full mr-2 ${color.value}`}></div>
-                                {color.label}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-sm font-medium text-slate-500 dark:text-slate-400">Description</Label>
-                      <Textarea
-                        placeholder="Enter department description"
-                        value={newDepartment.description}
-                        onChange={(e) => setNewDepartment({ ...newDepartment, description: e.target.value })}
-                        className="w-full"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-500 dark:text-slate-400">Department Lead</Label>
-                      <Select
-                        value={newDepartment.lead}
-                        onValueChange={(value) => setNewDepartment({ ...newDepartment, lead: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a lead (optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {users
-                            .filter((user) => user.role === "Manager" || user.role === "Admin")
-                            .map((user) => (
-                              <SelectItem key={user._id} value={user._id}>
-                                {user.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    onClick={handleAddDepartment}
-                    disabled={isLoading || !newDepartment.name}
-                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                return (
+                  <Card
+                    key={department._id}
+                    className="border-l-4 border-transparent hover:border-primary bg-gradient-to-br from-card to-card/50 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
-                    <Plus className="mr-2 h-4 w-4" /> Add Department
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              <div className="mt-8">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Manage Departments</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredDepartments.map((department) => {
-                    const departmentLead = getDepartmentLead(department.lead)
-                    const membersCount = getUsersInDepartment(department._id).length
-
-                    return (
-                      <Card
-                        key={department._id}
-                        className="border-none shadow-md hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-800"
-                      >
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-lg text-slate-800 dark:text-slate-100 flex items-center">
@@ -848,8 +855,6 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
 
       {/* Edit Department Dialog */}
       <Dialog open={showDepartmentDialog} onOpenChange={setShowDepartmentDialog}>

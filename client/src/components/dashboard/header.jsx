@@ -105,7 +105,6 @@ import { UserDetailsModal } from "./user-details-modal"
 import { Alerts } from "../notifications/Alerts";
 
 export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
-  const [searchQuery, setSearchQuery] = useState("")
   const [selectedUser, setSelectedUser] = useState(null)
   const [showUserModal, setShowUserModal] = useState(false)
   const { user, logout } = useAuth()
@@ -116,18 +115,31 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
   }
 
   return (
-    <header className="w-full h-18 border-b border-border/30 bg-background/95 backdrop-blur-xl neo-card shadow-neo-light">
-      <div className="flex h-full items-center justify-between px-4 md:px-8 relative">
-        {/* Mobile Menu Button */}
-        <div className="block md:hidden z-50">
-          <MobileMenuButton isOpen={sidebarOpen} onClick={onSidebarToggle} className="mr-3 hover-cyber" />
+    <div className="w-full h-16 border-b border-border bg-card/95 backdrop-blur-sm shadow-sm">
+      <div className="h-full flex items-center justify-between px-4 md:px-6 lg:px-8 gap-4">
+        {/* Left Section - Mobile Menu */}
+        <div className="flex items-center gap-4">
+          <div className="md:hidden">
+            <MobileMenuButton 
+              isOpen={sidebarOpen} 
+              onClick={onSidebarToggle} 
+              className="transition-all duration-300 hover:scale-110" 
+            />
+          </div>
+
+          {/* Enhanced Search Bar */}
+          <div className="hidden md:block">
+            <EnhancedSearch onUserSelect={handleUserSelect} />
+          </div>
         </div>
 
-        {/* Enhanced Search Bar */}
-        <EnhancedSearch onUserSelect={handleUserSelect} />
+        {/* Right Section - Actions */}
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Mobile Search - Icon Only */}
+          <div className="md:hidden">
+            <EnhancedSearch onUserSelect={handleUserSelect} compact />
+          </div>
 
-        {/* Enhanced Right Side Actions */}
-        <div className="flex flex-1 items-center justify-end space-x-3">
           <NotificationsPopover />
           <Alerts />
           <ModeToggle />
@@ -135,18 +147,21 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
           {/* Enhanced User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover-lift transition-all duration-300 hover:shadow-glow">
-                <Avatar className="h-9 w-9 ring-2 ring-primary/20 transition-all duration-300 hover:ring-primary/40">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+              <Button 
+                variant="ghost" 
+                className="relative h-10 w-10 rounded-full transition-all duration-300 hover:scale-110 focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <Avatar className="h-10 w-10 ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300">
+                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt={user?.name || "User"} />
+                  <AvatarFallback className="gradient-primary text-primary-foreground font-heading font-semibold shadow-glow-primary">
                     {user?.name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-success rounded-full border-2 border-background animate-pulse-slow"></div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-64 bg-background/95 backdrop-blur-xl border border-border/50 shadow-modern rounded-xl p-2 animate-scale-in"
+              className="w-64 bg-card/95 backdrop-blur-xl border border-border shadow-xl rounded-xl p-2 animate-scale-in"
               align="end"
               forceMount
             >
@@ -155,14 +170,14 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                      <AvatarFallback className="bg-gradient-primary text-black">
+                      <AvatarFallback className="gradient-primary text-primary-foreground font-heading">
                         {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold leading-none truncate">{user?.name || "User"}</p>
+                      <p className="text-sm font-heading font-semibold leading-none truncate">{user?.name || "User"}</p>
                       <p className="text-xs leading-none text-muted-foreground mt-1 truncate">{user?.email || "user@example.com"}</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary mt-1.5">
                         {user?.role || "User"}
                       </span>
                     </div>
@@ -170,13 +185,13 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem className="rounded-lg transition-colors duration-200 hover:bg-primary/10">
+              <DropdownMenuItem className="rounded-lg transition-all duration-200 hover:bg-primary/10 cursor-pointer">
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-lg transition-colors duration-200 hover:bg-primary/10">
+              <DropdownMenuItem className="rounded-lg transition-all duration-200 hover:bg-primary/10 cursor-pointer">
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -186,7 +201,7 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
               <DropdownMenuSeparator className="my-2" />
               <DropdownMenuItem
                 onClick={logout}
-                className="rounded-lg transition-colors duration-200 hover:bg-destructive/10 text-destructive focus:text-destructive"
+                className="rounded-lg transition-all duration-200 hover:bg-destructive/10 text-destructive focus:text-destructive cursor-pointer"
               >
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -204,6 +219,6 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
         isOpen={showUserModal}
         onClose={() => setShowUserModal(false)}
       />
-    </header>
+    </div>
   )
 }
