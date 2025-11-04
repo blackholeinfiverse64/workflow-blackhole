@@ -39,6 +39,7 @@ import { SubmissionFeedbackCard } from "../components/dashboard/SubmissionFeedba
 import { DashboardProvider } from "../context/DashboardContext" // New import
 import { api } from "@/lib/api"
 import { WorkHoursManager } from "../components/monitoring/WorkHoursManager"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 function UserDashboard() {
   const navigate = useNavigate()
@@ -389,13 +390,53 @@ function UserDashboard() {
 
         {/* Combined Work Hours & Progress Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Work Hours Manager */}
-          <div>
+          {/* Left Column - Work Hours Manager & Upcoming Deadlines */}
+          <div className="space-y-6">
             <WorkHoursManager />
+            
+            {/* Upcoming Deadlines */}
+            <Card className="neo-card shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-red-500/5 to-amber-500/5">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <Calendar className="h-4 w-4 text-red-500" />
+                  </div>
+                  Upcoming Deadlines
+                </CardTitle>
+                <CardDescription>Tasks due soon</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userStats.upcomingDeadlines && userStats.upcomingDeadlines.length > 0 ? (
+                  <div className="space-y-4">
+                    {userStats.upcomingDeadlines.map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between p-3 rounded-md bg-muted/50 cursor-pointer hover:bg-muted"
+                        onClick={() => navigate(`/tasks/${task.id}`)}
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{task.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Due: {new Date(task.dueDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Calendar className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
+                    <p>No upcoming deadlines</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* My Progress */}
-          <Card className="neo-card shadow-lg border-l-4 border-l-primary">
+          {/* Right Column - My Progress */}
+          <div>
+            <Card className="neo-card shadow-lg border-l-4 border-l-primary">
             <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
               <CardTitle className="text-xl flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -406,30 +447,108 @@ function UserDashboard() {
               <CardDescription>Your task completion progress</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Progress Chart */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">Overall Completion</p>
-                      <p className="text-xs text-muted-foreground">
-                        {userStats.completedTasks} of {userStats.totalTasks} tasks completed
-                      </p>
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    📊 Task Status Distribution
+                  </h3>
+                  
+                  {userStats.totalTasks > 0 ? (
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={[
+                            { 
+                              name: 'Tasks', 
+                              Completed: userStats.completedTasks,
+                              'In Progress': userStats.inProgressTasks,
+                              Pending: userStats.pendingTasks
+                            }
+                          ]}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="Completed" 
+                            stroke="#22c55e" 
+                            strokeWidth={2}
+                            dot={{ fill: '#22c55e', r: 6 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="In Progress" 
+                            stroke="#3b82f6" 
+                            strokeWidth={2}
+                            dot={{ fill: '#3b82f6', r: 6 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="Pending" 
+                            stroke="#f59e0b" 
+                            strokeWidth={2}
+                            dot={{ fill: '#f59e0b', r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                    <span className="text-sm font-medium">{userStats.completionRate}%</span>
+                  ) : (
+                    <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
+                      No tasks assigned yet
+                    </div>
+                  )}
+
+                  {/* Stats Summary */}
+                  <div className="grid grid-cols-3 gap-4 mt-6">
+                    <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {userStats.completedTasks}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Completed</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {userStats.inProgressTasks}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">In Progress</div>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {userStats.pendingTasks}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Pending</div>
+                    </div>
                   </div>
-                  <Progress value={userStats.completionRate} className="h-2" />
                 </div>
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto neo-card p-1">
-            <TabsTrigger value="tasks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+          <TabsList className="grid w-full max-w-2xl grid-cols-2 mx-auto neo-card p-2 gap-2 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-border shadow-lg">
+            <TabsTrigger 
+              value="tasks" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 hover:scale-105 font-semibold text-base py-3 rounded-lg"
+            >
               📋 My Tasks
             </TabsTrigger>
-            <TabsTrigger value="submissions" className="relative data-[state=active]:bg-accent data-[state=active]:text-accent-foreground transition-all">
+            <TabsTrigger 
+              value="submissions" 
+              className="relative data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md transition-all duration-300 hover:scale-105 font-semibold text-base py-3 rounded-lg"
+            >
               📤 My Submissions
               {hasNewReviews && (
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -441,18 +560,17 @@ function UserDashboard() {
           </TabsList>
 
           <TabsContent value="tasks" className="mt-6 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2 neo-card shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-accent/5">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Clock className="h-4 w-4 text-primary" />
-                    </div>
-                    My Tasks
-                  </CardTitle>
-                  <CardDescription>View and manage your assigned tasks</CardDescription>
-                </CardHeader>
-                <CardContent>
+            <Card className="neo-card shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-accent/5">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-primary" />
+                  </div>
+                  My Tasks
+                </CardTitle>
+                <CardDescription>View and manage your assigned tasks</CardDescription>
+              </CardHeader>
+              <CardContent>
                   {userTasks?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>You don't have any tasks assigned yet.</p>
@@ -517,45 +635,6 @@ function UserDashboard() {
                   )}
                 </CardContent>
               </Card>
-
-              <Card className="neo-card shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-red-500/5 to-amber-500/5">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-red-500" />
-                    </div>
-                    Upcoming Deadlines
-                  </CardTitle>
-                  <CardDescription>Tasks due soon</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {userStats.upcomingDeadlines && userStats.upcomingDeadlines.length > 0 ? (
-                    <div className="space-y-4">
-                      {userStats.upcomingDeadlines.map((task) => (
-                        <div
-                          key={task.id}
-                          className="flex items-center justify-between p-3 rounded-md bg-muted/50 cursor-pointer hover:bg-muted"
-                          onClick={() => navigate(`/tasks/${task.id}`)}
-                        >
-                          <div>
-                            <p className="font-medium text-sm">{task.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Due: {new Date(task.dueDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Calendar className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
-                      <p>No upcoming deadlines</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           <TabsContent value="submissions" className="mt-6 animate-fade-in">
@@ -662,100 +741,185 @@ function UserDashboard() {
           </TabsContent>
         </Tabs>
 
-         <Dialog open={isSubmissionDetailsOpen} onOpenChange={setIsSubmissionDetailsOpen} className="dialog-overlay">
-          <DialogContent className="dialog-content sm:max-w-[525px]  max-h-[80vh] overflow-y-auto">
-          
-            <DialogHeader>
-              <DialogTitle>Submission Details</DialogTitle>
-              <DialogDescription>{selectedSubmission?.task?.title || "Task Submission"}</DialogDescription>
+         <Dialog open={isSubmissionDetailsOpen} onOpenChange={setIsSubmissionDetailsOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden flex flex-col bg-white dark:bg-gray-950">
+            <DialogHeader className="border-b pb-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 -mx-6 -mt-6 px-6 pt-6 border-gray-200 dark:border-gray-800">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1 flex-1">
+                  <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center ring-1 ring-blue-200 dark:ring-blue-800">
+                      <Github className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    Submission Details
+                  </DialogTitle>
+                  <DialogDescription className="text-base text-gray-600 dark:text-gray-400">
+                    {selectedSubmission?.task?.title || "Task Submission"}
+                  </DialogDescription>
+                </div>
+                {selectedSubmission && (
+                  <div className="ml-4">
+                    {getSubmissionStatusBadge(selectedSubmission.status)}
+                  </div>
+                )}
+              </div>
             </DialogHeader>
 
             {selectedSubmission && (
-              <div className="space-y-4 py-4">
-                <div className="flex justify-between items-center">
+              <div className="space-y-5 py-6 overflow-y-auto flex-1 px-1">
+                {/* Submission Info Card */}
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                        <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600 dark:text-gray-400 text-xs">Submitted on</span>
+                        <p className="text-gray-900 dark:text-white font-semibold">
+                          {new Date(selectedSubmission.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+                        <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600 dark:text-gray-400 text-xs">Time</span>
+                        <p className="text-gray-900 dark:text-white font-semibold">
+                          {new Date(selectedSubmission.createdAt).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* GitHub Repository */}
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">Status:</p>
-                    {getSubmissionStatusBadge(selectedSubmission.status)}
+                    <div className="h-7 w-7 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center ring-1 ring-green-300 dark:ring-green-800">
+                      <Github className="h-4 w-4 text-green-700 dark:text-green-400" />
+                    </div>
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white">GitHub Repository</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Submitted on {new Date(selectedSubmission.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">GitHub Repository:</p>
-                  <div className="flex items-center gap-2 bg-muted p-2 rounded">
-                    <Github className="h-4 w-4" />
-                    <a
-                      href={selectedSubmission.githubLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                    >
-                      {selectedSubmission.githubLink}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
-
-                {selectedSubmission.additionalLinks && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Additional Links:</p>
-                    <div className="flex items-center gap-2 bg-muted p-2 rounded">
-                      <ExternalLink className="h-4 w-4" />
+                  <div className="group relative overflow-hidden rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 p-4 hover:shadow-lg transition-all hover:border-green-300 dark:hover:border-green-700">
+                    <div className="flex items-center gap-3">
+                      <Github className="h-5 w-5 text-green-700 dark:text-green-400 flex-shrink-0" />
                       <a
-                        href={selectedSubmission.additionalLinks}
+                        href={selectedSubmission.githubLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                        className="text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 hover:underline flex items-center gap-2 font-medium break-all transition-colors"
                       >
-                        {selectedSubmission.additionalLinks}
-                        <ExternalLink className="h-3 w-3" />
+                        <span className="flex-1">{selectedSubmission.githubLink}</span>
+                        <ExternalLink className="h-4 w-4 flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                       </a>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {selectedSubmission.notes && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Your Notes:</p>
-                    <div className="bg-muted p-3 rounded">
-                      <p className="text-sm whitespace-pre-line">{selectedSubmission.notes}</p>
+                {/* Additional Links */}
+                {selectedSubmission.additionalLinks && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center ring-1 ring-blue-300 dark:ring-blue-800">
+                        <ExternalLink className="h-4 w-4 text-blue-700 dark:text-blue-400" />
+                      </div>
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white">Additional Resources</p>
+                    </div>
+                    <div className="group relative overflow-hidden rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4 hover:shadow-lg transition-all hover:border-blue-300 dark:hover:border-blue-700">
+                      <div className="flex items-center gap-3">
+                        <ExternalLink className="h-5 w-5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
+                        <a
+                          href={selectedSubmission.additionalLinks}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 hover:underline flex items-center gap-2 font-medium break-all transition-colors"
+                        >
+                          <span className="flex-1">{selectedSubmission.additionalLinks}</span>
+                          <ExternalLink className="h-4 w-4 flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 )}
 
+                {/* Your Notes */}
+                {selectedSubmission.notes && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center ring-1 ring-amber-300 dark:ring-amber-800">
+                        <AlertCircle className="h-4 w-4 text-amber-700 dark:text-amber-400" />
+                      </div>
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white">Your Notes</p>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 shadow-sm">
+                      <p className="text-sm whitespace-pre-line leading-relaxed text-gray-800 dark:text-gray-200">{selectedSubmission.notes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviewer Feedback */}
                 {selectedSubmission.feedback && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Reviewer Feedback:</p>
-                    <div
-                      className={`p-3 rounded ${
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-7 w-7 rounded-lg flex items-center justify-center ring-1 ${
                         selectedSubmission.status === "Approved"
-                          ? "bg-green-50 dark:bg-green-900/20"
-                          : "bg-red-50 dark:bg-red-900/20"
+                          ? "bg-green-100 dark:bg-green-900/40 ring-green-300 dark:ring-green-800"
+                          : "bg-red-100 dark:bg-red-900/40 ring-red-300 dark:ring-red-800"
+                      }`}>
+                        {selectedSubmission.status === "Approved" ? (
+                          <ThumbsUp className="h-4 w-4 text-green-700 dark:text-green-400" />
+                        ) : (
+                          <ThumbsDown className="h-4 w-4 text-red-700 dark:text-red-400" />
+                        )}
+                      </div>
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white">Reviewer Feedback</p>
+                    </div>
+                    <div
+                      className={`rounded-lg border p-4 shadow-md ${
+                        selectedSubmission.status === "Approved"
+                          ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-800"
+                          : "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-line">{selectedSubmission.feedback}</p>
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 text-lg font-bold ${
+                          selectedSubmission.status === "Approved"
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-red-700 dark:text-red-400"
+                        }`}>
+                          {selectedSubmission.status === "Approved" ? "✓" : "✕"}
+                        </div>
+                        <p className={`text-sm whitespace-pre-line leading-relaxed font-medium flex-1 ${
+                          selectedSubmission.status === "Approved"
+                            ? "text-green-900 dark:text-green-100"
+                            : "text-red-900 dark:text-red-100"
+                        }`}>
+                          {selectedSubmission.feedback}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsSubmissionDetailsOpen(false)}>
+            <DialogFooter className="border-t border-gray-200 dark:border-gray-800 pt-4 gap-2 sm:gap-2 bg-gray-50 dark:bg-gray-900 -mx-6 -mb-6 px-6 pb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsSubmissionDetailsOpen(false)}
+                className="flex-1 sm:flex-none hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
+              >
                 Close
               </Button>
-              {selectedSubmission?.status === "Rejected" && (
-                <Button
-                  onClick={() => {
-                    setIsSubmissionDetailsOpen(false)
-                    setIsRevisionDialogOpen(true)
-                  }}
-                >
-                  Submit Revision
-                </Button>
-              )}
               {selectedSubmission?.task && (
                 <Button
                   variant="outline"
@@ -763,8 +927,22 @@ function UserDashboard() {
                     setIsSubmissionDetailsOpen(false)
                     navigate(`/tasks/${selectedSubmission.task._id}`)
                   }}
+                  className="flex-1 sm:flex-none hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 border-blue-300 dark:border-blue-700 text-gray-900 dark:text-white"
                 >
+                  <Clock className="h-4 w-4 mr-2" />
                   View Task
+                </Button>
+              )}
+              {selectedSubmission?.status === "Rejected" && (
+                <Button
+                  onClick={() => {
+                    setIsSubmissionDetailsOpen(false)
+                    setIsRevisionDialogOpen(true)
+                  }}
+                  className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Submit Revision
                 </Button>
               )}
             </DialogFooter>
