@@ -262,7 +262,7 @@ export function DashboardSidebar() {
                   </div>
                   <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover:shadow-lg hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white dark:text-red-400 dark:hover:text-white transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20 hover:scale-105 border border-red-500/20 hover:border-red-500"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Sign Out</span>
@@ -274,7 +274,7 @@ export function DashboardSidebar() {
               {isCollapsed && (
                 <button
                   onClick={logout}
-                  className="w-full flex items-center justify-center mt-2 p-2 rounded-lg text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 group relative"
+                  className="w-full flex items-center justify-center mt-2 p-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white dark:text-red-400 dark:hover:text-white transition-all duration-300 group relative border border-red-500/20 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20"
                   title="Sign Out"
                 >
                   <LogOut className="h-4 w-4" />

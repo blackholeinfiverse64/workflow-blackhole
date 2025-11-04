@@ -447,69 +447,58 @@ function UserDashboard() {
               <CardDescription>Your task completion progress</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="space-y-6">
-                {/* Progress Chart */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                    📊 Task Status Distribution
-                  </h3>
+              {userStats.totalTasks > 0 ? (
+                <>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={[
+                          { 
+                            name: 'Tasks', 
+                            Completed: userStats.completedTasks,
+                            'In Progress': userStats.inProgressTasks,
+                            Pending: userStats.pendingTasks
+                          }
+                        ]}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="Completed" 
+                          stroke="#22c55e" 
+                          strokeWidth={2}
+                          dot={{ fill: '#22c55e', r: 6 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="In Progress" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#3b82f6', r: 6 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="Pending" 
+                          stroke="#f59e0b" 
+                          strokeWidth={2}
+                          dot={{ fill: '#f59e0b', r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                   
-                  {userStats.totalTasks > 0 ? (
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={[
-                            { 
-                              name: 'Tasks', 
-                              Completed: userStats.completedTasks,
-                              'In Progress': userStats.inProgressTasks,
-                              Pending: userStats.pendingTasks
-                            }
-                          ]}
-                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--background))', 
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="Completed" 
-                            stroke="#22c55e" 
-                            strokeWidth={2}
-                            dot={{ fill: '#22c55e', r: 6 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="In Progress" 
-                            stroke="#3b82f6" 
-                            strokeWidth={2}
-                            dot={{ fill: '#3b82f6', r: 6 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="Pending" 
-                            stroke="#f59e0b" 
-                            strokeWidth={2}
-                            dot={{ fill: '#f59e0b', r: 6 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  ) : (
-                    <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
-                      No tasks assigned yet
-                    </div>
-                  )}
-
-                  {/* Stats Summary */}
+                  {/* Task Count Summary */}
                   <div className="grid grid-cols-3 gap-4 mt-6">
                     <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -530,8 +519,12 @@ function UserDashboard() {
                       <div className="text-xs text-muted-foreground mt-1">Pending</div>
                     </div>
                   </div>
+                </>
+              ) : (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
+                  No tasks assigned yet
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
           </div>
