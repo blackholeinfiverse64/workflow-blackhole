@@ -83,59 +83,59 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    /* Premium Dark Theme */
-    --background: 222 47% 11%;
-    --foreground: 0 0% 98%;
-    --card: 222 47% 14%;
-    --card-foreground: 0 0% 98%;
-    --popover: 222 47% 14%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 160 84% 39%;
+    .dark {
+    /* Premium Dark Theme - Obsidian Color Palette */
+    --background: 0 0% 7%;        /* #121212 - true dark gray */
+    --foreground: 0 0% 100%;      /* #FFFFFF - white */
+    --card: 0 0% 12%;             /* #1E1E1E - lighter dark gray */
+    --card-foreground: 0 0% 100%; /* #FFFFFF - white */
+    --popover: 0 0% 14%;          /* Slightly lighter gray */
+    --popover-foreground: 0 0% 100%; /* #FFFFFF - white */
+    --primary: 160 84% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 262 83% 58%;
+    --secondary: 262 83% 63%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 222 47% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 38 92% 50%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 215 20% 75%;
+    --accent: 38 92% 55%;
     --accent-foreground: 0 0% 100%;
-    --info: 217 91% 60%;
+    --info: 217 91% 65%;
     --info-foreground: 0 0% 100%;
-    --success: 160 84% 39%;
+    --success: 160 84% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 47% 20%;
-    --input: 222 47% 17%;
-    --ring: 160 84% 39%;
+    --border: 0 0% 18%;
+    --input: 0 0% 14%;
+    --ring: 160 84% 45%;
 
     /* Premium Dark Theme Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(160 84% 49%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(262 83% 68%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(38 92% 60%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(222 47% 14%) 0%, hsl(222 47% 12%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 45%) 0%, hsl(160 84% 55%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 63%) 0%, hsl(262 83% 73%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(38 92% 55%) 0%, hsl(38 92% 65%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 14%) 0%, hsl(0 0% 10%) 100%);
 
     /* Premium Dark Theme Shadows */
-    --shadow-glow-primary: 0 0 30px -5px hsl(160 84% 39% / 0.5);
-    --shadow-glow-secondary: 0 0 30px -5px hsl(262 83% 58% / 0.5);
-    --shadow-glow-accent: 0 0 30px -5px hsl(38 92% 50% / 0.5);
+    --shadow-glow-primary: 0 0 40px -5px hsl(160 84% 45% / 0.5);
+    --shadow-glow-secondary: 0 0 40px -5px hsl(262 83% 63% / 0.5);
+    --shadow-glow-accent: 0 0 40px -5px hsl(38 92% 55% / 0.5);
     
     /* Dark Neomorphic Shadows */
-    --neo-shadow-light: 8px 8px 16px hsl(222 47% 8%), -8px -8px 16px hsl(222 47% 17%);
-    --neo-shadow-inset: inset 4px 4px 8px hsl(222 47% 8%), inset -4px -4px 8px hsl(222 47% 17%);
-    --neo-shadow-hover: 12px 12px 24px hsl(222 47% 6%), -12px -12px 24px hsl(222 47% 19%);
+    --neo-shadow-light: 10px 10px 20px hsl(0 0% 3%), -10px -10px 20px hsl(0 0% 15%);
+    --neo-shadow-inset: inset 6px 6px 12px hsl(0 0% 3%), inset -6px -6px 12px hsl(0 0% 15%);
+    --neo-shadow-hover: 15px 15px 30px hsl(0 0% 2%), -15px -15px 30px hsl(0 0% 18%);
 
     /* Sidebar variables for dark mode */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 160 84% 45%;
   }
 }
 
@@ -307,13 +307,11 @@ body.sidebar-open {
   .neo-card {
     background: hsl(var(--card));
     border-radius: var(--radius);
-    box-shadow: var(--neo-shadow-light);
     transition: all 0.3s ease-out;
     border: 1px solid hsl(var(--border) / 0.3);
   }
 
   .neo-card:hover {
-    box-shadow: var(--neo-shadow-hover);
     transform: translateY(-2px);
   }
 
@@ -324,18 +322,25 @@ body.sidebar-open {
 
   .neo-button {
     background: hsl(var(--card));
-    box-shadow: var(--neo-shadow-light);
     border: none;
     transition: all 0.3s ease-out;
   }
 
   .neo-button:hover {
-    box-shadow: var(--neo-shadow-hover);
+    background: hsl(var(--muted));
   }
 
   .neo-button:active {
-    box-shadow: var(--neo-shadow-inset);
     transform: scale(0.98);
+  }
+
+  /* Remove glow effects in dark mode */
+  .dark .glow-primary,
+  .dark .glow-secondary,
+  .dark .glow-accent,
+  .dark .glow-cyber {
+    box-shadow: none;
+    filter: none;
   }
 }
 

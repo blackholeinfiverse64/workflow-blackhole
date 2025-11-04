@@ -6,11 +6,9 @@ import { Button } from "../ui/button"
 import { Sparkles, Loader2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { api } from "../../lib/api"
-import { useToast } from "../../hooks/use-toast"
 
 export function AIInsights() {
   const navigate = useNavigate()
-  const { toast } = useToast()
   const [insights, setInsights] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -80,7 +78,11 @@ fetchInsights()
             ))}
           </ul>
 
-          <Button variant="outline" className="w-full" onClick={() => navigate("/optimization")}>
+          <Button 
+            className="w-full gradient-primary hover:glow-primary transition-cyber transform hover:scale-105 group hover-cyber" 
+            onClick={() => navigate("/optimization")}
+          >
+            <Sparkles className="mr-2 h-4 w-4 transition-cyber group-hover:rotate-12" />
             View All Insights
           </Button>
         </div>

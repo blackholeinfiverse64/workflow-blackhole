@@ -85,38 +85,33 @@ export function EnhancedSearch({ onUserSelect }) {
 
   return (
     <div className="search-container relative max-w-lg flex-1 hidden md:flex group" ref={searchRef}>
-      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground transition-cyber group-focus-within:text-primary group-focus-within:glow-primary z-10" />
+      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground transition-all duration-300 group-focus-within:text-primary group-focus-within:scale-110 z-10" />
       
       <Input
         type="search"
         placeholder="Search users, tasks, departments..."
-        className="w-full pl-12 pr-4 py-3 neo-inset border-0 focus:neo-card focus:glow-primary transition-cyber text-sm font-medium"
+        className="w-full pl-12 pr-4 h-12 rounded-2xl bg-gradient-to-r from-card/50 via-card/30 to-card/50 backdrop-blur-sm border-0 hover:border-0 focus:border-0 focus-visible:border-0 focus-visible:ring-0 focus-visible:outline-none transition-all duration-300 text-sm font-semibold placeholder:text-muted-foreground/70 shadow-lg hover:shadow-xl hover:shadow-primary/10 dark:hover:shadow-primary/5"
         value={searchQuery}
         onChange={handleInputChange}
         onFocus={() => searchQuery && setIsOpen(true)}
       />
-      
-      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10">
-        <div className="w-6 h-6 gradient-primary rounded-lg flex items-center justify-center opacity-50 group-focus-within:opacity-100 transition-cyber">
-          <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-      </div>
 
       {/* Search Suggestions */}
       {isOpen && (suggestions.length > 0 || loading) && (
         <Card
           ref={suggestionsRef}
-          className="search-dropdown neo-card border-primary/20 shadow-2xl backdrop-blur-md max-h-96 overflow-y-auto animate-scale-in"
+          className="absolute top-full left-0 right-0 mt-3 bg-card/98 dark:bg-card/95 backdrop-blur-2xl border-2 border-primary/30 dark:border-primary/20 shadow-2xl dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] rounded-2xl max-h-96 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-200 ring-1 ring-primary/10"
         >
           {loading ? (
             <div className="p-4 text-center">
-              <div className="animate-pulse-cyber text-muted-foreground">Searching users...</div>
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span>Searching users...</span>
+              </div>
             </div>
           ) : (
             <div className="p-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
+              <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2 px-3 py-2 bg-primary/5 dark:bg-primary/10 rounded-lg border-l-4 border-primary">
                 Users ({suggestions.length})
               </div>
               {suggestions.map((user) => {
@@ -126,21 +121,21 @@ export function EnhancedSearch({ onUserSelect }) {
                   <div
                     key={user._id || user.id}
                     onClick={() => handleUserSelect(user)}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:neo-inset cursor-pointer transition-cyber group/item"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 dark:hover:from-primary/15 dark:hover:to-primary/5 cursor-pointer transition-all duration-200 group/item border border-transparent hover:border-primary/20 dark:hover:border-primary/30"
                   >
-                    <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                    <Avatar className="h-10 w-10 ring-2 ring-primary/30 group-hover/item:ring-primary/60 group-hover/item:ring-4 transition-all duration-300 shadow-lg group-hover/item:shadow-xl group-hover/item:shadow-primary/20">
                       <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
+                      <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-sm">
                         {user.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground group-hover/item:text-primary transition-cyber">
+                      <h4 className="font-bold text-foreground group-hover/item:text-primary transition-colors duration-200 truncate">
                         {user.name}
                       </h4>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs shrink-0 border-primary/30 dark:border-primary/20 group-hover/item:border-primary group-hover/item:bg-primary/10">
                         {user.role}
                       </Badge>
                     </div>
@@ -163,7 +158,7 @@ export function EnhancedSearch({ onUserSelect }) {
                     </div>
                   </div>
                   
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground shrink-0">
                       {user.department?.name || user.department || 'No Department'}
                     </div>
                   </div>

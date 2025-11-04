@@ -314,113 +314,140 @@ export function CreateTaskDialog({ open, onOpenChange }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} className="dialog-overlay">
-      <DialogContent className="dialog-content sm:max-w-[525px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription>Add a new task to your workflow management system</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">
-              Task Title <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="title"
-              placeholder="Enter task title"
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Enter task description"
-              className="min-h-[100px]"
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="links">Links</Label>
-            <Input
-              id="links"
-              placeholder="Add relevant links (comma-separated)"
-              value={formData.links}
-              onChange={(e) => handleChange("links", e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="department">
-                Department <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.department}
-                onValueChange={handleDepartmentChange}
-              >
-                <SelectTrigger id="department" className="bg-white border-gray-300">
-                  <SelectValue placeholder={
-                    Array.isArray(departments) && departments.length > 0 
-                      ? "Select department" 
-                      : "Loading departments..."
-                  } />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300 max-h-60 overflow-y-auto z-[70]">
-                  {Array.isArray(departments) && departments.length > 0 && 
-                    departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-              {Array.isArray(departments) && departments.length === 0 && (
-                <p className="text-sm text-gray-500">Loading departments...</p>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="assignee-search">
-                Assignee <span className="text-red-500">*</span>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl p-0">
+        {/* Hidden title for accessibility */}
+        <DialogTitle className="sr-only">Create New Task</DialogTitle>
+        
+        {/* Scrollable Content Area */}
+        <div className="px-6 pt-6 pb-5 overflow-y-auto max-h-[calc(90vh-120px)] bg-white dark:bg-gray-950 scrollbar-thin scrollbar-thumb-primary/20 dark:scrollbar-thumb-primary/10 scrollbar-track-transparent hover:scrollbar-thumb-primary/30 dark:hover:scrollbar-thumb-primary/20">
+          <div className="grid gap-6">
+            {/* Task Title */}
+            <div className="grid gap-2.5">
+              <Label htmlFor="title" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
+                Task Title <span className="text-destructive ml-0.5">*</span>
               </Label>
               <Input
-                id="assignee-search"
-                placeholder="Search assignees..."
-                value={assigneeSearch}
-                onChange={handleAssigneeSearch}
-                disabled={!formData.department}
+                id="title"
+                placeholder="Enter a descriptive task title..."
+                value={formData.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-primary/40 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-xl transition-all duration-300 text-base font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
               />
-              {filteredUsers.length > 0 && formData.department && (
-                <div className="bg-white border border-gray-300 rounded-md max-h-60 overflow-y-auto">
+            </div>
+
+            {/* Description */}
+            <div className="grid gap-2.5">
+              <Label htmlFor="description" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-secondary"></div>
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Describe the task in detail..."
+                className="min-h-[110px] px-4 py-3 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-secondary/40 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/10 rounded-xl resize-none transition-all duration-300 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+              />
+            </div>
+
+            {/* Links */}
+            <div className="grid gap-2.5">
+              <Label htmlFor="links" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+                Reference Links
+              </Label>
+              <Input
+                id="links"
+                placeholder="Add URLs separated by commas..."
+                value={formData.links}
+                onChange={(e) => handleChange("links", e.target.value)}
+                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-accent/40 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/10 rounded-xl transition-all duration-300 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+
+            {/* Department and Assignee Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid gap-2.5">
+                <Label htmlFor="department" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-info"></div>
+                  Department <span className="text-destructive ml-0.5">*</span>
+                </Label>
+                <Select
+                  value={formData.department}
+                  onValueChange={handleDepartmentChange}
+                >
+                  <SelectTrigger id="department" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-info/40 focus:border-info focus:ring-4 focus:ring-info/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
+                    <SelectValue placeholder={
+                      Array.isArray(departments) && departments.length > 0 
+                        ? "Select department..." 
+                        : "Loading..."
+                    } />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-h-64 overflow-y-auto">
+                    {Array.isArray(departments) && departments.length > 0 && 
+                      departments.map((dept) => (
+                        <SelectItem 
+                          key={dept._id} 
+                          value={dept._id}
+                          className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-info/10 dark:hover:bg-info/5 cursor-pointer transition-all duration-200 font-medium"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-info"></div>
+                            {dept.name}
+                          </div>
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+                {Array.isArray(departments) && departments.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Loading departments...</p>
+                )}
+              </div>
+
+              <div className="grid gap-2.5">
+                <Label htmlFor="assignee-search" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success"></div>
+                  Assignee <span className="text-destructive ml-0.5">*</span>
+                </Label>
+                <Input
+                  id="assignee-search"
+                  placeholder="Search assignees..."
+                  value={assigneeSearch}
+                  onChange={handleAssigneeSearch}
+                  disabled={!formData.department}
+                  className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-success/40 focus:border-success focus-visible:ring-4 focus-visible:ring-success/10 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                />
+                {filteredUsers.length > 0 && formData.department && (
+                  <div className="mt-1 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-border/30 scrollbar-track-transparent">
                   {filteredUsers.map((user) => (
                     <div
                       key={user._id}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex items-center justify-between"
+                      className="m-2 px-4 py-3 hover:bg-success/10 dark:hover:bg-success/5 cursor-pointer text-sm flex items-center justify-between rounded-lg transition-all duration-200 group"
                       onClick={() => handleAssigneeSelect(user)}
                     >
-                      <span>{user.name}</span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        ✓ Active
+                      <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-success transition-colors">{user.name}</span>
+                      <span className="text-xs bg-success/20 dark:bg-success/10 text-success px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Active
                       </span>
                     </div>
                     ))}
                 </div>
               )}
               {formData.department && filteredUsers.length === 0 && assigneeSearch && !formData.assignee && (
-                <div className="px-4 py-2 text-sm text-gray-500">
+                <div className="px-4 py-2 text-sm text-muted-foreground">
                   No active users found in this department
                 </div>
               )}
 
               {/* User's Previous Tasks */}
               {formData.assignee && (
-                <div className="mt-4 p-4 neo-card border-primary/20 rounded-xl">
+                <div className="mt-4 p-4 bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 rounded-xl">
                   <div className="flex items-center gap-2 mb-3">
                     <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -430,19 +457,22 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
                   {loadingUserTasks ? (
                     <div className="text-center py-4">
-                      <div className="animate-pulse-cyber text-muted-foreground text-sm">Loading tasks...</div>
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        Loading tasks...
+                      </div>
                     </div>
                   ) : selectedUserTasks.length > 0 ? (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
                       {selectedUserTasks.slice(0, 5).map((task) => (
-                        <div key={task._id} className="flex items-center justify-between p-2 bg-background/50 rounded-lg border border-border/30">
+                        <div key={task._id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg border border-border/30 hover:border-primary/30 transition-colors duration-200">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`text-xs px-2 py-1 rounded-full ${
-                                task.status === 'Completed' ? 'bg-green-500/20 text-green-500' :
-                                task.status === 'In Progress' ? 'bg-blue-500/20 text-blue-500' :
-                                'bg-yellow-500/20 text-yellow-500'
+                                task.status === 'Completed' ? 'bg-success/20 text-success' :
+                                task.status === 'In Progress' ? 'bg-info/20 text-info' :
+                                'bg-warning/20 text-warning'
                               }`}>
                                 {task.status}
                               </span>
@@ -476,86 +506,175 @@ export function CreateTaskDialog({ open, onOpenChange }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
+          {/* Priority and Due Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid gap-2.5">
+              <Label htmlFor="priority" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-warning"></div>
+                Priority
+              </Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleChange("priority", value)}
               >
-                <SelectTrigger id="priority" className="bg-white border-gray-300">
-                  <SelectValue placeholder="Select priority" />
+                <SelectTrigger id="priority" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-warning/40 focus:border-warning focus:ring-4 focus:ring-warning/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
+                  <SelectValue placeholder="Select priority..." />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300 z-[70]">
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Low">Low</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-900 backdrop-blur-2xl border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl">
+                  <SelectItem value="High" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-destructive/10 dark:hover:bg-destructive/5 cursor-pointer transition-all duration-200">
+                    <span className="flex items-center gap-2.5 font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-destructive shadow-lg shadow-destructive/30"></span>
+                      <span className="text-destructive">High Priority</span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="Medium" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-warning/10 dark:hover:bg-warning/5 cursor-pointer transition-all duration-200">
+                    <span className="flex items-center gap-2.5 font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-warning shadow-lg shadow-warning/30"></span>
+                      <span className="text-warning">Medium Priority</span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="Low" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-success/10 dark:hover:bg-success/5 cursor-pointer transition-all duration-200">
+                    <span className="flex items-center gap-2.5 font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full bg-success shadow-lg shadow-success/30"></span>
+                      <span className="text-success">Low Priority</span>
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="text"
-                placeholder="YYYY-MM-DD"
-                value={dueDate}
-                onChange={handleDateChange}
-                className={cn(dateError && "border-red-500")}
-              />
-              {dateError && <p className="text-sm text-red-500">{dateError}</p>}
+            <div className="grid gap-2.5">
+              <Label htmlFor="dueDate" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-info"></div>
+                Due Date
+              </Label>
+              <div className="relative">
+                <Input
+                  id="dueDate"
+                  type="text"
+                  placeholder="YYYY-MM-DD"
+                  value={dueDate}
+                  onChange={handleDateChange}
+                  className={cn("h-12 px-4 pr-11 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-info/40 focus:border-info focus-visible:ring-4 focus-visible:ring-info/10 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500", dateError && "border-destructive focus:border-destructive focus-visible:ring-destructive/10")}
+                />
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              {dateError && <p className="text-sm text-destructive flex items-center gap-1.5 mt-1 font-medium">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {dateError}
+              </p>}
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="dependencies">Dependencies</Label>
+          {/* Dependencies */}
+          <div className="grid gap-2.5">
+            <Label htmlFor="dependencies" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-secondary"></div>
+              Dependencies
+            </Label>
             <Select
               value={formData.dependencies[0] || ""}
               onValueChange={(value) => handleChange("dependencies", value ? [value] : [])}
             >
-              <SelectTrigger id="dependencies" className="bg-white border-gray-300">
+              <SelectTrigger id="dependencies" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-secondary/40 focus:border-secondary focus:ring-4 focus:ring-secondary/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
                 <SelectValue placeholder={
                   Array.isArray(tasks) && tasks.length > 0 
-                    ? "Select dependent tasks" 
-                    : "No tasks available"
+                    ? "Select dependent tasks..." 
+                    : "No dependencies available"
                 } />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-300 max-h-60 overflow-y-auto z-[70]">
+              <SelectContent className="bg-white dark:bg-gray-900 backdrop-blur-2xl border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-h-64 overflow-y-auto">
                 {Array.isArray(tasks) && tasks.length > 0 && 
                   tasks.map((task) => (
-                    <SelectItem key={task._id} value={task._id}>
-                      {task.title}
+                    <SelectItem 
+                      key={task._id} 
+                      value={task._id}
+                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/10 dark:hover:bg-secondary/5 cursor-pointer transition-all duration-200 font-medium"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        {task.title}
+                      </div>
                     </SelectItem>
                   ))
                 }
               </SelectContent>
             </Select>
             {Array.isArray(tasks) && tasks.length === 0 && (
-              <p className="text-sm text-gray-500">No tasks available for dependencies</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">No tasks available for dependencies</p>
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="document">Document</Label>
-            <Input
-              id="document"
-              type="file"
-              accept=".pdf,.doc,.docx,.txt,.html"
-              onChange={handleFileChange}
-            />
+          {/* Document Upload */}
+          <div className="grid gap-2.5">
+            <Label htmlFor="document" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+              Document Attachment
+            </Label>
+            <div className="relative">
+              <Input
+                id="document"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.html"
+                onChange={handleFileChange}
+                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-accent/40 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/10 rounded-xl transition-all duration-300 cursor-pointer text-gray-900 dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-accent file:to-accent/80 file:text-accent-foreground hover:file:from-accent/90 hover:file:to-accent/70 file:transition-all file:duration-300"
+              />
+            </div>
             {documentFile && (
-              <p className="text-sm text-muted-foreground">Selected: {documentFile.name}</p>
+              <div className="mt-1 p-3 bg-accent/10 dark:bg-accent/5 border border-accent/20 rounded-lg">
+                <p className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2.5 font-medium">
+                  <svg className="h-5 w-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="truncate">{documentFile.name}</span>
+                  <span className="text-xs text-accent bg-accent/20 px-2 py-0.5 rounded-full ml-auto">Attached</span>
+                </p>
+              </div>
             )}
           </div>
+          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" onClick={handleSubmit} disabled={isLoading || dateError}>
-            {isLoading ? "Creating..." : "Create Task"}
-          </Button>
+
+        {/* Premium Footer */}
+        <DialogFooter className="px-6 py-4 border-t-2 border-gray-200 dark:border-gray-800 bg-gradient-to-t from-gray-50/50 dark:from-gray-900/50 to-transparent backdrop-blur-sm">
+          <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="flex-1 sm:flex-none h-12 px-6 rounded-xl border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 font-semibold text-gray-900 dark:text-gray-100"
+            >
+              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleSubmit} 
+              disabled={isLoading || dateError}
+              className="flex-1 sm:flex-none h-12 px-8 rounded-xl gradient-primary text-primary-foreground hover:shadow-xl hover:shadow-primary/30 dark:hover:shadow-primary/20 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none font-bold"
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2.5">
+                  <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                  Creating Task...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2.5">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Task
+                </span>
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
