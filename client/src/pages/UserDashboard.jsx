@@ -284,17 +284,29 @@ function UserDashboard() {
       hasNewReviews={hasNewReviews}
       markReviewsAsSeen={markReviewsAsSeen}
     >
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.name || "User"}! Here's your task overview.</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={fetchUserDashboardData}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
+      <div className="space-y-6 pb-8">
+        {/* Enhanced Header Section */}
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 p-6 border border-primary/20">
+          <div className="absolute inset-0 bg-cyber-grid opacity-20"></div>
+          <div className="relative flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                My Dashboard
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Welcome back, <span className="font-semibold text-foreground">{user?.name || "User"}</span>! 👋 Here's your task overview.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={fetchUserDashboardData}
+                className="relative overflow-hidden group hover:border-primary/50 transition-all"
+              >
+                <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -316,68 +328,109 @@ function UserDashboard() {
           </Alert>
         )}
 
+        {/* Enhanced Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Tasks</CardTitle>
-              <div className="h-4 w-4 text-muted-foreground">
-                <Clock className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">My Tasks</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Clock className="h-5 w-5 text-blue-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.totalTasks}</div>
-              <p className="text-xs text-muted-foreground">Total assigned tasks</p>
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{userStats.totalTasks}</div>
+              <p className="text-xs text-muted-foreground mt-1">Total assigned tasks</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <div className="h-4 w-4 text-muted-foreground">
-                <CheckCircle className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.completedTasks}</div>
-              <p className="text-xs text-muted-foreground">{userStats.completionRate}% completion rate</p>
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{userStats.completedTasks}</div>
+              <p className="text-xs text-muted-foreground mt-1">{userStats.completionRate}% completion rate</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-amber-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-              <div className="h-4 w-4 text-muted-foreground">
-                <Clock className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Clock className="h-5 w-5 text-amber-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.inProgressTasks}</div>
-              <p className="text-xs text-muted-foreground">Tasks currently in progress</p>
+              <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">{userStats.inProgressTasks}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tasks currently in progress</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <div className="h-4 w-4 text-muted-foreground">
-                <AlertCircle className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <AlertCircle className="h-5 w-5 text-red-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.pendingTasks}</div>
-              <p className="text-xs text-muted-foreground">Tasks waiting to be started</p>
+              <div className="text-3xl font-bold text-red-600 dark:text-red-400">{userStats.pendingTasks}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tasks waiting to be started</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Work Hours Manager */}
-        <WorkHoursManager />
+        {/* Combined Work Hours & Progress Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Work Hours Manager */}
+          <div>
+            <WorkHoursManager />
+          </div>
+
+          {/* My Progress */}
+          <Card className="neo-card shadow-lg border-l-4 border-l-primary">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-transparent">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                </div>
+                My Progress
+              </CardTitle>
+              <CardDescription>Your task completion progress</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Overall Completion</p>
+                      <p className="text-xs text-muted-foreground">
+                        {userStats.completedTasks} of {userStats.totalTasks} tasks completed
+                      </p>
+                    </div>
+                    <span className="text-sm font-medium">{userStats.completionRate}%</span>
+                  </div>
+                  <Progress value={userStats.completionRate} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
-            <TabsTrigger value="tasks">My Tasks</TabsTrigger>
-            <TabsTrigger value="submissions" className="relative">
-              My Submissions
+          <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto neo-card p-1">
+            <TabsTrigger value="tasks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+              📋 My Tasks
+            </TabsTrigger>
+            <TabsTrigger value="submissions" className="relative data-[state=active]:bg-accent data-[state=active]:text-accent-foreground transition-all">
+              📤 My Submissions
               {hasNewReviews && (
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -387,11 +440,16 @@ function UserDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tasks" className="mt-6">
+          <TabsContent value="tasks" className="mt-6 animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>My Tasks</CardTitle>
+              <Card className="md:col-span-2 neo-card shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-accent/5">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Clock className="h-4 w-4 text-primary" />
+                    </div>
+                    My Tasks
+                  </CardTitle>
                   <CardDescription>View and manage your assigned tasks</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -460,9 +518,14 @@ function UserDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Deadlines</CardTitle>
+              <Card className="neo-card shadow-lg">
+                <CardHeader className="border-b bg-gradient-to-r from-red-500/5 to-amber-500/5">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                      <Calendar className="h-4 w-4 text-red-500" />
+                    </div>
+                    Upcoming Deadlines
+                  </CardTitle>
                   <CardDescription>Tasks due soon</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -493,35 +556,17 @@ function UserDashboard() {
                 </CardContent>
               </Card>
             </div>
-
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>My Progress</CardTitle>
-                <CardDescription>Your task completion progress</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Overall Completion</p>
-                        <p className="text-xs text-muted-foreground">
-                          {userStats.completedTasks} of {userStats.totalTasks} tasks completed
-                        </p>
-                      </div>
-                      <span className="text-sm font-medium">{userStats.completionRate}%</span>
-                    </div>
-                    <Progress value={userStats.completionRate} className="h-2" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
-          <TabsContent value="submissions" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Submissions</CardTitle>
+          <TabsContent value="submissions" className="mt-6 animate-fade-in">
+            <Card className="neo-card shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-accent/5 to-primary/5">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Github className="h-4 w-4 text-accent" />
+                  </div>
+                  My Submissions
+                </CardTitle>
                 <CardDescription>Track the status of your task submissions</CardDescription>
               </CardHeader>
               <CardContent>
@@ -584,9 +629,14 @@ function UserDashboard() {
             </Card>
 
             {recentReviews.length > 0 && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Recent Reviews</CardTitle>
+              <Card className="mt-6 neo-card shadow-lg border-l-4 border-l-blue-500 animate-slide-up">
+                <CardHeader className="border-b bg-gradient-to-r from-blue-500/5 to-transparent">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <Bell className="h-4 w-4 text-blue-500" />
+                    </div>
+                    Recent Reviews
+                  </CardTitle>
                   <CardDescription>Feedback on your recent submissions</CardDescription>
                 </CardHeader>
                 <CardContent>
