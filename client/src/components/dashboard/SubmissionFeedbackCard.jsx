@@ -1,3 +1,7 @@
+
+
+
+
 "use client"
 
 import { useState } from "react"
@@ -18,14 +22,12 @@ import {
   ExternalLink,
   MessageSquare,
 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
 
 export function SubmissionFeedbackCard({
   submission,
   onViewDetails,
   onSubmitRevision,
 }) {
-  const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
 
   const getStatusIcon = () => {
@@ -69,13 +71,13 @@ export function SubmissionFeedbackCard({
         <div className="flex justify-between items-start gap-4">
           <div className="flex items-center gap-2">
             {getStatusIcon()}
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-base font-semibold text-gray-900 dark:text-white">
               {submission.task?.title || "Task Submission"}
             </CardTitle>
           </div>
           {getStatusBadge()}
         </div>
-        <CardDescription className="text-xs text-muted-foreground">
+        <CardDescription className="text-xs text-gray-600 dark:text-gray-300">
           Reviewed on {new Date(submission.updatedAt).toLocaleDateString()}
         </CardDescription>
       </CardHeader>
@@ -84,11 +86,11 @@ export function SubmissionFeedbackCard({
         {submission.feedback && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              Feedback
+              <MessageSquare className="h-4 w-4 text-gray-500 dark:text-gray-300" />
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-100">Feedback</span>
             </div>
-            <div className="bg-background rounded p-3 border text-sm">
-              <p className="whitespace-pre-line">
+            <div className="bg-white/95 dark:bg-black/20 rounded p-3 border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-100">
+              <p className="whitespace-pre-line break-words">
                 {expanded || submission.feedback.length <= 150
                   ? submission.feedback
                   : `${submission.feedback.slice(0, 150)}...`}
@@ -108,7 +110,7 @@ export function SubmissionFeedbackCard({
 
         {submission.githubLink && (
           <div className="flex items-center gap-2 text-sm">
-            <Github className="h-4 w-4 text-muted-foreground" />
+            <Github className="h-4 w-4 text-gray-500 dark:text-gray-300" />
             <a
               href={submission.githubLink}
               target="_blank"
@@ -125,7 +127,7 @@ export function SubmissionFeedbackCard({
         )}
       </CardContent>
 
-      <CardFooter className="flex justify-between border-t pt-4">
+      <CardFooter className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
         <Button
           variant="outline"
           size="sm"

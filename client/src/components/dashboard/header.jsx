@@ -96,7 +96,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ModeToggle } from "../mode-toggle"
+import { SimpleModeToggle } from "../simple-mode-toggle"
 import { NotificationsPopover } from "../notifications/notifications-popover"
 import { useAuth } from "../../context/auth-context"
 import { MobileMenuButton } from "@/components/ui/mobile-menu-button"
@@ -144,7 +144,7 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
           <div className="flex items-center gap-2">
             <NotificationsPopover />
             <Alerts />
-            <ModeToggle />
+            <SimpleModeToggle />
 
             {/* Enhanced User Menu */}
             <DropdownMenu>
