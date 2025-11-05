@@ -8,18 +8,20 @@ import { NotificationSettings } from "./notification-settings"
 
 export function SettingsLayout() {
   return (
+    
     <Card>
       <CardHeader>
         <CardTitle>Settings</CardTitle>
         <CardDescription>Manage your preferences and account settings</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="workspace">Workspace</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="profile" className="w-full">
+          
           <TabsContent value="profile">
             <ProfileSettings />
           </TabsContent>

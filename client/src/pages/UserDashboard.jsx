@@ -331,61 +331,65 @@ function UserDashboard() {
 
         {/* Enhanced Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+          {/* My Tasks Stat */}
+          <div className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">My Tasks</CardTitle>
+            <div className="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">My Tasks</h3>
               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Clock className="h-5 w-5 text-blue-500" />
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6 pt-0">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{userStats.totalTasks}</div>
               <p className="text-xs text-muted-foreground mt-1">Total assigned tasks</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
+          {/* Completed Stat */}
+          <div className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            <div className="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Completed</h3>
               <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6 pt-0">
               <div className="text-3xl font-bold text-green-600 dark:text-green-400">{userStats.completedTasks}</div>
               <p className="text-xs text-muted-foreground mt-1">{userStats.completionRate}% completion rate</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-amber-500">
+          {/* In Progress Stat */}
+          <div className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-amber-500 rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+            <div className="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">In Progress</h3>
               <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6 pt-0">
               <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">{userStats.inProgressTasks}</div>
               <p className="text-xs text-muted-foreground mt-1">Tasks currently in progress</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="neo-card relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
+          {/* Pending Stat */}
+          <div className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+            <div className="flex flex-row items-center justify-between space-y-0 p-6 pb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
               <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <AlertCircle className="h-5 w-5 text-red-500" />
               </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-6 pt-0">
               <div className="text-3xl font-bold text-red-600 dark:text-red-400">{userStats.pendingTasks}</div>
               <p className="text-xs text-muted-foreground mt-1">Tasks waiting to be started</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Combined Work Hours & Progress Section */}

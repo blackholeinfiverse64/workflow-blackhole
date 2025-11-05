@@ -6,11 +6,11 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Textarea } from "../ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { Card, CardContent } from "../ui/card"
-import { Separator } from "../ui/separator"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { api } from "../../lib/api"
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
+import { User, Lock } from "lucide-react"
 
 export function ProfileSettings() {
   const { toast } = useToast()
@@ -26,7 +26,8 @@ export function ProfileSettings() {
     newPassword: "",
     confirmPassword: "",
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+  const [isLoadingPassword, setIsLoadingPassword] = useState(false)
   const [userId, setUserId] = useState(null)
 
   // Set initial form data when user is available
@@ -50,9 +51,9 @@ export function ProfileSettings() {
     setPasswordData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmitProfile = async (e) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsLoadingProfile(true)
 
     try {
       // Update user profile
@@ -62,20 +63,48 @@ export function ProfileSettings() {
         bio: formData.bio,
       })
 
-      // Update password if provided
-      if (passwordData.currentPassword && passwordData.newPassword) {
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-          throw new Error("New passwords don't match")
-        }
-        await api.users.changePassword(userId, {
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        })
-      }
-
       toast({
         title: "Success",
         description: "Profile updated successfully!",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update profile",
+      })
+    } finally {
+      setIsLoadingProfile(false)
+    }
+  }
+
+  const handleSubmitPassword = async (e) => {
+    e.preventDefault()
+    setIsLoadingPassword(true)
+
+    try {
+      // Validate password fields
+      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+        throw new Error("All password fields are required")
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        throw new Error("New passwords don't match")
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        throw new Error("New password must be at least 6 characters")
+      }
+
+      // Update password
+      await api.users.changePassword(userId, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      })
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully!",
       })
 
       // Reset password fields
@@ -88,10 +117,10 @@ export function ProfileSettings() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to update profile",
+        description: error.message || "Failed to update password",
       })
     } finally {
-      setIsLoading(false)
+      setIsLoadingPassword(false)
     }
   }
 
@@ -114,28 +143,37 @@ export function ProfileSettings() {
   }
 
   return (
-    <div className="space-y-6 py-4">
-      <div>
-        <h3 className="text-lg font-medium">Profile</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage your personal information and preferences
-        </p>
-      </div>
-      <Separator />
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex flex-col gap-6 md:flex-row">
-          <Card className="w-full md:w-[200px] flex-shrink-0">
-            <CardContent className="p-4 flex flex-col items-center gap-4">
-              <Avatar className="h-24 w-24">
+    <div className="space-y-6">
+
+      {/* 3 Separate Cards Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Card 1: Avatar Section */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-blue-500" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Profile Picture</CardTitle>
+                <CardDescription className="text-xs">Update your avatar</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-32 w-32 ring-2 ring-blue-500/20">
                 <AvatarImage src={formData.avatar} alt="Profile" />
-                <AvatarFallback>
-                  {formData.name ? formData.name[0] : "U"}
+                <AvatarFallback className="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-3xl font-semibold">
+                  {formData.name ? formData.name[0].toUpperCase() : "U"}
                 </AvatarFallback>
               </Avatar>
               <Button
                 variant="outline"
                 size="sm"
                 className="w-full"
+                type="button"
                 as="label"
               >
                 Change Avatar
@@ -146,96 +184,146 @@ export function ProfileSettings() {
                   onChange={handleAvatarChange}
                 />
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="flex-1 space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                />
+        {/* Card 2: Profile Information */}
+        <Card className="border-l-4 border-l-green-500 lg:col-span-2">
+          <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-green-500" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                />
+              <div>
+                <CardTitle className="text-base">Profile Information</CardTitle>
+                <CardDescription className="text-xs">Update your personal details</CardDescription>
               </div>
             </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmitProfile} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => handleChange("bio", e.target.value)}
-                className="min-h-[100px]"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleChange("bio", e.target.value)}
+                  className="min-h-[80px] resize-none"
+                  placeholder="Tell us a little about yourself..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Brief description for your profile. Max 200 characters.
+                </p>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button type="submit" disabled={isLoadingProfile} className="min-w-[120px]">
+                  {isLoadingProfile ? "Saving..." : "Save Profile"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Card 3: Update Password (Full Width) */}
+      <Card className="border-l-4 border-l-amber-500">
+        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <Lock className="h-4 w-4 text-amber-500" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Update Password</CardTitle>
+              <CardDescription className="text-xs">Change your password to keep your account secure</CardDescription>
             </div>
           </div>
-        </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmitPassword} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("currentPassword", e.target.value)
+                  }
+                  placeholder="Enter your current password"
+                />
+              </div>
 
-        <Separator />
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("newPassword", e.target.value)
+                  }
+                  placeholder="Enter new password"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 6 characters
+                </p>
+              </div>
 
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium">Password</h4>
-            <p className="text-sm text-muted-foreground">
-              Update your password to keep your account secure
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input
-                id="current-password"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) =>
-                  handlePasswordChange("currentPassword", e.target.value)
-                }
-              />
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("confirmPassword", e.target.value)
+                  }
+                  placeholder="Re-enter new password"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Must match new password
+                </p>
+              </div>
             </div>
-            <div></div>
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={passwordData.newPassword}
-                onChange={(e) =>
-                  handlePasswordChange("newPassword", e.target.value)
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={passwordData.confirmPassword}
-                onChange={(e) =>
-                  handlePasswordChange("confirmPassword", e.target.value)
-                }
-              />
-            </div>
-          </div>
-        </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
+            <div className="flex justify-end pt-4 border-t">
+              <Button 
+                type="submit" 
+                disabled={isLoadingPassword}
+                className="min-w-[120px]"
+                variant="default"
+              >
+                {isLoadingPassword ? "Updating..." : "Update Password"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }
