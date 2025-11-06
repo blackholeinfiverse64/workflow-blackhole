@@ -315,38 +315,38 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl p-0">
+      <DialogContent className="sm:max-w-[700px] max-h-[92vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800 rounded-lg p-0">
         {/* Hidden title for accessibility */}
         <DialogTitle className="sr-only">Create New Task</DialogTitle>
         
         {/* Scrollable Content Area */}
-        <div className="px-6 pt-6 pb-5 overflow-y-auto max-h-[calc(90vh-120px)] bg-white dark:bg-gray-950 scrollbar-thin scrollbar-thumb-primary/20 dark:scrollbar-thumb-primary/10 scrollbar-track-transparent hover:scrollbar-thumb-primary/30 dark:hover:scrollbar-thumb-primary/20">
+        <div className="px-7 pt-7 pb-6 overflow-y-auto max-h-[calc(92vh-130px)] scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/30 dark:hover:scrollbar-thumb-white/20">
           <div className="grid gap-6">
             {/* Task Title */}
             <div className="grid gap-2.5">
-              <Label htmlFor="title" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                Task Title <span className="text-destructive ml-0.5">*</span>
+              <Label htmlFor="title" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-lg shadow-primary/50"></div>
+                Task Title <span className="text-red-400 ml-0.5">*</span>
               </Label>
               <Input
                 id="title"
                 placeholder="Enter a descriptive task title..."
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-primary/40 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 rounded-xl transition-all duration-300 text-base font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/30 rounded-xl transition-all duration-300 text-base font-medium placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
               />
             </div>
 
             {/* Description */}
             <div className="grid gap-2.5">
-              <Label htmlFor="description" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-secondary"></div>
+              <Label htmlFor="description" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-secondary shadow-lg shadow-secondary/50"></div>
                 Description
               </Label>
               <Textarea
                 id="description"
                 placeholder="Describe the task in detail..."
-                className="min-h-[110px] px-4 py-3 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-secondary/40 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/10 rounded-xl resize-none transition-all duration-300 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                className="min-h-[110px] px-4 py-3 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/30 rounded-xl resize-none transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
                 value={formData.description}
                 onChange={(e) => handleChange("description", e.target.value)}
               />
@@ -354,8 +354,8 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
             {/* Links */}
             <div className="grid gap-2.5">
-              <Label htmlFor="links" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+              <Label htmlFor="links" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-accent shadow-lg shadow-accent/50"></div>
                 Reference Links
               </Label>
               <Input
@@ -363,35 +363,35 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 placeholder="Add URLs separated by commas..."
                 value={formData.links}
                 onChange={(e) => handleChange("links", e.target.value)}
-                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-accent/40 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/10 rounded-xl transition-all duration-300 text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
               />
             </div>
 
             {/* Department and Assignee Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="grid gap-2.5">
-                <Label htmlFor="department" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-info"></div>
-                  Department <span className="text-destructive ml-0.5">*</span>
+                <Label htmlFor="department" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
+                  Department <span className="text-red-400 ml-0.5">*</span>
                 </Label>
                 <Select
                   value={formData.department}
                   onValueChange={handleDepartmentChange}
                 >
-                  <SelectTrigger id="department" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-info/40 focus:border-info focus:ring-4 focus:ring-info/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
+                  <SelectTrigger id="department" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-info focus:ring-4 focus:ring-info/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
                     <SelectValue placeholder={
                       Array.isArray(departments) && departments.length > 0 
                         ? "Select department..." 
                         : "Loading..."
                     } />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-h-64 overflow-y-auto">
+                  <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
                     {Array.isArray(departments) && departments.length > 0 && 
                       departments.map((dept) => (
                         <SelectItem 
                           key={dept._id} 
                           value={dept._id}
-                          className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-info/10 dark:hover:bg-info/5 cursor-pointer transition-all duration-200 font-medium"
+                          className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-info/20 dark:hover:bg-info/30 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-white"
                         >
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-info"></div>
@@ -408,9 +408,9 @@ export function CreateTaskDialog({ open, onOpenChange }) {
               </div>
 
               <div className="grid gap-2.5">
-                <Label htmlFor="assignee-search" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-success"></div>
-                  Assignee <span className="text-destructive ml-0.5">*</span>
+                <Label htmlFor="assignee-search" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success shadow-lg shadow-success/50"></div>
+                  Assignee <span className="text-red-400 ml-0.5">*</span>
                 </Label>
                 <Input
                   id="assignee-search"
@@ -418,14 +418,14 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   value={assigneeSearch}
                   onChange={handleAssigneeSearch}
                   disabled={!formData.department}
-                  className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-success/40 focus:border-success focus-visible:ring-4 focus-visible:ring-success/10 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-100"
+                  className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-success focus-visible:ring-4 focus-visible:ring-success/30 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
                 />
                 {filteredUsers.length > 0 && formData.department && (
-                  <div className="mt-1 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-border/30 scrollbar-track-transparent">
+                  <div className="mt-1 bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-white/10 scrollbar-track-transparent" style={{backdropFilter: 'blur(20px)'}}>
                   {filteredUsers.map((user) => (
                     <div
                       key={user._id}
-                      className="m-2 px-4 py-3 hover:bg-success/10 dark:hover:bg-success/5 cursor-pointer text-sm flex items-center justify-between rounded-lg transition-all duration-200 group"
+                      className="m-2 px-4 py-3 hover:bg-success/30 dark:hover:bg-success/40 cursor-pointer text-sm flex items-center justify-between rounded-lg transition-all duration-200 group"
                       onClick={() => handleAssigneeSelect(user)}
                     >
                       <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-success transition-colors">{user.name}</span>
@@ -509,31 +509,31 @@ export function CreateTaskDialog({ open, onOpenChange }) {
           {/* Priority and Due Date */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="grid gap-2.5">
-              <Label htmlFor="priority" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-warning"></div>
+              <Label htmlFor="priority" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-warning shadow-lg shadow-warning/50"></div>
                 Priority
               </Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => handleChange("priority", value)}
               >
-                <SelectTrigger id="priority" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-warning/40 focus:border-warning focus:ring-4 focus:ring-warning/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
+                <SelectTrigger id="priority" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-warning focus:ring-4 focus:ring-warning/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
                   <SelectValue placeholder="Select priority..." />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-900 backdrop-blur-2xl border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl">
-                  <SelectItem value="High" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-destructive/10 dark:hover:bg-destructive/5 cursor-pointer transition-all duration-200">
+                <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl" style={{backdropFilter: 'blur(20px)'}}>
+                  <SelectItem value="High" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-destructive/30 dark:hover:bg-destructive/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-destructive shadow-lg shadow-destructive/30"></span>
                       <span className="text-destructive">High Priority</span>
                     </span>
                   </SelectItem>
-                  <SelectItem value="Medium" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-warning/10 dark:hover:bg-warning/5 cursor-pointer transition-all duration-200">
+                  <SelectItem value="Medium" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-warning/30 dark:hover:bg-warning/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-warning shadow-lg shadow-warning/30"></span>
                       <span className="text-warning">Medium Priority</span>
                     </span>
                   </SelectItem>
-                  <SelectItem value="Low" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-success/10 dark:hover:bg-success/5 cursor-pointer transition-all duration-200">
+                  <SelectItem value="Low" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-success/30 dark:hover:bg-success/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-success shadow-lg shadow-success/30"></span>
                       <span className="text-success">Low Priority</span>
@@ -544,8 +544,8 @@ export function CreateTaskDialog({ open, onOpenChange }) {
             </div>
 
             <div className="grid gap-2.5">
-              <Label htmlFor="dueDate" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 rounded-full bg-info"></div>
+              <Label htmlFor="dueDate" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
                 Due Date
               </Label>
               <div className="relative">
@@ -555,9 +555,9 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   placeholder="YYYY-MM-DD"
                   value={dueDate}
                   onChange={handleDateChange}
-                  className={cn("h-12 px-4 pr-11 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-info/40 focus:border-info focus-visible:ring-4 focus-visible:ring-info/10 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500", dateError && "border-destructive focus:border-destructive focus-visible:ring-destructive/10")}
+                  className={cn("h-12 px-4 pr-11 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-info focus-visible:ring-4 focus-visible:ring-info/30 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl", dateError && "border-red-400 focus:border-red-400 focus-visible:ring-red-400/30")}
                 />
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-white/50 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -572,28 +572,28 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
           {/* Dependencies */}
           <div className="grid gap-2.5">
-            <Label htmlFor="dependencies" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-secondary"></div>
+            <Label htmlFor="dependencies" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-secondary shadow-lg shadow-secondary/50"></div>
               Dependencies
             </Label>
             <Select
               value={formData.dependencies[0] || ""}
               onValueChange={(value) => handleChange("dependencies", value ? [value] : [])}
             >
-              <SelectTrigger id="dependencies" className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 hover:border-secondary/40 focus:border-secondary focus:ring-4 focus:ring-secondary/10 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-gray-100">
+              <SelectTrigger id="dependencies" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-secondary focus:ring-4 focus:ring-secondary/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
                 <SelectValue placeholder={
                   Array.isArray(tasks) && tasks.length > 0 
                     ? "Select dependent tasks..." 
                     : "No dependencies available"
                 } />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-900 backdrop-blur-2xl border-2 border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl max-h-64 overflow-y-auto">
+              <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
                 {Array.isArray(tasks) && tasks.length > 0 && 
                   tasks.map((task) => (
                     <SelectItem 
                       key={task._id} 
                       value={task._id}
-                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/10 dark:hover:bg-secondary/5 cursor-pointer transition-all duration-200 font-medium"
+                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/30 dark:hover:bg-secondary/40 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-white"
                     >
                       <div className="flex items-center gap-2">
                         <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -613,8 +613,8 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
           {/* Document Upload */}
           <div className="grid gap-2.5">
-            <Label htmlFor="document" className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>
+            <Label htmlFor="document" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-accent shadow-lg shadow-accent/50"></div>
               Document Attachment
             </Label>
             <div className="relative">
@@ -623,12 +623,12 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 type="file"
                 accept=".pdf,.doc,.docx,.txt,.html"
                 onChange={handleFileChange}
-                className="h-12 px-4 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-accent/40 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/10 rounded-xl transition-all duration-300 cursor-pointer text-gray-900 dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-accent file:to-accent/80 file:text-accent-foreground hover:file:from-accent/90 hover:file:to-accent/70 file:transition-all file:duration-300"
+                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-dashed border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 cursor-pointer text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-accent file:to-accent/80 file:text-accent-foreground hover:file:from-accent/90 hover:file:to-accent/70 file:transition-all file:duration-300 backdrop-blur-xl"
               />
             </div>
             {documentFile && (
-              <div className="mt-1 p-3 bg-accent/10 dark:bg-accent/5 border border-accent/20 rounded-lg">
-                <p className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2.5 font-medium">
+              <div className="mt-1 p-3 bg-accent/20 dark:bg-accent/10 border border-accent/40 dark:border-accent/20 rounded-lg backdrop-blur-xl">
+                <p className="text-sm text-gray-900 dark:text-white/90 flex items-center gap-2.5 font-medium">
                   <svg className="h-5 w-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
@@ -642,12 +642,13 @@ export function CreateTaskDialog({ open, onOpenChange }) {
         </div>
 
         {/* Premium Footer */}
-        <DialogFooter className="px-6 py-4 border-t-2 border-gray-200 dark:border-gray-800 bg-gradient-to-t from-gray-50/50 dark:from-gray-900/50 to-transparent backdrop-blur-sm">
+        {/* Premium Footer */}
+        <DialogFooter className="px-7 py-4 border-t border-white/20 dark:border-white/10 bg-gradient-to-t from-white/10 dark:from-black/10 to-transparent backdrop-blur-xl" style={{backdropFilter: 'blur(20px)'}}>
           <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="flex-1 sm:flex-none h-12 px-6 rounded-xl border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 font-semibold text-gray-900 dark:text-gray-100"
+              className="flex-1 sm:flex-none h-12 px-6 rounded-xl border border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 hover:bg-white/10 dark:hover:bg-white/5 transition-all duration-300 font-semibold text-gray-900 dark:text-white/90"
             >
               <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

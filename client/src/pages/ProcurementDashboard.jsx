@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import api from "../lib/api";
 import { Button } from "../components/ui/button";
+import { CreateTaskDialog } from "../components/tasks/create-task-dialog";
 import { 
   AlertCircle, 
   Users, 
@@ -14,7 +15,8 @@ import {
   AlertTriangle,
   RefreshCw,
   UserCheck,
-  Activity
+  Activity,
+  Flame
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Progress } from "../components/ui/progress";
@@ -26,6 +28,8 @@ export default function ProcurementDashboard() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     fetchAnalysis();
@@ -118,42 +122,104 @@ export default function ProcurementDashboard() {
           </div>
         </div>
 
-        {/* Low Task Alert - Below Stats */}
+        {/* Low Task Alert - Enhanced with Glassmorphism */}
         {analysis?.lowTaskEmployees?.length > 0 && (
-          <Alert className="border-2 border-orange-500 bg-transparent shadow-lg animate-fade-in max-w-3xl">
-            <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-            <AlertTitle className="text-base font-bold text-orange-900 dark:text-orange-100">
-              ⚠️ Urgent: Low Task Alert
-            </AlertTitle>
-            <AlertDescription className="mt-2">
-              <p className="text-sm text-orange-900 dark:text-orange-100 font-medium mb-3">
-                <span className="font-bold text-orange-700 dark:text-orange-300">
-                  {analysis.lowTaskEmployees.length} employee{analysis.lowTaskEmployees.length > 1 ? 's' : ''}
-                </span> {analysis.lowTaskEmployees.length > 1 ? 'have' : 'has'} less than 1 active task and need{analysis.lowTaskEmployees.length > 1 ? '' : 's'} immediate assignment:
-              </p>
-              <div className="mt-3 space-y-2 max-h-[250px] overflow-y-auto pr-2">
-                {analysis.lowTaskEmployees.map((emp) => (
-                  <div 
-                    key={emp.employeeId} 
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-orange-900/50 border border-orange-200 dark:border-orange-700 shadow-sm transition-all hover:shadow-md"
-                  >
-                    <div className="h-6 w-6 rounded-full bg-orange-500/20 dark:bg-orange-500/30 flex items-center justify-center flex-shrink-0">
-                      <Users className="h-3 w-3 text-orange-700 dark:text-orange-300" />
-                    </div>
-                    <span className="font-semibold text-sm text-orange-900 dark:text-orange-100 flex-1">
-                      {emp.name}
-                    </span>
-                    <Badge 
-                      variant="outline" 
-                      className="bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 border-orange-300 dark:border-orange-600 font-medium text-xs"
-                    >
-                      {emp.activeTasks} active task{emp.activeTasks !== 1 ? 's' : ''}
-                    </Badge>
+          <div className="space-y-4 bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-3xl p-6 shadow-2xl animate-fade-in" 
+            style={{backdropFilter: 'blur(20px)'}}>
+            <div className="space-y-3">
+              {/* Header Section */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <AlertTriangle className="h-5 w-5 text-white" />
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-lg font-bold text-orange-900 dark:text-orange-100">
+                      🚨 Urgent: Low Task Alert
+                    </h3>
+                    <p className="text-sm text-orange-800 dark:text-orange-200 mt-1">
+                      <span className="font-bold">{analysis.lowTaskEmployees.length} employee{analysis.lowTaskEmployees.length > 1 ? 's' : ''}</span> need{analysis.lowTaskEmployees.length > 1 ? '' : 's'} immediate task assignment
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 px-3 py-1 font-semibold text-xs">
+                  PRIORITY
+                </Badge>
               </div>
-            </AlertDescription>
-          </Alert>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-orange-700 dark:text-orange-300 font-medium">Alert Coverage</span>
+                  <span className="text-orange-600 dark:text-orange-400">{analysis.lowTaskEmployees.length} of {analysis.lowTaskEmployees.length}</span>
+                </div>
+                <Progress 
+                  value={100} 
+                  className="h-2.5 bg-orange-100/30 dark:bg-orange-900/30"
+                />
+              </div>
+
+              {/* Employee List */}
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-3 uppercase tracking-wide">Employees Requiring Assignment</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
+                  {analysis.lowTaskEmployees.map((emp, index) => (
+                    <div 
+                      key={emp.employeeId}
+                      className="group rounded-xl bg-white/20 dark:bg-white/10 backdrop-blur-lg border border-white/40 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20 hover:border-white/60 dark:hover:border-white/30 transition-all duration-200 shadow-md hover:shadow-lg p-4"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center flex-shrink-0 font-semibold text-white text-sm shadow-md">
+                          {(index + 1).toString().padStart(2, '0')}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-orange-950 dark:text-white truncate">
+                            {emp.name}
+                          </p>
+                          <p className="text-xs text-orange-700 dark:text-orange-300">
+                            {emp.activeTasks === 0 ? '⏸️ No active tasks' : `${emp.activeTasks} active task${emp.activeTasks !== 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/20">
+                        <Badge 
+                          className="bg-red-500/20 dark:bg-red-500/30 text-red-700 dark:text-red-200 border border-red-300 dark:border-red-600 font-medium text-xs px-2 py-0.5"
+                        >
+                          {emp.activeTasks} task{emp.activeTasks !== 1 ? 's' : ''}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          className="h-7 px-3 bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800 font-medium shadow-sm"
+                          onClick={() => {
+                            setSelectedEmployee({
+                              id: emp.employeeId,
+                              name: emp.name,
+                              department: emp.department
+                            });
+                            setIsCreateTaskOpen(true);
+                          }}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end pt-3 border-t border-white/20 dark:border-white/10">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -263,37 +329,37 @@ export default function ProcurementDashboard() {
         </TabsContent>
 
         <TabsContent value="available" className="mt-0">
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {analysis?.availableEmployees?.length > 0 ? (
               analysis.availableEmployees.map((employee) => (
                 <Card 
                   key={employee.employeeId}
                   className="border-l-4 border-l-green-500 transition-all hover:shadow-md"
                 >
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">{employee.name}</h3>
-                          <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">
-                            Available
-                          </Badge>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm truncate">{employee.name}</h3>
+                        <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs">
+                          Available
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Active Tasks:</span>
+                          <span className="font-medium">{employee.activeTasks}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Active Tasks:</span>
-                            <span className="ml-2 font-medium">{employee.activeTasks}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Completion Rate:</span>
-                            <span className="ml-2 font-medium">{employee.completionRate}%</span>
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Completion:</span>
+                          <span className="font-medium">{employee.completionRate}%</span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground mb-1">Availability Score</div>
-                        <div className="text-2xl font-bold text-green-600">{employee.availabilityScore}</div>
-                        <Progress value={employee.availabilityScore} className="w-24 h-2 mt-2" />
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground">Score</span>
+                          <span className="text-sm font-bold text-green-600">{employee.availabilityScore}</span>
+                        </div>
+                        <Progress value={employee.availabilityScore} className="h-1.5 mt-2" />
                       </div>
                     </div>
                   </CardContent>
@@ -355,6 +421,18 @@ export default function ProcurementDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Create Task Dialog */}
+      <CreateTaskDialog 
+        open={isCreateTaskOpen} 
+        onOpenChange={(open) => {
+          setIsCreateTaskOpen(open);
+          if (!open) {
+            setSelectedEmployee(null);
+          }
+        }}
+        defaultAssignee={selectedEmployee}
+      />
     </div>
   );
 }
