@@ -9,46 +9,57 @@ import {
   Plus,
   Settings,
   BarChart3,
-  PieChart,
-  Calculator,
-  CreditCard,
-  Wallet,
-  Building,
-  UserCheck
+  Upload,
+  Trash2,
+  Edit2,
+  FileSpreadsheet,
+  AlertCircle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { useSalaryManagement } from '../hooks/use-salary';
-import { useAuth } from '../context/auth-context';
-import api from '../lib/api';
-import SalaryCard from '../components/salary/SalaryCard';
-import SalaryAnalytics from '../components/salary/SalaryAnalytics';
-import SalaryForm from '../components/salary/SalaryForm';
-import WorkingDaysConfig from '../components/salary/WorkingDaysConfig';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import salaryAPI from '../services/salaryAPI';
 
 const SalaryManagement = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [showSalaryForm, setShowSalaryForm] = useState(false);
-  const [showWorkingDaysConfig, setShowWorkingDaysConfig] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [departments, setDepartments] = useState([]);
-
-  const {
-    data: salaryData,
-    loading,
-    error,
-    filters,
-    updateFilters,
-    refresh,
-    exportSalaryData
-  } = useSalaryManagement();
-
-  // Check if user has admin access
-  const isAdmin = user?.role === 'Admin';
+  const [activeTab, setActiveTab] = useState('upload');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [salaryRecords, setSalaryRecords] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  
+  // Holiday form state
+  const [holidayDate, setHolidayDate] = useState('');
+  const [holidayDescription, setHolidayDescription] = useState('');
+  const [holidayType, setHolidayType] = useState('public');
+  
+  // Initialize with current month
+  useEffect(() => {
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    setSelectedMonth(month);
+  }, []);
+  
+  // Fetch data when month changes
+  useEffect(() => {
+    if (selectedMonth) {
+      fetchSalaryRecords();
+      fetchHolidays();
+      fetchStats();
+    }
+  }, [selectedMonth]);
 
   // Fetch departments on mount
   useEffect(() => {

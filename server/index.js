@@ -147,7 +147,8 @@ const aimRoutes = require('./routes/aims_universal');
 const pushRoutes = require('./routes/push'); // Add this line
 const attendanceRoutes = require('./routes/attendance'); // New attendance routes
 const leaveRoutes = require('./routes/leave'); // New leave routes
-const salaryRoutes = require('./routes/salary'); // New salary routes
+const salaryRoutes = require('./routes/salary'); // Old salary routes
+const biometricSalaryRoutes = require('./routes/salaryRoutes'); // New biometric salary routes
 const enhancedAimsRoutes = require('./routes/enhancedAims'); // Enhanced aims routes
 const consentRoutes = require('./routes/consent'); // Consent routes
 const alertRoutes = require('./routes/alerts'); // Alert routes
@@ -312,7 +313,8 @@ app.use("/api/push", pushRoutes) // Added push routes use
 app.use("/api/monitoring", require("./routes/monitoring")); // Employee monitoring routes
 app.use("/api/attendance", attendanceRoutes); // Attendance management routes
 app.use("/api/leave", leaveRoutes); // Leave management routes
-app.use("/api/salary", salaryRoutes); // Salary management routes
+app.use("/api/salary", salaryRoutes); // Old salary management routes
+app.use("/api/biometric-salary", biometricSalaryRoutes); // New biometric salary routes
 app.use("/api/enhanced-aims", enhancedAimsRoutes); // Enhanced aims with progress routes
 app.use('/api/consent', consentRoutes);
 app.use('/api/alerts', alertRoutes);

@@ -39,6 +39,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import EMSDashboard from "./pages/EMSDashboard";
 import ProcurementDashboard from "./pages/ProcurementDashboard";
+import BiometricSalaryManagement from "./pages/BiometricSalaryManagement";
 
 function App() {
   const user = JSON.parse(localStorage.getItem("WorkflowUser") || "{}");
@@ -327,6 +328,14 @@ function App() {
                         element={
                           <ProtectedRoute>
                             <LeaveRequest />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/biometric-salary-management"
+                        element={
+                          <ProtectedRoute>
+                            <BiometricSalaryManagement />
                           </ProtectedRoute>
                         }
                       />

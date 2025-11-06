@@ -807,4 +807,356 @@ router.get('/live', adminAuth, async (req, res) => {
   }
 });
 
+// Upload and process biometric Excel file
+router.post('/upload', auth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'No file uploaded' 
+      });
+    }
+
+    console.log('📁 Processing biometric file:', req.file.originalname);
+
+    const BiometricUpload = require('../models/BiometricUpload');
+    
+    // Read the Excel file
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(req.file.path);
+    
+    const worksheet = workbook.getWorksheet(1);
+    if (!worksheet) {
+      fs.unlinkSync(req.file.path); // Clean up
+      return res.status(400).json({ 
+        success: false,
+        error: 'No data found in Excel file' 
+      });
+    }
+
+    const attendanceData = [];
+    const preview = [];
+    const errors = [];
+    let dateRange = { start: null, end: null };
+    
+    // Process each row (skip header)
+    let rowNumber = 0;
+    worksheet.eachRow((row, index) => {
+      if (index === 1) {
+        // Store headers
+        return;
+      }
+      
+      rowNumber++;
+      
+      try {
+        const employeeId = row.getCell(1).value?.toString().trim();
+        const dateValue = row.getCell(2).value;
+        const timeIn = row.getCell(3).value;
+        const timeOut = row.getCell(4).value;
+        const deviceId = row.getCell(5).value?.toString() || 'Unknown';
+        const location = row.getCell(6).value?.toString() || 'Main Office';
+        
+        if (!employeeId || !dateValue) {
+          errors.push(`Row ${rowNumber}: Missing employee ID or date`);
+          return;
+        }
+        
+        // Parse date
+        let attendanceDate;
+        if (dateValue instanceof Date) {
+          attendanceDate = dateValue;
+        } else if (typeof dateValue === 'number') {
+          // Excel date serial number
+          attendanceDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          attendanceDate = new Date(dateValue);
+        }
+        
+        if (isNaN(attendanceDate.getTime())) {
+          errors.push(`Row ${rowNumber}: Invalid date format`);
+          return;
+        }
+        
+        // Parse times
+        const parseTime = (timeValue, date) => {
+          if (!timeValue) return null;
+          
+          if (timeValue instanceof Date) {
+            return timeValue;
+          }
+          
+          if (typeof timeValue === 'number') {
+            // Excel time serial (fraction of day)
+            const hours = Math.floor(timeValue * 24);
+            const minutes = Math.floor((timeValue * 24 * 60) % 60);
+            const resultDate = new Date(date);
+            resultDate.setHours(hours, minutes, 0, 0);
+            return resultDate;
+          }
+          
+          if (typeof timeValue === 'string') {
+            const timeParts = timeValue.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            if (timeParts) {
+              const resultDate = new Date(date);
+              resultDate.setHours(
+                parseInt(timeParts[1]), 
+                parseInt(timeParts[2]), 
+                parseInt(timeParts[3] || '0'), 
+                0
+              );
+              return resultDate;
+            }
+          }
+          
+          return null;
+        };
+        
+        const parsedTimeIn = parseTime(timeIn, attendanceDate);
+        const parsedTimeOut = parseTime(timeOut, attendanceDate);
+        
+        // Calculate hours
+        let hours = 0;
+        if (parsedTimeIn && parsedTimeOut) {
+          hours = (parsedTimeOut - parsedTimeIn) / (1000 * 60 * 60);
+          if (hours < 0) hours = 0;
+        }
+        
+        const record = {
+          employeeId,
+          date: attendanceDate.toISOString().split('T')[0],
+          timeIn: parsedTimeIn ? parsedTimeIn.toISOString() : null,
+          timeOut: parsedTimeOut ? parsedTimeOut.toISOString() : null,
+          hours: Math.round(hours * 100) / 100,
+          deviceId,
+          location
+        };
+        
+        attendanceData.push(record);
+        
+        // Update date range
+        if (!dateRange.start || attendanceDate < new Date(dateRange.start)) {
+          dateRange.start = attendanceDate.toISOString().split('T')[0];
+        }
+        if (!dateRange.end || attendanceDate > new Date(dateRange.end)) {
+          dateRange.end = attendanceDate.toISOString().split('T')[0];
+        }
+        
+        // Add to preview (first 10 records)
+        if (preview.length < 10) {
+          preview.push(record);
+        }
+        
+      } catch (error) {
+        console.error(`Error processing row ${rowNumber}:`, error);
+        errors.push(`Row ${rowNumber}: ${error.message}`);
+      }
+    });
+    
+    // Create biometric upload record
+    const biometricRecord = new BiometricUpload({
+      uploadDate: new Date(),
+      fileName: req.file.filename,
+      originalFileName: req.file.originalname,
+      filePath: req.file.path,
+      fileSize: req.file.size,
+      processedBy: req.user.id,
+      totalRecords: attendanceData.length,
+      status: 'Pending Review',
+      preview: {
+        headers: ['Employee ID', 'Date', 'Time In', 'Time Out', 'Device ID', 'Location'],
+        sampleRows: preview,
+        totalRows: attendanceData.length,
+        detectedFormat: 'Standard'
+      },
+      summary: {
+        dateRange: {
+          start: dateRange.start ? new Date(dateRange.start) : null,
+          end: dateRange.end ? new Date(dateRange.end) : null
+        }
+      },
+      errorLog: errors.map((err, idx) => ({
+        row: idx + 1,
+        error: err,
+        timestamp: new Date()
+      }))
+    });
+    
+    await biometricRecord.save();
+    
+    // Store processed data temporarily (you might want to use a cache or session storage)
+    // For now, we'll include it in the response
+    
+    console.log(`✅ Processed ${attendanceData.length} records from ${req.file.originalname}`);
+    
+    res.json({
+      success: true,
+      message: `Processed ${attendanceData.length} attendance records`,
+      preview: preview,
+      analysis: {
+        totalRecords: attendanceData.length,
+        dateRange: dateRange.start && dateRange.end ? 
+          `${dateRange.start} to ${dateRange.end}` : 'N/A',
+        errors: errors.length,
+        fileId: biometricRecord._id
+      },
+      fileId: biometricRecord._id
+    });
+
+  } catch (error) {
+    console.error('Biometric upload error:', error);
+    
+    // Clean up file if it exists
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: error.message || 'Failed to process biometric file' 
+    });
+  }
+});
+
+// Confirm and import biometric upload
+router.post('/confirm-upload', auth, async (req, res) => {
+  try {
+    const { fileId, applyChanges } = req.body;
+    
+    if (!fileId) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'File ID is required' 
+      });
+    }
+    
+    const BiometricUpload = require('../models/BiometricUpload');
+    const biometricRecord = await BiometricUpload.findById(fileId);
+    
+    if (!biometricRecord) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Upload record not found' 
+      });
+    }
+    
+    if (!applyChanges) {
+      // Just mark as reviewed
+      biometricRecord.status = 'Completed';
+      biometricRecord.approvalStatus = 'Rejected';
+      biometricRecord.rejectionReason = 'User cancelled import';
+      await biometricRecord.save();
+      
+      return res.json({
+        success: true,
+        message: 'Upload cancelled',
+        imported: 0
+      });
+    }
+    
+    // Re-read and process the file
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(biometricRecord.filePath);
+    
+    const worksheet = workbook.getWorksheet(1);
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+    
+    worksheet.eachRow(async (row, index) => {
+      if (index === 1) return; // Skip header
+      
+      try {
+        const employeeId = row.getCell(1).value?.toString().trim();
+        const dateValue = row.getCell(2).value;
+        const timeIn = row.getCell(3).value;
+        const timeOut = row.getCell(4).value;
+        
+        if (!employeeId || !dateValue) {
+          skipped++;
+          return;
+        }
+        
+        // Find user by employee ID
+        const user = await User.findOne({ employeeId: employeeId });
+        if (!user) {
+          console.log(`User not found for employee ID: ${employeeId}`);
+          skipped++;
+          return;
+        }
+        
+        // Parse date and times (same logic as before)
+        let attendanceDate;
+        if (dateValue instanceof Date) {
+          attendanceDate = dateValue;
+        } else if (typeof dateValue === 'number') {
+          attendanceDate = new Date((dateValue - 25569) * 86400 * 1000);
+        } else {
+          attendanceDate = new Date(dateValue);
+        }
+        
+        attendanceDate.setHours(0, 0, 0, 0);
+        
+        // Check if attendance already exists
+        let existingAttendance = await Attendance.findOne({
+          user: user._id,
+          date: attendanceDate
+        });
+        
+        if (existingAttendance) {
+          // Update existing
+          existingAttendance.biometricData = {
+            timeIn: timeIn,
+            timeOut: timeOut,
+            uploadedAt: new Date()
+          };
+          await existingAttendance.save();
+          updated++;
+        } else {
+          // Create new attendance record
+          await Attendance.create({
+            user: user._id,
+            date: attendanceDate,
+            status: 'Present',
+            biometricData: {
+              timeIn: timeIn,
+              timeOut: timeOut,
+              uploadedAt: new Date()
+            }
+          });
+          imported++;
+        }
+        
+      } catch (error) {
+        console.error(`Error importing row ${index}:`, error);
+        skipped++;
+      }
+    });
+    
+    // Update biometric record
+    biometricRecord.status = 'Completed';
+    biometricRecord.approvalStatus = 'Approved';
+    biometricRecord.approvedBy = req.user.id;
+    biometricRecord.approvedAt = new Date();
+    biometricRecord.newRecords = imported;
+    biometricRecord.updatedRecords = updated;
+    await biometricRecord.save();
+    
+    res.json({
+      success: true,
+      message: `Successfully imported ${imported} new records and updated ${updated} records`,
+      imported,
+      updated,
+      skipped
+    });
+    
+  } catch (error) {
+    console.error('Confirm upload error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message || 'Failed to confirm upload' 
+    });
+  }
+});
+
 module.exports = router;

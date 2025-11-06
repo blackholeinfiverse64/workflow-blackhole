@@ -61,6 +61,16 @@ const UserSchema = new mongoose.Schema({
     type: Number, // in days
     default: 30,
   },
+  // Salary management fields
+  employeeId: {
+    type: String,
+    trim: true,
+    index: true,
+  },
+  hourlyRate: {
+    type: Number,
+    default: 25, // Default hourly rate in USD
+  },
 })
 
 // Update the updatedAt field before saving
