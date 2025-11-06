@@ -29,6 +29,14 @@ const UserSchema = new mongoose.Schema({
   avatar: {
     type: String,
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows null values while maintaining uniqueness
+  },
+  profilePicture: {
+    type: String,
+  },
   stillExist: {
     type: Number,
     default: 1,

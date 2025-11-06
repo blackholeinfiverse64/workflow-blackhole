@@ -532,5 +532,92 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 })
 
+// Google OAuth routes
+router.get("/google", (req, res) => {
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=profile email&access_type=offline&prompt=consent`;
+  res.redirect(googleAuthUrl);
+});
+
+router.get("/google/callback", async (req, res) => {
+  const { code } = req.query;
+
+  try {
+    // Exchange code for tokens
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokens = await tokenResponse.json();
+
+    if (!tokens.access_token) {
+      throw new Error("Failed to get access token");
+    }
+
+    // Get user info from Google
+    const userInfoResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      }
+    );
+
+    const googleUser = await userInfoResponse.json();
+
+    // Check if user exists
+    let user = await User.findOne({ email: googleUser.email });
+
+    if (!user) {
+      // Create new user
+      user = new User({
+        name: googleUser.name,
+        email: googleUser.email,
+        password: Math.random().toString(36).slice(-8), // Random password for OAuth users
+        role: "User", // Default role
+        googleId: googleUser.id,
+        profilePicture: googleUser.picture,
+      });
+
+      await user.save();
+
+      // Send welcome email
+      await sendWelcomeEmail(user);
+    }
+
+    // Create JWT payload
+    const payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+    };
+
+    // Generate JWT token
+    const token = jwt.sign(payload, process.env.JWT_SECRET || "jwtSecret", {
+      expiresIn: "180d",
+    });
+
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(payload))}`);
+  } catch (error) {
+    console.error("Google OAuth error:", error);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+  }
+});
+
 module.exports = router
 
