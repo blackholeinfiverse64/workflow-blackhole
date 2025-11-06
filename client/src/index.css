@@ -483,6 +483,10 @@ body.sidebar-open {
   }
 }
 
+.animate-float-cyber {
+  animation: floatCyber 6s ease-in-out infinite;
+}
+
 @keyframes glowPulse {
   0%, 100% {
     box-shadow: var(--glow-primary);
