@@ -287,8 +287,7 @@ function UserDashboard() {
     >
       <div className="space-y-6 pb-8">
         {/* Enhanced Header Section */}
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 p-6 border border-primary/20">
-          <div className="absolute inset-0 bg-cyber-grid opacity-20"></div>
+        <div className="relative overflow-hidden rounded-lg p-6">
           <div className="relative flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-4xl font-bold tracking-tight text-foreground">

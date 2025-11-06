@@ -2,127 +2,68 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
+const groqService = require('../services/groqService');
+const Task = require('../models/Task');
+const User = require('../models/User');
 
-// AI Insights endpoint
+// AI Insights endpoint - Now with Real Analysis
 router.get('/ai/insights', auth, async (req, res) => {
   try {
-    // Mock AI insights data
-    const insights = {
-      productivity: {
-        score: 85,
-        trend: 'up',
-        change: 12,
-        recommendations: [
-          'Team productivity has increased by 12% this month',
-          'Consider implementing flexible work hours for better performance',
-          'Focus on reducing meeting overhead for development team'
-        ]
-      },
-      workload: {
-        distribution: 'balanced',
-        overloaded: 2,
-        underutilized: 1,
-        recommendations: [
-          'Redistribute tasks from overloaded team members',
-          'Consider cross-training to improve flexibility'
-        ]
-      },
-      efficiency: {
-        score: 78,
-        bottlenecks: ['Code review process', 'Deployment pipeline'],
-        suggestions: [
-          'Automate code review checks',
-          'Optimize CI/CD pipeline',
-          'Implement parallel testing'
-        ]
-      },
-      collaboration: {
-        score: 92,
-        strongPoints: ['Communication', 'Knowledge sharing'],
-        improvements: ['Cross-team coordination'],
-        recommendations: [
-          'Excellent team communication maintained',
-          'Consider weekly cross-team sync meetings'
-        ]
-      },
-      timeline: {
-        onTrack: 15,
-        atRisk: 3,
-        delayed: 1,
-        recommendations: [
-          'Most projects are on track',
-          'Review resource allocation for at-risk projects',
-          'Consider scope adjustment for delayed project'
-        ]
-      }
-    };
+    // Fetch real task and user data
+    const [tasks, users] = await Promise.all([
+      Task.find()
+        .populate('assignee', 'name email')
+        .sort({ dueDate: 1 })
+        .lean(),
+      User.find({ role: { $in: ['user', 'manager', 'admin'] } })
+        .select('name email role')
+        .lean(),
+    ]);
 
-    res.json({
-      success: true,
-      data: insights,
-      generatedAt: new Date(),
-      version: '1.0'
-    });
+    // Generate AI-powered insights using Groq
+    const insights = await groqService.analyzeWorkflow(tasks, users);
+
+    res.json(insights);
 
   } catch (error) {
     console.error('AI insights error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to generate AI insights'
+      error: 'Failed to generate AI insights',
     });
   }
 });
 
-// AI Optimization endpoint
+// AI Optimization endpoint - Now with Real Analysis
 router.post('/ai/optimize', auth, async (req, res) => {
   try {
-    // Mock optimization results
-    const optimization = {
-      suggestions: [
-        {
-          type: 'workflow',
-          title: 'Optimize Task Assignment',
-          description: 'Redistribute tasks based on team member expertise and current workload',
-          impact: 'high',
-          effort: 'medium',
-          estimatedImprovement: '15% productivity increase'
-        },
-        {
-          type: 'process',
-          title: 'Automate Repetitive Tasks',
-          description: 'Identify and automate recurring manual processes',
-          impact: 'medium',
-          effort: 'high',
-          estimatedImprovement: '20% time savings'
-        },
-        {
-          type: 'communication',
-          title: 'Streamline Meetings',
-          description: 'Reduce meeting frequency and duration based on effectiveness analysis',
-          impact: 'medium',
-          effort: 'low',
-          estimatedImprovement: '10% more focused work time'
-        }
-      ],
-      metrics: {
-        currentEfficiency: 78,
-        projectedEfficiency: 89,
-        potentialTimeSavings: '2.5 hours per day per team member',
-        implementationTime: '2-3 weeks'
-      }
-    };
+    // Fetch real task and user data
+    const [tasks, users] = await Promise.all([
+      Task.find()
+        .populate('assignee', 'name email')
+        .sort({ dueDate: 1 })
+        .lean(),
+      User.find({ role: { $in: ['user', 'manager', 'admin'] } })
+        .select('name email role')
+        .lean(),
+    ]);
+
+    // Generate fresh insights
+    const insights = await groqService.analyzeWorkflow(tasks, users);
 
     res.json({
       success: true,
-      data: optimization,
-      generatedAt: new Date()
+      insights,
+      generatedAt: new Date(),
+      tasksAnalyzed: tasks.length,
+      usersAnalyzed: users.length,
     });
 
   } catch (error) {
     console.error('AI optimization error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to generate optimization suggestions'
+      error: 'Failed to generate optimization suggestions',
     });
   }
 });
