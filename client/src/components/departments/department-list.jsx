@@ -206,11 +206,11 @@ export function DepartmentList({ onDepartmentSelect }) {
 
       <TabsContent value="grid" className="mt-0">
         {departments.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No departments found. Create a new department to get started.</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg font-medium">No departments found. Create a new department to get started.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {departments.map((department) => {
               const departmentId = department._id || department.id;
               const tasks = departmentTasks[departmentId] || { total: 0, completed: 0 }
@@ -224,23 +224,27 @@ export function DepartmentList({ onDepartmentSelect }) {
               return (
                 <Card 
                   key={departmentId} 
-                  className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  className="group cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-2 hover:border-primary/30"
                   onClick={() => onDepartmentSelect && onDepartmentSelect(department)}
                 >
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: department.color }} />
-                          {department.name}
+                      <div className="space-y-2 flex-1">
+                        <CardTitle className="flex items-center gap-2.5 text-xl">
+                          <div 
+                            className="w-4 h-4 rounded-full shadow-lg ring-2 ring-white dark:ring-slate-900" 
+                            style={{ backgroundColor: department.color }} 
+                          />
+                          <span className="group-hover:text-primary transition-colors">{department.name}</span>
                         </CardTitle>
-                        <CardDescription>{department.description}</CardDescription>
+                        <CardDescription className="text-sm leading-relaxed">{department.description}</CardDescription>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="icon"
+                            className="opacity-60 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreHorizontal className="h-4 w-4" />
@@ -268,49 +272,60 @@ export function DepartmentList({ onDepartmentSelect }) {
                       </DropdownMenu>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage 
-                            src={department.lead?.avatar || "/placeholder.svg?height=40&width=40"} 
-                            alt={department.lead?.name || "Lead"} 
-                          />
-                          <AvatarFallback>
-                            {department.lead?.name ? department.lead.name.charAt(0) : "L"}
-                          </AvatarFallback>
-                        </Avatar>
+                  <CardContent className="space-y-4">
+                    {/* Department Lead */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 transition-colors group-hover:bg-muted">
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                        <AvatarImage 
+                          src={department.lead?.avatar || "/placeholder.svg?height=40&width=40"} 
+                          alt={department.lead?.name || "Lead"} 
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                          {department.lead?.name ? department.lead.name.charAt(0) : "L"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold truncate">
+                          {department.lead?.name || "No lead assigned"}
+                          {department.lead && !department.lead.stillExist && (
+                            <span className="text-xs text-red-500 ml-1.5">(Inactive)</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Department Lead</div>
+                      </div>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
+                        <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
                         <div>
-                          <div className="text-sm font-medium">
-                            {department.lead?.name || "No lead assigned"}
-                            {department.lead && !department.lead.stillExist && (
-                              <span className="text-xs text-red-500 ml-1">(Inactive)</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">Department Lead</div>
+                          <div className="text-lg font-bold">{activeMemberCount}</div>
+                          <div className="text-xs text-muted-foreground font-medium">Members</div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
+                        <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold">{tasks.completed}/{tasks.total}</div>
+                          <div className="text-xs text-muted-foreground font-medium">Tasks</div>
+                        </div>
+                      </div>
+                    </div>
 
+                    {/* Progress Section */}
+                    <div className="space-y-2.5 p-3 rounded-lg bg-muted/30">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{activeMemberCount} Active Members</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {tasks.completed}/{tasks.total} Tasks
-                          </span>
-                        </div>
+                        <span className="text-sm font-semibold">Task Completion</span>
+                        <Badge variant={completionPercentage >= 75 ? "default" : completionPercentage >= 50 ? "secondary" : "outline"} className="font-bold">
+                          {completionPercentage}%
+                        </Badge>
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Task Completion</span>
-                          <span>{completionPercentage}%</span>
-                        </div>
-                        <Progress value={completionPercentage} className="h-2" />
-                      </div>
+                      <Progress value={completionPercentage} className="h-2.5 shadow-inner" />
                     </div>
                   </CardContent>
                 </Card>
@@ -321,18 +336,18 @@ export function DepartmentList({ onDepartmentSelect }) {
       </TabsContent>
 
       <TabsContent value="list" className="mt-0">
-        <Card>
-          <CardHeader>
-            <CardTitle>All Departments</CardTitle>
-            <CardDescription>Manage and view all departments</CardDescription>
+        <Card className="shadow-lg">
+          <CardHeader className="border-b bg-muted/30">
+            <CardTitle className="text-xl">All Departments</CardTitle>
+            <CardDescription className="text-base">Manage and view all departments</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             {departments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No departments found. Create a new department to get started.</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-lg font-medium">No departments found. Create a new department to get started.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {departments.map((department) => {
                   const departmentId = department._id || department.id;
                   const tasks = departmentTasks[departmentId] || { total: 0, completed: 0 }
@@ -346,40 +361,46 @@ export function DepartmentList({ onDepartmentSelect }) {
                   return (
                     <div 
                       key={departmentId} 
-                      className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow duration-200"
+                      className="group flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/30 hover:-translate-y-0.5 bg-card"
                       onClick={() => onDepartmentSelect && onDepartmentSelect(department)}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold`}
+                          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white dark:ring-slate-900 shrink-0"
                           style={{ backgroundColor: department.color }}
                         >
                           {department.name.charAt(0)}
                         </div>
-                        <div>
-                          <h3 className="font-medium">{department.name}</h3>
-                          <p className="text-sm text-muted-foreground">{department.description}</p>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-lg truncate group-hover:text-primary transition-colors">{department.name}</h3>
+                          <p className="text-sm text-muted-foreground truncate">{department.description}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{activeMemberCount}</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+                          <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{activeMemberCount}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+                          <CheckSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          <span className="text-sm font-bold text-green-700 dark:text-green-300">
                             {tasks.completed}/{tasks.total}
                           </span>
                         </div>
-                        <Badge>{completionPercentage}%</Badge>
+                        <Badge 
+                          variant={completionPercentage >= 75 ? "default" : completionPercentage >= 50 ? "secondary" : "outline"} 
+                          className="font-bold text-base px-3 py-1 min-w-[4rem] justify-center"
+                        >
+                          {completionPercentage}%
+                        </Badge>
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button 
                               variant="ghost" 
                               size="icon"
+                              className="opacity-60 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <MoreHorizontal className="h-4 w-4" />
