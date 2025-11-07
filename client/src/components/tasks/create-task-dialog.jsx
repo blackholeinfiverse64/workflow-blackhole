@@ -315,16 +315,16 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[92vh] overflow-hidden bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-800 rounded-lg p-0">
+      <DialogContent className="sm:max-w-[700px] max-h-[92vh] overflow-hidden bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-800 rounded-lg p-0">
         {/* Hidden title for accessibility */}
-        <DialogTitle className="sr-only">Create New Task</DialogTitle>
+        <DialogTitle className="sr-only dark:text-slate-100">Create New Task</DialogTitle>
         
         {/* Scrollable Content Area */}
-        <div className="px-7 pt-7 pb-6 overflow-y-auto max-h-[calc(92vh-130px)] scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/30 dark:hover:scrollbar-thumb-white/20">
+        <div className="px-7 pt-7 pb-6 overflow-y-auto max-h-[calc(92vh-130px)] scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-white/30 dark:hover:scrollbar-thumb-slate-600">
           <div className="grid gap-6">
             {/* Task Title */}
             <div className="grid gap-2.5">
-              <Label htmlFor="title" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <Label htmlFor="title" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-lg shadow-primary/50"></div>
                 Task Title <span className="text-red-400 ml-0.5">*</span>
               </Label>
@@ -333,20 +333,20 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 placeholder="Enter a descriptive task title..."
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/30 rounded-xl transition-all duration-300 text-base font-medium placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
+                className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-primary focus-visible:ring-4 focus-visible:ring-primary/30 rounded-xl transition-all duration-300 text-base font-medium placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
               />
             </div>
 
             {/* Description */}
             <div className="grid gap-2.5">
-              <Label htmlFor="description" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <Label htmlFor="description" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-secondary shadow-lg shadow-secondary/50"></div>
                 Description
               </Label>
               <Textarea
                 id="description"
                 placeholder="Describe the task in detail..."
-                className="min-h-[110px] px-4 py-3 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/30 rounded-xl resize-none transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
+                className="min-h-[110px] px-4 py-3 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/30 rounded-xl resize-none transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
                 value={formData.description}
                 onChange={(e) => handleChange("description", e.target.value)}
               />
@@ -354,7 +354,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
             {/* Links */}
             <div className="grid gap-2.5">
-              <Label htmlFor="links" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <Label htmlFor="links" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-accent shadow-lg shadow-accent/50"></div>
                 Reference Links
               </Label>
@@ -363,14 +363,14 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 placeholder="Add URLs separated by commas..."
                 value={formData.links}
                 onChange={(e) => handleChange("links", e.target.value)}
-                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
+                className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
               />
             </div>
 
             {/* Department and Assignee Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="grid gap-2.5">
-                <Label htmlFor="department" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <Label htmlFor="department" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                   <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
                   Department <span className="text-red-400 ml-0.5">*</span>
                 </Label>
@@ -378,20 +378,20 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   value={formData.department}
                   onValueChange={handleDepartmentChange}
                 >
-                  <SelectTrigger id="department" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-info focus:ring-4 focus:ring-info/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
+                  <SelectTrigger id="department" className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-info focus:ring-4 focus:ring-info/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl">
                     <SelectValue placeholder={
                       Array.isArray(departments) && departments.length > 0 
                         ? "Select department..." 
                         : "Loading..."
                     } />
                   </SelectTrigger>
-                  <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
+                  <SelectContent className="bg-white/10 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/30 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
                     {Array.isArray(departments) && departments.length > 0 && 
                       departments.map((dept) => (
                         <SelectItem 
                           key={dept._id} 
                           value={dept._id}
-                          className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-info/20 dark:hover:bg-info/30 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-white"
+                          className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-info/20 dark:hover:bg-info/30 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-slate-100"
                         >
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-info"></div>
@@ -403,12 +403,12 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   </SelectContent>
                 </Select>
                 {Array.isArray(departments) && departments.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Loading departments...</p>
+                  <p className="text-xs text-muted-foreground dark:text-slate-400">Loading departments...</p>
                 )}
               </div>
 
               <div className="grid gap-2.5">
-                <Label htmlFor="assignee-search" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+                <Label htmlFor="assignee-search" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                   <div className="h-1.5 w-1.5 rounded-full bg-success shadow-lg shadow-success/50"></div>
                   Assignee <span className="text-red-400 ml-0.5">*</span>
                 </Label>
@@ -418,17 +418,17 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   value={assigneeSearch}
                   onChange={handleAssigneeSearch}
                   disabled={!formData.department}
-                  className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-success focus-visible:ring-4 focus-visible:ring-success/30 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-500 dark:placeholder:text-white/40 text-gray-900 dark:text-white backdrop-blur-xl"
+                  className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-success focus-visible:ring-4 focus-visible:ring-success/30 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
                 />
                 {filteredUsers.length > 0 && formData.department && (
-                  <div className="mt-1 bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-white/10 scrollbar-track-transparent" style={{backdropFilter: 'blur(20px)'}}>
+                  <div className="mt-1 bg-white/10 dark:bg-slate-900/95 backdrop-blur-xl border border-white/30 dark:border-slate-700 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent" style={{backdropFilter: 'blur(20px)'}}>
                   {filteredUsers.map((user) => (
                     <div
                       key={user._id}
                       className="m-2 px-4 py-3 hover:bg-success/30 dark:hover:bg-success/40 cursor-pointer text-sm flex items-center justify-between rounded-lg transition-all duration-200 group"
                       onClick={() => handleAssigneeSelect(user)}
                     >
-                      <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-success transition-colors">{user.name}</span>
+                      <span className="font-semibold text-gray-900 dark:text-slate-100 group-hover:text-success transition-colors">{user.name}</span>
                       <span className="text-xs bg-success/20 dark:bg-success/10 text-success px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
                         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -440,34 +440,34 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 </div>
               )}
               {formData.department && filteredUsers.length === 0 && assigneeSearch && !formData.assignee && (
-                <div className="px-4 py-2 text-sm text-muted-foreground">
+                <div className="px-4 py-2 text-sm text-muted-foreground dark:text-slate-400">
                   No active users found in this department
                 </div>
               )}
 
               {/* User's Previous Tasks */}
               {formData.assignee && (
-                <div className="mt-4 p-4 bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 rounded-xl">
+                <div className="mt-4 p-4 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10 dark:to-transparent border border-primary/20 dark:border-primary/30 rounded-xl">
                   <div className="flex items-center gap-2 mb-3">
                     <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <h4 className="font-semibold text-foreground">Previous Tasks for {assigneeSearch}</h4>
+                    <h4 className="font-semibold text-foreground dark:text-slate-200">Previous Tasks for {assigneeSearch}</h4>
                   </div>
 
                   {loadingUserTasks ? (
                     <div className="text-center py-4">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground dark:text-slate-400 text-sm">
                         <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         Loading tasks...
                       </div>
                     </div>
                   ) : selectedUserTasks.length > 0 ? (
-                    <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
+                    <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-border/50 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
                       {selectedUserTasks.slice(0, 5).map((task) => (
-                        <div key={task._id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg border border-border/30 hover:border-primary/30 transition-colors duration-200">
+                        <div key={task._id} className="flex items-center justify-between p-2 bg-muted/50 dark:bg-slate-800/50 rounded-lg border border-border/30 dark:border-slate-700 hover:border-primary/30 dark:hover:border-primary/50 transition-colors duration-200">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
+                            <p className="text-sm font-medium text-foreground dark:text-slate-200 truncate">{task.title}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`text-xs px-2 py-1 rounded-full ${
                                 task.status === 'Completed' ? 'bg-success/20 text-success' :
@@ -485,19 +485,19 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                               </span>
                             </div>
                           </div>
-                          <div className="text-xs text-muted-foreground ml-2">
+                          <div className="text-xs text-muted-foreground dark:text-slate-400 ml-2">
                             {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}
                           </div>
                         </div>
                       ))}
                       {selectedUserTasks.length > 5 && (
-                        <div className="text-xs text-muted-foreground text-center py-2">
+                        <div className="text-xs text-muted-foreground dark:text-slate-400 text-center py-2">
                           +{selectedUserTasks.length - 5} more tasks
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-4 text-muted-foreground text-sm">
+                    <div className="text-center py-4 text-muted-foreground dark:text-slate-400 text-sm">
                       No previous tasks found for this user
                     </div>
                   )}
@@ -509,7 +509,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
           {/* Priority and Due Date */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="grid gap-2.5">
-              <Label htmlFor="priority" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <Label htmlFor="priority" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-warning shadow-lg shadow-warning/50"></div>
                 Priority
               </Label>
@@ -517,23 +517,23 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 value={formData.priority}
                 onValueChange={(value) => handleChange("priority", value)}
               >
-                <SelectTrigger id="priority" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-warning focus:ring-4 focus:ring-warning/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
+                <SelectTrigger id="priority" className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-warning focus:ring-4 focus:ring-warning/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl">
                   <SelectValue placeholder="Select priority..." />
                 </SelectTrigger>
-                <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl" style={{backdropFilter: 'blur(20px)'}}>
-                  <SelectItem value="High" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-destructive/30 dark:hover:bg-destructive/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
+                <SelectContent className="bg-white/10 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/30 dark:border-slate-700 rounded-2xl shadow-2xl" style={{backdropFilter: 'blur(20px)'}}>
+                  <SelectItem value="High" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-destructive/30 dark:hover:bg-destructive/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-slate-100">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-destructive shadow-lg shadow-destructive/30"></span>
                       <span className="text-destructive">High Priority</span>
                     </span>
                   </SelectItem>
-                  <SelectItem value="Medium" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-warning/30 dark:hover:bg-warning/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
+                  <SelectItem value="Medium" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-warning/30 dark:hover:bg-warning/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-slate-100">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-warning shadow-lg shadow-warning/30"></span>
                       <span className="text-warning">Medium Priority</span>
                     </span>
                   </SelectItem>
-                  <SelectItem value="Low" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-success/30 dark:hover:bg-success/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-white">
+                  <SelectItem value="Low" className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-success/30 dark:hover:bg-success/40 cursor-pointer transition-all duration-200 text-gray-900 dark:text-slate-100">
                     <span className="flex items-center gap-2.5 font-semibold">
                       <span className="h-2.5 w-2.5 rounded-full bg-success shadow-lg shadow-success/30"></span>
                       <span className="text-success">Low Priority</span>
@@ -544,7 +544,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
             </div>
 
             <div className="grid gap-2.5">
-              <Label htmlFor="dueDate" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+              <Label htmlFor="dueDate" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
                 Due Date
               </Label>
@@ -555,9 +555,9 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                   placeholder="YYYY-MM-DD"
                   value={dueDate}
                   onChange={handleDateChange}
-                  className={cn("h-12 px-4 pr-11 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-info focus-visible:ring-4 focus-visible:ring-info/30 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl", dateError && "border-red-400 focus:border-red-400 focus-visible:ring-red-400/30")}
+                  className={cn("h-12 px-4 pr-11 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-info focus-visible:ring-4 focus-visible:ring-info/30 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl", dateError && "border-red-400 focus:border-red-400 focus-visible:ring-red-400/30")}
                 />
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-white/50 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -572,7 +572,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
           {/* Dependencies */}
           <div className="grid gap-2.5">
-            <Label htmlFor="dependencies" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+            <Label htmlFor="dependencies" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-secondary shadow-lg shadow-secondary/50"></div>
               Dependencies
             </Label>
@@ -580,20 +580,20 @@ export function CreateTaskDialog({ open, onOpenChange }) {
               value={formData.dependencies[0] || ""}
               onValueChange={(value) => handleChange("dependencies", value ? [value] : [])}
             >
-              <SelectTrigger id="dependencies" className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-secondary focus:ring-4 focus:ring-secondary/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/40 backdrop-blur-xl">
+              <SelectTrigger id="dependencies" className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-secondary focus:ring-4 focus:ring-secondary/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl">
                 <SelectValue placeholder={
                   Array.isArray(tasks) && tasks.length > 0 
                     ? "Select dependent tasks..." 
                     : "No dependencies available"
                 } />
               </SelectTrigger>
-              <SelectContent className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
+              <SelectContent className="bg-white/10 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/30 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
                 {Array.isArray(tasks) && tasks.length > 0 && 
                   tasks.map((task) => (
                     <SelectItem 
                       key={task._id} 
                       value={task._id}
-                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/30 dark:hover:bg-secondary/40 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-white"
+                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/30 dark:hover:bg-secondary/40 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-slate-100"
                     >
                       <div className="flex items-center gap-2">
                         <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -607,13 +607,13 @@ export function CreateTaskDialog({ open, onOpenChange }) {
               </SelectContent>
             </Select>
             {Array.isArray(tasks) && tasks.length === 0 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">No tasks available for dependencies</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">No tasks available for dependencies</p>
             )}
           </div>
 
           {/* Document Upload */}
           <div className="grid gap-2.5">
-            <Label htmlFor="document" className="text-sm font-bold text-gray-900 dark:text-white/90 flex items-center gap-1.5">
+            <Label htmlFor="document" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
               <div className="h-1.5 w-1.5 rounded-full bg-accent shadow-lg shadow-accent/50"></div>
               Document Attachment
             </Label>
@@ -623,12 +623,12 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 type="file"
                 accept=".pdf,.doc,.docx,.txt,.html"
                 onChange={handleFileChange}
-                className="h-12 px-4 bg-white/10 dark:bg-white/5 border-2 border-dashed border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 cursor-pointer text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-accent file:to-accent/80 file:text-accent-foreground hover:file:from-accent/90 hover:file:to-accent/70 file:transition-all file:duration-300 backdrop-blur-xl"
+                className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-dashed border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-accent focus-visible:ring-4 focus-visible:ring-accent/30 rounded-xl transition-all duration-300 cursor-pointer text-gray-900 dark:text-slate-100 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-accent file:to-accent/80 file:text-accent-foreground hover:file:from-accent/90 hover:file:to-accent/70 file:transition-all file:duration-300 backdrop-blur-xl"
               />
             </div>
             {documentFile && (
-              <div className="mt-1 p-3 bg-accent/20 dark:bg-accent/10 border border-accent/40 dark:border-accent/20 rounded-lg backdrop-blur-xl">
-                <p className="text-sm text-gray-900 dark:text-white/90 flex items-center gap-2.5 font-medium">
+              <div className="mt-1 p-3 bg-accent/20 dark:bg-accent/10 border border-accent/40 dark:border-accent/30 rounded-lg backdrop-blur-xl">
+                <p className="text-sm text-gray-900 dark:text-slate-100 flex items-center gap-2.5 font-medium">
                   <svg className="h-5 w-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
@@ -643,12 +643,12 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
         {/* Premium Footer */}
         {/* Premium Footer */}
-        <DialogFooter className="px-7 py-4 border-t border-white/20 dark:border-white/10 bg-gradient-to-t from-white/10 dark:from-black/10 to-transparent backdrop-blur-xl" style={{backdropFilter: 'blur(20px)'}}>
+        <DialogFooter className="px-7 py-4 border-t border-white/20 dark:border-slate-800 bg-gradient-to-t from-white/10 dark:from-slate-800/50 to-transparent backdrop-blur-xl" style={{backdropFilter: 'blur(20px)'}}>
           <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="flex-1 sm:flex-none h-12 px-6 rounded-xl border border-white/30 dark:border-white/15 hover:border-white/50 dark:hover:border-white/30 hover:bg-white/10 dark:hover:bg-white/5 transition-all duration-300 font-semibold text-gray-900 dark:text-white/90"
+              className="flex-1 sm:flex-none h-12 px-6 rounded-xl border border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 hover:bg-white/10 dark:hover:bg-slate-800 transition-all duration-300 font-semibold text-gray-900 dark:text-slate-200"
             >
               <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
