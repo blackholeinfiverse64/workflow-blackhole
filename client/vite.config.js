@@ -11,6 +11,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), VitePWA({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.svg', 'icons/icon-192x192.png', 'icons/icon-512x512.png'],
+    workbox: {
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
+    },
     manifest: {
       name: 'WorkflowAI Management App',
       short_name: 'WorkflowAI',
