@@ -34,13 +34,6 @@
 //   },
 // });
 
-// // CORS Configuration
-// const corsOptions = {
-//   origin: ['http://localhost:5173','http://192.168.1.2:5173','https://main-workflow.vercel.app'],  // Replace with your frontend's URL
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   credentials: true,  // Allow credentials (cookies, HTTP authentication)
-// };
-// app.use(cors(corsOptions));
 
 // app.use(express.json());
 
