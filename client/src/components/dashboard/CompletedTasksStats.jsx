@@ -152,91 +152,127 @@ export function CompletedTasksStats() {
   ].filter((item) => item.value > 0)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Completion Statistics</CardTitle>
-        <CardDescription>Overview of task submissions and approvals</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-green-50 dark:bg-green-900/20 border-none">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-green-600 dark:text-green-400">Approved</p>
-                      <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.approved}</p>
-                    </div>
-                    <div className="bg-green-100 dark:bg-green-800/30 p-2 rounded-full">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-amber-50 dark:bg-amber-900/20 border-none">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-amber-600 dark:text-amber-400">Pending</p>
-                      <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pending}</p>
-                    </div>
-                    <div className="bg-amber-100 dark:bg-amber-800/30 p-2 rounded-full">
-                      <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-red-50 dark:bg-red-900/20 border-none">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400">Rejected</p>
-                      <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.rejected}</p>
-                    </div>
-                    <div className="bg-red-100 dark:bg-red-800/30 p-2 rounded-full">
-                      <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-50 dark:bg-slate-800/50 border-none">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">No Submission</p>
-                      <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{stats.noSubmission}</p>
-                    </div>
-                    <div className="bg-slate-200 dark:bg-slate-700 p-2 rounded-full">
-                      <Clock className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ========== COMPLETION STATISTICS CARD ========== */}
+      <Card className="border-l-4 border-l-green-500 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
             </div>
-            <div>
-              <h3 className="text-sm font-medium mb-2">Submission Status</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Approved</span>
-                  <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0}%</span>
-                </div>
-                <Progress value={stats.total > 0 ? (stats.approved / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Pending Review</span>
-                  <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.pending / stats.total) * 100) : 0}%</span>
-                </div>
-                <Progress value={stats.total > 0 ? (stats.pending / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Rejected</span>
-                  <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.rejected / stats.total) * 100) : 0}%</span>
-                </div>
-                <Progress value={stats.total > 0 ? (stats.rejected / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
-              </div>
-            </div>
+            <CardTitle className="text-base">Completion Statistics</CardTitle>
           </div>
-          <div className="h-[300px]">
-            <h3 className="text-sm font-medium mb-4">Submission Distribution</h3>
+          <CardDescription>Quick overview of all submissions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-green-50 dark:bg-green-900/20 border-none">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-green-600 dark:text-green-400">Approved</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.approved}</p>
+                  </div>
+                  <div className="bg-green-100 dark:bg-green-800/30 p-2 rounded-full">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-none">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400">Pending</p>
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pending}</p>
+                  </div>
+                  <div className="bg-amber-100 dark:bg-amber-800/30 p-2 rounded-full">
+                    <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-red-50 dark:bg-red-900/20 border-none">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-red-600 dark:text-red-400">Rejected</p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.rejected}</p>
+                  </div>
+                  <div className="bg-red-100 dark:bg-red-800/30 p-2 rounded-full">
+                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-50 dark:bg-slate-800/50 border-none">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400">No Submission</p>
+                    <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{stats.noSubmission}</p>
+                  </div>
+                  <div className="bg-slate-200 dark:bg-slate-700 p-2 rounded-full">
+                    <Clock className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ========== SUBMISSION STATUS CARD ========== */}
+      <Card className="border-l-4 border-l-blue-500 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-blue-500" />
+            </div>
+            <CardTitle className="text-base">Submission Status</CardTitle>
+          </div>
+          <CardDescription>Percentage breakdown of submissions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Approved</span>
+            <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0}%</span>
+          </div>
+          <Progress value={stats.total > 0 ? (stats.approved / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Pending Review</span>
+            <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.pending / stats.total) * 100) : 0}%</span>
+          </div>
+          <Progress value={stats.total > 0 ? (stats.pending / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Rejected</span>
+            <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.rejected / stats.total) * 100) : 0}%</span>
+          </div>
+          <Progress value={stats.total > 0 ? (stats.rejected / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm">No Submission</span>
+            <span className="text-sm font-medium">{stats.total > 0 ? Math.round((stats.noSubmission / stats.total) * 100) : 0}%</span>
+          </div>
+          <Progress value={stats.total > 0 ? (stats.noSubmission / stats.total) * 100 : 0} className="h-2 bg-slate-100 dark:bg-slate-800" />
+        </CardContent>
+      </Card>
+
+      {/* ========== SUBMISSION DISTRIBUTION CARD ========== */}
+      <Card className="border-l-4 border-l-purple-500 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-500/5 to-transparent">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-4 w-4 text-purple-500" />
+            </div>
+            <CardTitle className="text-base">Submission Distribution</CardTitle>
+          </div>
+          <CardDescription>Visual breakdown of all submissions</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -259,46 +295,56 @@ export function CompletedTasksStats() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-        {stats.byDepartment.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-medium mb-4">Completion by Department</h3>
-            <div className="space-y-4">
-              {stats.byDepartment.map((dept) => (
-                <div key={dept.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${dept.color}`} />
-                      <span className="text-sm font-medium">{dept.name}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {dept.approved}/{dept.total} approved
-                    </span>
-                  </div>
-                  <div className="flex h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div
-                      className="bg-green-500 h-full"
-                      style={{ width: `${dept.total > 0 ? (dept.approved / dept.total) * 100 : 0}%` }}
-                    ></div>
-                    <div
-                      className="bg-amber-500 h-full"
-                      style={{ width: `${dept.total > 0 ? (dept.pending / dept.total) * 100 : 0}%` }}
-                    ></div>
-                    <div
-                      className="bg-red-500 h-full"
-                      style={{ width: `${dept.total > 0 ? (dept.rejected / dept.total) * 100 : 0}%` }}
-                    ></div>
-                    <div
-                      className="bg-slate-400 h-full"
-                      style={{ width: `${dept.total > 0 ? (dept.noSubmission / dept.total) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+        </CardContent>
+      </Card>
+
+      {/* ========== COMPLETION BY DEPARTMENT CARD ========== */}
+      {stats.byDepartment.length > 0 && (
+        <Card className="border-l-4 border-l-orange-500 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-orange-500/5 to-transparent">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+              </div>
+              <CardTitle className="text-base">Completion by Department</CardTitle>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            <CardDescription>Department-wise submission breakdown</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            {stats.byDepartment.map((dept) => (
+              <div key={dept.id} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${dept.color}`} />
+                    <span className="text-sm font-medium">{dept.name}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {dept.approved}/{dept.total} approved
+                  </span>
+                </div>
+                <div className="flex h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className="bg-green-500 h-full"
+                    style={{ width: `${dept.total > 0 ? (dept.approved / dept.total) * 100 : 0}%` }}
+                  ></div>
+                  <div
+                    className="bg-amber-500 h-full"
+                    style={{ width: `${dept.total > 0 ? (dept.pending / dept.total) * 100 : 0}%` }}
+                  ></div>
+                  <div
+                    className="bg-red-500 h-full"
+                    style={{ width: `${dept.total > 0 ? (dept.rejected / dept.total) * 100 : 0}%` }}
+                  ></div>
+                  <div
+                    className="bg-slate-400 h-full"
+                    style={{ width: `${dept.total > 0 ? (dept.noSubmission / dept.total) * 100 : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }

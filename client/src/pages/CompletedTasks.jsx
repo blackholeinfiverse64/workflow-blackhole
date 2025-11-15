@@ -225,36 +225,51 @@ const handleReviewSubmission = async () => {
   }
 
   return (
-    <div className="h-screen flex flex-col space-y-6 overflow-y-auto px-4 md:px-6 py-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Completed Tasks</h1>
-          <p className="text-muted-foreground">Review and manage task submissions</p>
+    <div className="min-h-screen bg-background p-6">
+      {/* ========== CLEAN HEADER ========== */}
+      <div className="space-y-2 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Completed Tasks</h1>
+            <p className="text-muted-foreground">
+              Review and manage task submissions
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" size="sm" onClick={fetchData} className="h-9">
-            <Clock className="mr-2 h-4 w-4" /> Refresh
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-9"
-            onClick={() => setShowStats(!showStats)}
-          >
-            {showStats ? "Hide Stats" : "Show Stats"}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <Filter className="mr-2 h-4 w-4" /> View
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setViewMode("grid")}>Grid View</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setViewMode("list")}>List View</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      </div>
+
+      {/* ========== ACTION BUTTONS ========== */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={fetchData} 
+          className="h-9 hover:bg-green-50 hover:border-green-300 transition-colors"
+        >
+          <Clock className="mr-2 h-4 w-4" /> Refresh
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-9 hover:bg-green-50 hover:border-green-300 transition-colors"
+          onClick={() => setShowStats(!showStats)}
+        >
+          {showStats ? "Hide Stats" : "Show Stats"}
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-9 hover:bg-green-50 hover:border-green-300 transition-colors">
+              <Filter className="mr-2 h-4 w-4" /> View
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setViewMode("grid")}>Grid View</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setViewMode("list")}>List View</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {showStats && (
@@ -263,53 +278,75 @@ const handleReviewSubmission = async () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tasks or assignees..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Filter by department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Departments</SelectItem>
-            {Array.isArray(departments) && departments.map((department) => (
-              <SelectItem key={department._id} value={department._id}>
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-2 ${department.color}`}></div>
-                  {department.name}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={submissionFilter} onValueChange={setSubmissionFilter}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Filter by submission" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Submissions</SelectItem>
-            <SelectItem value="pending">Pending Review</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-            <SelectItem value="noSubmission">No Submission</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* ========== FILTERS SECTION ========== */}
+      <Card className="mb-6 border-l-4 border-l-green-500 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <Filter className="h-4 w-4 text-green-500" />
+            </div>
+            <CardTitle className="text-base">Filters</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tasks or assignees..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Filter by department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {Array.isArray(departments) && departments.map((department) => (
+                  <SelectItem key={department._id} value={department._id}>
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-2 ${department.color}`}></div>
+                      {department.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={submissionFilter} onValueChange={setSubmissionFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Filter by submission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Submissions</SelectItem>
+                <SelectItem value="pending">Pending Review</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="noSubmission">No Submission</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      <Tabs defaultValue="tasks" className="w-full flex-1">
-        <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 mb-6">
-          <TabsTrigger value="tasks" className="text-sm">
-            <Check className="mr-2 h-4 w-4" /> Tasks
+      {/* ========== TABS SECTION ========== */}
+      <Tabs defaultValue="tasks" className="w-full">
+        <TabsList className="h-auto p-0 bg-transparent flex gap-1 mb-6">
+          <TabsTrigger 
+            value="tasks" 
+            className="flex items-center gap-2 py-2 px-4 rounded-lg border-2 border-muted data-[state=active]:bg-green-500 data-[state=active]:border-green-500 data-[state=active]:text-white hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+          >
+            <Check className="h-4 w-4" />
+            <span>Tasks</span>
           </TabsTrigger>
-          <TabsTrigger value="submissions" className="text-sm">
-            <Github className="mr-2 h-4 w-4" /> Submissions
+          <TabsTrigger 
+            value="submissions" 
+            className="flex items-center gap-2 py-2 px-4 rounded-lg border-2 border-muted data-[state=active]:bg-green-500 data-[state=active]:border-green-500 data-[state=active]:text-white hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+          >
+            <Github className="h-4 w-4" />
+            <span>Submissions</span>
           </TabsTrigger>
         </TabsList>
 
@@ -334,114 +371,156 @@ const handleReviewSubmission = async () => {
                 return (
                   <Card
                     key={task._id}
-                    className="overflow-hidden transition-all hover:shadow-md dark:hover:shadow-primary/10"
+                    className="overflow-hidden transition-all hover:shadow-lg hover:border-green-500/50 dark:hover:shadow-green-500/10 border-l-4 border-l-green-500 group"
                   >
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-lg line-clamp-1">{task.title}</CardTitle>
+                    {/* ========== CARD HEADER ========== */}
+                    <CardHeader className="pb-3 bg-gradient-to-r from-green-500/5 to-transparent">
+                      <div className="flex justify-between items-start gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base font-semibold line-clamp-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                            {task.title}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-2 mt-1.5 text-xs">
+                            {task.description}
+                          </CardDescription>
+                        </div>
+                        {submission && (
+                          <div className="flex-shrink-0">
+                            {getSubmissionStatusBadge(submission.status)}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Task Meta Info */}
+                      <div className="flex items-center gap-3 pt-2 border-t border-green-500/10">
                         {task.department && (
                           <Badge
                             variant="outline"
-                            className="border-none bg-muted hover:bg-muted flex items-center gap-1.5"
+                            className="border-none bg-background/50 hover:bg-background flex items-center gap-1.5 text-xs"
                           >
                             <div className={`w-2 h-2 rounded-full ${task.department.color}`}></div>
-                            <span className="text-xs font-medium">{task.department.name}</span>
+                            <span>{task.department.name}</span>
                           </Badge>
                         )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                      <CardDescription className="line-clamp-2 mt-1">{task.description}</CardDescription>
                     </CardHeader>
-                    <CardContent className="pb-2">
+
+                    {/* ========== CARD CONTENT - SUBMISSION SECTION ========== */}
+                    <CardContent className="pb-3 pt-3">
                       {submission ? (
                         <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium">Submission</h4>
-                            {getSubmissionStatusBadge(submission.status)}
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-6 w-6 rounded-md bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                            </div>
+                            <h4 className="text-sm font-medium text-green-600 dark:text-green-400">
+                              Submission Details
+                            </h4>
                           </div>
-                          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                          
+                          <div className="bg-muted/30 rounded-lg p-3 space-y-2.5 border border-muted">
                             {submission.githubLink && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <Github className="h-4 w-4 text-muted-foreground" />
+                              <div className="flex items-start gap-2.5">
+                                <div className="mt-0.5 flex-shrink-0">
+                                  <Github className="h-4 w-4 text-muted-foreground" />
+                                </div>
                                 <a
                                   href={submission.githubLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1"
+                                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1 flex-1 min-w-0"
                                 >
-                                  {submission.githubLink.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
-                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="truncate">{submission.githubLink.replace(/^https?:\/\/(www\.)?github\.com\//, '')}</span>
+                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
                                 </a>
                               </div>
                             )}
                             {submission.additionalLinks && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <Link2 className="h-4 w-4 text-muted-foreground" />
+                              <div className="flex items-start gap-2.5">
+                                <div className="mt-0.5 flex-shrink-0">
+                                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                                </div>
                                 <a
                                   href={submission.additionalLinks}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1"
+                                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1 flex-1 min-w-0"
                                 >
-                                  {new URL(submission.additionalLinks).hostname}
-                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="truncate">{new URL(submission.additionalLinks).hostname}</span>
+                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
                                 </a>
                               </div>
                             )}
                             {document?.url && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
+                              <div className="flex items-start gap-2.5">
+                                <div className="mt-0.5 flex-shrink-0">
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                </div>
                                 <a
                                   href={document.url}
                                   target={document.isImage ? "_self" : "_blank"}
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1"
+                                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center gap-1 flex-1 min-w-0"
                                 >
-                                  {document.fileName} ({document.fileType})
-                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="truncate">{document.fileName} ({document.fileType})</span>
+                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
                                 </a>
                               </div>
                             )}
                             {submission.notes && (
-                              <div className="pt-1 text-sm">
-                                <p className="text-xs font-medium text-muted-foreground mb-1">Notes:</p>
-                                <p className="line-clamp-2">{submission.notes}</p>
+                              <div className="pt-1 border-t border-muted">
+                                <p className="text-xs font-medium text-muted-foreground mb-1.5">Notes:</p>
+                                <p className="text-sm line-clamp-3 text-foreground/80">{submission.notes}</p>
                               </div>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center py-4 text-muted-foreground">
-                          <p>No submission yet</p>
+                        <div className="flex flex-col items-center justify-center py-6 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-muted">
+                          <HelpCircle className="h-8 w-8 mb-2 opacity-50" />
+                          <p className="text-sm font-medium">No submission yet</p>
+                          <p className="text-xs mt-1">Awaiting employee submission</p>
                         </div>
                       )}
                     </CardContent>
-                    <CardFooter className="flex justify-between border-t pt-4">
+
+                    {/* ========== CARD FOOTER - ACTIONS ========== */}
+                    <CardFooter className="flex justify-between items-center border-t bg-muted/20 pt-3 pb-3">
                       <div className="flex items-center gap-2">
                         {task.assignee ? (
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
+                            <Avatar className="h-7 w-7 ring-2 ring-green-500/20">
                               <AvatarImage src={task.assignee.avatar || "/placeholder.svg"} />
-                              <AvatarFallback className="text-xs">
+                              <AvatarFallback className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 font-medium">
                                 {task.assignee.name
                                   .split(" ")
                                   .map((n) => n[0])
                                   .join("")}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm">{task.assignee.name}</span>
+                            <span className="text-sm font-medium">{task.assignee.name}</span>
                           </div>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Unassigned</span>
+                          <span className="text-sm text-muted-foreground italic">Unassigned</span>
                         )}
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/tasks/${task._id}`)} className="h-8">
-                          View Details
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => navigate(`/tasks/${task._id}`)} 
+                          className="h-8 hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950/20"
+                        >
+                          View
                         </Button>
                         {submission && (
                           <Button
                             size="sm"
-                            className="h-8"
+                            className="h-8 bg-green-500 hover:bg-green-600 text-white"
                             onClick={() => {
                               setSelectedSubmission(submission)
                               setReviewData({ status: submission.status || "Approved", feedback: submission.feedback || "" })
@@ -737,162 +816,223 @@ const handleReviewSubmission = async () => {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen} className="dialog-overlay">
-        <DialogContent className="dialog-content sm:max-w-[525px] max-w-full sm:max-w-[525px] w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedSubmission?.status === "Pending" ? "Review Task Submission" : "Re-review Task Submission"}</DialogTitle>
-            <DialogDescription>Review or update the feedback for this task submission.</DialogDescription>
-          </DialogHeader>
+      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[92vh] overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/50 border-2 border-white/40 dark:border-slate-700/60 rounded-2xl shadow-2xl backdrop-blur-2xl p-0">
+          {/* Hidden title for accessibility */}
+          <DialogTitle className="sr-only">
+            {selectedSubmission?.status === "Pending" ? "Review Task Submission" : "Re-review Task Submission"}
+          </DialogTitle>
 
-          {selectedSubmission && (
-            <div className="space-y-6 py-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Task Information</h3>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <h4 className="font-medium">{selectedSubmission.task?.title}</h4>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {selectedSubmission.task?.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Submission Details</h3>
-                  <div className="space-y-3">
-                    {selectedSubmission.githubLink && (
-                      <div className="flex flex-wrap items-center gap-2 break-all">
-                        <Github className="h-4 w-4" />
-                        <a
-                          href={selectedSubmission.githubLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                        >
-                          {selectedSubmission.githubLink}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                    {selectedSubmission.additionalLinks && (
-                      <div className="flex flex-wrap items-center gap-2 break-all">
-                        <Link2 className="h-4 w-4" />
-                        <a
-                          href={selectedSubmission.additionalLinks}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                        >
-                          {selectedSubmission.additionalLinks}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                    {selectedSubmission.documentLink && (
-                      <div className="flex flex-wrap items-center gap-2 break-all">
-                        <FileText className="h-4 w-4" />
-                        <a
-                          href={getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).url}
-                          target={getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).isImage ? "_self" : "_blank"}
-                          rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                        >
-                          {getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).fileName} ({getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).fileType})
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                    {selectedSubmission.notes && (
-                      <div className="bg-muted p-3 rounded-lg mt-2">
-                        <h4 className="text-sm font-medium mb-1">Notes from Submitter:</h4>
-                        <p className="text-sm whitespace-pre-line">{selectedSubmission.notes}</p>
-                      </div>
-                    )}
-                    <div className="text-sm text-muted-foreground">
-                      Submitted on {new Date(selectedSubmission.createdAt).toLocaleString()}
+          {/* Scrollable Content Area */}
+          <div className="px-7 pt-7 pb-6 overflow-y-auto max-h-[calc(92vh-130px)] scrollbar-thin scrollbar-thumb-gray-300/40 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/50 dark:hover:scrollbar-thumb-slate-600">
+            {selectedSubmission && (
+              <div className="grid gap-6">
+                {/* Task Information */}
+                <div className="grid gap-2.5">
+                  <Label className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-primary to-primary/70 shadow-lg shadow-primary/50 animate-pulse"></div>
+                    Task Information
+                  </Label>
+                  <div className="relative overflow-hidden bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20 border-2 border-white/60 dark:border-slate-700/60 rounded-2xl p-5 backdrop-blur-xl transition-all duration-300 hover:border-primary/30 dark:hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative">
+                      <h4 className="font-bold text-lg text-gray-900 dark:text-slate-100 mb-2.5 tracking-tight">{selectedSubmission.task?.title}</h4>
+                      <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed line-clamp-3">
+                        {selectedSubmission.task?.description}
+                      </p>
                     </div>
                   </div>
                 </div>
 
+                {/* Submission Details */}
+                <div className="grid gap-2.5">
+                  <Label className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-secondary to-secondary/70 shadow-lg shadow-secondary/50 animate-pulse"></div>
+                    Submission Details
+                  </Label>
+                  <div className="relative overflow-hidden bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20 border-2 border-white/60 dark:border-slate-700/60 rounded-2xl p-5 space-y-3 backdrop-blur-xl transition-all duration-300">
+                    {selectedSubmission.githubLink && (
+                      <div className="relative overflow-hidden flex flex-wrap items-start gap-2.5 p-3.5 bg-gradient-to-r from-white/70 to-white/40 dark:from-slate-700/50 dark:to-slate-700/30 rounded-xl border border-white/70 dark:border-slate-600/60 backdrop-blur-lg transition-all duration-300 hover:border-primary/40 dark:hover:border-primary/40 hover:shadow-md group">
+                        <Github className="h-4 w-4 text-gray-800 dark:text-slate-200 flex-shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                        <a
+                          href={selectedSubmission.githubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1.5 flex-1 min-w-0 break-all text-sm font-semibold transition-colors"
+                        >
+                          <span className="truncate">{selectedSubmission.githubLink}</span>
+                          <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                        </a>
+                      </div>
+                    )}
+                    {selectedSubmission.additionalLinks && (
+                      <div className="relative overflow-hidden flex flex-wrap items-start gap-2.5 p-3.5 bg-gradient-to-r from-white/70 to-white/40 dark:from-slate-700/50 dark:to-slate-700/30 rounded-xl border border-white/70 dark:border-slate-600/60 backdrop-blur-lg transition-all duration-300 hover:border-secondary/40 dark:hover:border-secondary/40 hover:shadow-md group">
+                        <Link2 className="h-4 w-4 text-gray-800 dark:text-slate-200 flex-shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                        <a
+                          href={selectedSubmission.additionalLinks}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1.5 flex-1 min-w-0 break-all text-sm font-semibold transition-colors"
+                        >
+                          <span className="truncate">{selectedSubmission.additionalLinks}</span>
+                          <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                        </a>
+                      </div>
+                    )}
+                    {selectedSubmission.documentLink && (
+                      <div className="relative overflow-hidden flex flex-wrap items-start gap-2.5 p-3.5 bg-gradient-to-r from-white/70 to-white/40 dark:from-slate-700/50 dark:to-slate-700/30 rounded-xl border border-white/70 dark:border-slate-600/60 backdrop-blur-lg transition-all duration-300 hover:border-accent/40 dark:hover:border-accent/40 hover:shadow-md group">
+                        <FileText className="h-4 w-4 text-gray-800 dark:text-slate-200 flex-shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                        <a
+                          href={getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).url}
+                          target={getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).isImage ? "_self" : "_blank"}
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1.5 flex-1 min-w-0 break-all text-sm font-semibold transition-colors"
+                        >
+                          <span className="truncate">
+                            {getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).fileName} 
+                            ({getDocumentDetails(selectedSubmission.documentLink, selectedSubmission.fileType).fileType})
+                          </span>
+                          <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                        </a>
+                      </div>
+                    )}
+                    {selectedSubmission.notes && (
+                      <div className="relative overflow-hidden bg-gradient-to-br from-accent/30 via-accent/20 to-accent/10 dark:from-accent/20 dark:via-accent/15 dark:to-accent/5 border-2 border-accent/50 dark:border-accent/40 rounded-2xl p-4 backdrop-blur-xl mt-3 transition-all duration-300 hover:shadow-lg hover:shadow-accent/20">
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <svg className="h-4 w-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-slate-100">Notes from Submitter:</h4>
+                        </div>
+                        <p className="text-sm text-gray-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">{selectedSubmission.notes}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300 pt-3 mt-2 border-t border-white/60 dark:border-slate-600/60">
+                      <Clock className="h-4 w-4 text-gray-600 dark:text-slate-400" />
+                      <span className="font-medium">Submitted on {new Date(selectedSubmission.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review History */}
                 {selectedSubmission.reviewHistory && selectedSubmission.reviewHistory.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Review History</h3>
-                    <div className="space-y-3">
+                  <div className="grid gap-2.5">
+                    <Label className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-info to-info/70 shadow-lg shadow-info/50 animate-pulse"></div>
+                      Review History
+                    </Label>
+                    <div className="space-y-2.5">
                       {selectedSubmission.reviewHistory.map((review, index) => (
-                        <div key={index} className="bg-muted p-3 rounded-lg">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{review.status}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(review.reviewedAt).toLocaleString()}
-                            </span>
+                        <div key={index} className="relative overflow-hidden bg-gradient-to-br from-white/60 via-white/40 to-white/20 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/20 border-2 border-white/60 dark:border-slate-700/60 rounded-2xl p-4 backdrop-blur-xl transition-all duration-300 hover:border-info/40 dark:hover:border-info/40 hover:shadow-lg hover:shadow-info/10 group">
+                          <div className="absolute inset-0 bg-gradient-to-br from-info/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="relative">
+                            <div className="flex justify-between items-center mb-2.5">
+                              <span className="font-bold text-gray-900 dark:text-slate-100 text-base">{review.status}</span>
+                              <span className="text-xs text-gray-700 dark:text-slate-300 flex items-center gap-1.5 bg-white/50 dark:bg-slate-700/40 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                                <Clock className="h-3.5 w-3.5" />
+                                {new Date(review.reviewedAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-800 dark:text-slate-200 mb-1">
+                              <span className="font-semibold">Reviewer:</span> {review.reviewedBy?.name || "Unknown"}
+                            </p>
+                            {review.feedback && (
+                              <p className="text-sm text-gray-800 dark:text-slate-200 mt-2 pt-2 border-t border-white/40 dark:border-slate-600/40">
+                                <span className="font-semibold">Feedback:</span> {review.feedback}
+                              </p>
+                            )}
                           </div>
-                          <p className="text-sm mt-1">By: {review.reviewedBy?.name || "Unknown"}</p>
-                          {review.feedback && (
-                            <p className="text-sm mt-1">Feedback: {review.feedback}</p>
-                          )}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="review-status">Review Decision</Label>
-                  <div className="flex gap-2 flex-col sm:flex-row">
+                {/* Review Decision */}
+                <div className="grid gap-2.5">
+                  <Label htmlFor="review-status" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-success to-success/70 shadow-lg shadow-success/50 animate-pulse"></div>
+                    Review Decision <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>
+                  </Label>
+                  <div className="flex gap-3 flex-col sm:flex-row">
                     <Button
                       type="button"
                       variant={reviewData.status === "Approved" ? "default" : "outline"}
                       className={
                         reviewData.status === "Approved"
-                          ? "flex-1 bg-green-600 hover:bg-green-700"
-                          : "flex-1 border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/30"
+                          ? "flex-1 h-14 rounded-2xl bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800 text-white shadow-xl shadow-green-500/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] active:scale-[0.98]"
+                          : "flex-1 h-14 rounded-2xl border-2 border-green-300 dark:border-green-700/60 bg-white/40 dark:bg-slate-800/40 text-green-700 dark:text-green-400 hover:bg-green-50/80 dark:hover:bg-green-900/30 backdrop-blur-xl transition-all duration-300 font-bold text-base hover:border-green-400 dark:hover:border-green-600 hover:scale-[1.02] active:scale-[0.98]"
                       }
                       onClick={() => setReviewData({ ...reviewData, status: "Approved" })}
                     >
-                      <ThumbsUp className="mr-2 h-4 w-4" /> Approve
+                      <ThumbsUp className="mr-2.5 h-5 w-5" /> Approve Submission
                     </Button>
                     <Button
                       type="button"
                       variant={reviewData.status === "Rejected" ? "default" : "outline"}
                       className={
                         reviewData.status === "Rejected"
-                          ? "flex-1 bg-red-600 hover:bg-red-700"
-                          : "flex-1 border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
+                          ? "flex-1 h-14 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 dark:from-red-600 dark:to-red-700 dark:hover:from-red-700 dark:hover:to-red-800 text-white shadow-xl shadow-red-500/40 transition-all duration-300 font-bold text-base hover:scale-[1.02] active:scale-[0.98]"
+                          : "flex-1 h-14 rounded-2xl border-2 border-red-300 dark:border-red-700/60 bg-white/40 dark:bg-slate-800/40 text-red-700 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 backdrop-blur-xl transition-all duration-300 font-bold text-base hover:border-red-400 dark:hover:border-red-600 hover:scale-[1.02] active:scale-[0.98]"
                       }
                       onClick={() => setReviewData({ ...reviewData, status: "Rejected" })}
                     >
-                      <ThumbsDown className="mr-2 h-4 w-4" /> Reject
+                      <ThumbsDown className="mr-2.5 h-5 w-5" /> Reject Submission
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="feedback">Feedback (Optional)</Label>
+                {/* Feedback */}
+                <div className="grid gap-2.5">
+                  <Label htmlFor="feedback" className="text-sm font-bold text-gray-900 dark:text-slate-200 flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-warning to-warning/70 shadow-lg shadow-warning/50 animate-pulse"></div>
+                    Feedback (Optional)
+                  </Label>
                   <Textarea
                     id="feedback"
-                    placeholder="Provide feedback to the submitter..."
+                    placeholder="Provide detailed feedback to help the submitter improve..."
                     value={reviewData.feedback}
                     onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
                     rows={4}
+                    className="px-4 py-3.5 bg-gradient-to-br from-white/60 to-white/30 dark:from-slate-800/60 dark:to-slate-800/30 border-2 border-white/60 dark:border-slate-700/60 hover:border-white/80 dark:hover:border-slate-600/80 focus:border-warning/60 dark:focus:border-warning/60 focus-visible:ring-4 focus-visible:ring-warning/20 rounded-2xl resize-none transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-slate-400 text-gray-900 dark:text-slate-100 backdrop-blur-xl font-medium"
                   />
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleReviewSubmission} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
-                </>
-              ) : (
-                <>Submit Review</>
-              )}
-            </Button>
+          {/* Premium Glassmorphic Footer */}
+          <DialogFooter className="relative px-7 py-5 border-t border-white/40 dark:border-slate-700/60 bg-gradient-to-t from-white/80 via-white/60 to-white/30 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-slate-800/30 backdrop-blur-2xl shadow-inner" style={{backdropFilter: 'blur(40px)'}}>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 opacity-50"></div>
+            <div className="relative flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setReviewDialogOpen(false)} 
+                className="flex-1 sm:flex-none h-12 px-6 rounded-xl border-2 border-white/60 dark:border-slate-600/60 bg-white/40 dark:bg-slate-800/40 hover:border-gray-400/60 dark:hover:border-slate-500/60 hover:bg-white/60 dark:hover:bg-slate-700/50 transition-all duration-300 font-bold text-gray-900 dark:text-slate-100 backdrop-blur-lg hover:scale-[1.02] active:scale-[0.98] shadow-md"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleReviewSubmission} 
+                disabled={isLoading} 
+                className="flex-1 sm:flex-none h-12 px-8 rounded-xl bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground shadow-xl shadow-primary/40 hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-xl font-bold text-base backdrop-blur-lg"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2.5">
+                    <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2.5">
+                    <CheckCircle className="h-5 w-5" />
+                    Submit Review
+                  </span>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
