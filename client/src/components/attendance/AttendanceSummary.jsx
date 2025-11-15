@@ -149,7 +149,7 @@ const AttendanceSummary = ({ data }) => {
             }}
             whileTap={{ scale: 0.98 }}
           >
-            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden border-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
               {/* Gradient Background */}
               <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-5`} />
               

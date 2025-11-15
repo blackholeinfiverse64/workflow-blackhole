@@ -138,51 +138,58 @@ const AttendanceDashboard = () => {
   }) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-background p-6 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-7xl mx-auto space-y-6"
+        className="max-w-7xl mx-auto space-y-6 pb-8"
       >
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <motion.h1 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-            >
-              Live Attendance Dashboard
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-600 mt-1"
-            >
-              Real-time employee attendance monitoring and analytics
-            </motion.p>
-          </div>
+        <div className="space-y-2">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Activity className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <motion.h1 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-3xl font-bold tracking-tight"
+                >
+                  Live Attendance Dashboard
+                </motion.h1>
+                <motion.p 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-muted-foreground"
+                >
+                  Real-time employee attendance monitoring and analytics
+                </motion.p>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Biometric Data
-            </Button>
-            
-            <Button
-              onClick={refreshLiveData}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Activity className="w-4 h-4" />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setShowUpload(true)}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 rounded-xl border-2 border-green-500/20"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Biometric Data
+              </Button>
+              
+              <Button
+                onClick={refreshLiveData}
+                variant="outline"
+                className="flex items-center gap-2 border-2 rounded-xl hover:border-green-500/50 hover:bg-green-50"
+              >
+                <Activity className="w-4 h-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -192,79 +199,79 @@ const AttendanceDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+            className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+            <Card className="border-2 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] w-full">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-green-600">Present Today</p>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="text-base font-semibold text-green-600">Present Today</p>
+                    <p className="text-4xl font-extrabold text-green-900 dark:text-green-100">
                       {attendanceStats.presentToday || 0}
                     </p>
-                    <p className="text-xs text-green-700 mt-1">
+                    <p className="text-sm text-green-700 dark:text-green-400 mt-2">
                       {attendanceStats.presentPercentage?.toFixed(1)}% of total
                     </p>
                   </div>
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <UserCheck className="w-6 h-6 text-green-600" />
+                  <div className="h-14 w-14 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <UserCheck className="w-7 h-7 text-green-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-rose-50">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+            <Card className="border-2 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] w-full">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-red-600">Absent Today</p>
-                    <p className="text-2xl font-bold text-red-900">
+                    <p className="text-base font-semibold text-red-600">Absent Today</p>
+                    <p className="text-4xl font-extrabold text-red-900 dark:text-red-100">
                       {attendanceStats.absentToday || 0}
                     </p>
-                    <p className="text-xs text-red-700 mt-1">
+                    <p className="text-sm text-red-700 dark:text-red-400 mt-2">
                       {attendanceStats.absentPercentage?.toFixed(1)}% of total
                     </p>
                   </div>
-                  <div className="p-3 bg-red-100 rounded-full">
-                    <UserX className="w-6 h-6 text-red-600" />
+                  <div className="h-14 w-14 rounded-xl bg-red-500/10 flex items-center justify-center">
+                    <UserX className="w-7 h-7 text-red-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+            <Card className="border-2 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] w-full">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-blue-600">Avg Hours</p>
-                    <p className="text-2xl font-bold text-blue-900">
+                    <p className="text-base font-semibold text-blue-600">Avg Hours</p>
+                    <p className="text-4xl font-extrabold text-blue-900 dark:text-blue-100">
                       {attendanceStats.avgHoursToday?.toFixed(1) || 0}h
                     </p>
-                    <p className="text-xs text-blue-700 mt-1">
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-2">
                       Per employee today
                     </p>
                   </div>
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <Clock className="w-6 h-6 text-blue-600" />
+                  <div className="h-14 w-14 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Clock className="w-7 h-7 text-blue-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-50">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+            <Card className="border-2 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] w-full">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-purple-600">On Time</p>
-                    <p className="text-2xl font-bold text-purple-900">
+                    <p className="text-base font-semibold text-purple-600">On Time</p>
+                    <p className="text-4xl font-extrabold text-purple-900 dark:text-purple-100">
                       {attendanceStats.onTimeToday || 0}
                     </p>
-                    <p className="text-xs text-purple-700 mt-1">
+                    <p className="text-sm text-purple-700 dark:text-purple-400 mt-2">
                       {attendanceStats.onTimePercentage?.toFixed(1)}% punctual
                     </p>
                   </div>
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <Timer className="w-6 h-6 text-purple-600" />
+                  <div className="h-14 w-14 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <Timer className="w-7 h-7 text-purple-600" />
                   </div>
                 </div>
               </CardContent>
@@ -273,62 +280,71 @@ const AttendanceDashboard = () => {
         )}
 
         {/* Filters */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Card className="border-2 rounded-2xl shadow-xl w-full max-w-5xl mx-auto">
+          <CardContent className="p-8">
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between w-full">
+              <div className="flex-1 w-full">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                   <Input
                     placeholder="Search employees..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-white"
+                    className="pl-12 border-2 rounded-xl focus-visible:ring-green-500 w-full text-base py-3"
                   />
                 </div>
               </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 bg-white">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="present">Present</SelectItem>
-                  <SelectItem value="absent">Absent</SelectItem>
-                  <SelectItem value="late">Late</SelectItem>
-                  <SelectItem value="on-leave">On Leave</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-40 bg-white">
-                  <SelectValue placeholder="Department" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="all">All Departments</SelectItem>
-                  <SelectItem value="Engineering">Engineering</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Sales">Sales</SelectItem>
-                  <SelectItem value="HR">HR</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-4 w-full md:w-auto">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-44 border-2 rounded-xl text-base">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="present">Present</SelectItem>
+                    <SelectItem value="absent">Absent</SelectItem>
+                    <SelectItem value="late">Late</SelectItem>
+                    <SelectItem value="on-leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                  <SelectTrigger className="w-44 border-2 rounded-xl text-base">
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    <SelectItem value="Engineering">Engineering</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Sales">Sales</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
-            <TabsTrigger value="live" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3 border-2 rounded-xl p-1 bg-muted/20">
+            <TabsTrigger 
+              value="live" 
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all"
+            >
               <Activity className="w-4 h-4" />
               Live View
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="analytics" 
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all"
+            >
               <BarChart3 className="w-4 h-4" />
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="map" 
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all"
+            >
               <MapPin className="w-4 h-4" />
               Location Map
             </TabsTrigger>

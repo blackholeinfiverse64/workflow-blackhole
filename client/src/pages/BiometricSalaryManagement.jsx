@@ -296,32 +296,31 @@ const BiometricSalaryManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-6 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto space-y-8 pb-8">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <DollarSign className="w-8 h-8 text-blue-600" />
-              Biometric Salary Management
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Upload biometric data and manage employee salaries
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Label htmlFor="month-select" className="text-sm font-medium text-gray-700">
-              Month:
-            </Label>
-            <Input
-              id="month-select"
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-48"
-            />
+        <div className="space-y-2">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <DollarSign className="h-7 w-7 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Biometric Salary Management</h1>
+                <p className="text-muted-foreground mt-1">Upload biometric data and manage employee salaries</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="month-select" className="text-base font-medium text-foreground">Month:</Label>
+              <Input
+                id="month-select"
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-48 border-2 rounded-xl text-base"
+              />
+            </div>
           </div>
         </div>
         
@@ -342,75 +341,66 @@ const BiometricSalaryManagement = () => {
         
         {/* Statistics Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-2 rounded-2xl shadow-xl w-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Users className="w-4 h-4" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-600" />
                   Total Employees
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stats.totalEmployees}</div>
+                <div className="text-4xl font-extrabold text-blue-900 dark:text-blue-100">{stats.totalEmployees}</div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <Card className="border-2 rounded-2xl shadow-xl w-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-green-600" />
                   Total Salary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {formatCurrency(stats.totalSalary)}
-                </div>
+                <div className="text-4xl font-extrabold text-green-900 dark:text-green-100">{formatCurrency(stats.totalSalary)}</div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="border-2 rounded-2xl shadow-xl w-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-purple-600" />
                   Total Hours
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {stats.totalHours.toFixed(0)}
-                </div>
+                <div className="text-4xl font-extrabold text-purple-900 dark:text-purple-100">{stats.totalHours.toFixed(0)}</div>
               </CardContent>
             </Card>
-            
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <Card className="border-2 rounded-2xl shadow-xl w-full">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-orange-600" />
                   Avg Salary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {formatCurrency(stats.averageSalary)}
-                </div>
+                <div className="text-4xl font-extrabold text-orange-900 dark:text-orange-100">{formatCurrency(stats.averageSalary)}</div>
               </CardContent>
             </Card>
           </div>
         )}
         
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
-            <TabsTrigger value="upload" className="flex items-center gap-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 border-2 rounded-xl p-1 bg-muted/20">
+            <TabsTrigger value="upload" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
               <Upload className="w-4 h-4" />
               Upload
             </TabsTrigger>
-            <TabsTrigger value="records" className="flex items-center gap-2">
+            <TabsTrigger value="records" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
               <FileSpreadsheet className="w-4 h-4" />
               Records
             </TabsTrigger>
-            <TabsTrigger value="holidays" className="flex items-center gap-2">
+            <TabsTrigger value="holidays" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
               <Calendar className="w-4 h-4" />
               Holidays
             </TabsTrigger>
@@ -457,22 +447,6 @@ const BiometricSalaryManagement = () => {
                   )}
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Expected File Format
-                  </h4>
-                  <p className="text-sm text-blue-800 mb-2">
-                    Your file should contain the following columns:
-                  </p>
-                  <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-                    <li>Employee ID / EmployeeID / empId</li>
-                    <li>Name / Employee Name / EmployeeName</li>
-                    <li>Date / Attendance Date</li>
-                    <li>Punch In / PunchIn / In Time / Check In</li>
-                    <li>Punch Out / PunchOut / Out Time / Check Out</li>
-                  </ul>
-                </div>
                 
                 <Button
                   onClick={handleFileUpload}

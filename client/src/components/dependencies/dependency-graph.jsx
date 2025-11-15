@@ -28,7 +28,7 @@ export function DependencyGraph() {
   const [tasks, setTasks] = useState([])
   const [departments, setDepartments] = useState([])
   const [selectedDepartment, setSelectedDepartment] = useState("All")
-  const [viewMode, setViewMode] = useState("graph") // "graph" or "gantt"
+  // Only graph view is supported now
   const isMobile = useIsMobile()
 
   // Fetch tasks and departments
@@ -77,12 +77,8 @@ export function DependencyGraph() {
 
         d3.select(svgRef.current).attr("width", containerWidth).attr("height", containerHeight)
 
-        // Re-render the appropriate chart
-        if (viewMode === "graph") {
-          renderDependencyGraph()
-        } else {
-          renderGanttChart()
-        }
+        // Always render the graph view
+        renderDependencyGraph()
       }
     }
 
@@ -91,7 +87,7 @@ export function DependencyGraph() {
 
     return () => window.removeEventListener("resize", updateSize)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, svgRef, filteredTasks, departments, viewMode])
+  }, [containerRef, svgRef, filteredTasks, departments])
 
   // Render Dependency Graph
   const renderDependencyGraph = () => {
@@ -361,238 +357,7 @@ export function DependencyGraph() {
     return { simulation, tooltip }
   }
 
-  // Render Gantt Chart
-  const renderGanttChart = () => {
-    if (!svgRef.current || !filteredTasks.length || !departments.length) return
-
-    d3.select(svgRef.current).selectAll("*").remove()
-
-    const svg = d3.select(svgRef.current)
-    const width = +svg.attr("width")
-    const height = +svg.attr("height")
-    const margin = isMobile
-      ? { top: 50, right: 10, bottom: 30, left: 80 }
-      : { top: 60, right: 150, bottom: 50, left: 150 }
-    const boundedWidth = width - margin.left - margin.right
-    const boundedHeight = height - margin.top - margin.bottom
-
-    svg.style("background", "#f9fafb")
-
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`)
-
-    const tooltip = d3
-      .select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("position", "absolute")
-      .style("background", "#ffffff")
-      .style("padding", "12px 16px")
-      .style("border", "2px solid #e5e7eb")
-      .style("border-radius", "8px")
-      .style("box-shadow", "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)")
-      .style("pointer-events", "none")
-      .style("opacity", 0)
-      .style("z-index", 1000)
-      .style("max-width", "300px")
-
-    const ganttData = filteredTasks.map((task) => ({
-      id: task._id,
-      title: task.title,
-      department: task.department?.name || "Unknown",
-      status: task.status,
-      start: new Date(task.createdAt),
-      end: task.dueDate
-        ? new Date(task.dueDate)
-        : new Date(new Date(task.createdAt).setDate(new Date(task.createdAt).getDate() + 7)),
-      dependencies: task.dependencies?.map((dep) => dep._id) || [],
-    }))
-
-    const xScale = d3
-      .scaleTime()
-      .domain([d3.min(ganttData, (d) => d.start), d3.max(ganttData, (d) => d.end)])
-      .range([0, boundedWidth])
-      .nice()
-
-    const yScale = d3
-      .scaleBand()
-      .domain(ganttData.map((d) => d.id))
-      .range([0, boundedHeight])
-      .padding(0.2)
-
-    const xAxis = d3
-      .axisTop(xScale)
-      .ticks(isMobile ? 5 : d3.timeDay.every(1))
-      .tickFormat(isMobile ? d3.timeFormat("%m/%d") : d3.timeFormat("%b %d"))
-
-    const yAxis = d3.axisLeft(yScale).tickFormat((id) => {
-      const task = ganttData.find((d) => d.id === id)
-      if (!task) return ""
-
-      // Truncate text based on screen size
-      const maxLength = isMobile ? 12 : 20
-      if (task.title.length > maxLength) {
-        return task.title.substring(0, maxLength) + "..."
-      }
-      return task.title
-    })
-
-    // Add grid lines for better readability
-    g.append("g")
-      .attr("class", "grid")
-      .attr("opacity", 0.1)
-      .call(
-        d3
-          .axisTop(xScale)
-          .ticks(isMobile ? 5 : d3.timeDay.every(1))
-          .tickSize(-boundedHeight)
-          .tickFormat("")
-      )
-
-    g.append("g")
-      .attr("class", "x-axis")
-      .call(xAxis)
-      .selectAll("text")
-      .style("font-size", isMobile ? "9px" : "11px")
-      .style("font-weight", "500")
-      .attr("transform", "rotate(-45)")
-      .attr("text-anchor", "end")
-      .attr("dx", "-0.5em")
-      .attr("dy", "-0.3em")
-
-    g.append("g")
-      .attr("class", "y-axis")
-      .call(yAxis)
-      .selectAll("text")
-      .style("font-size", isMobile ? "9px" : "11px")
-      .style("font-weight", "500")
-
-    // Add alternating row backgrounds for better readability
-    g.selectAll(".row-bg")
-      .data(ganttData)
-      .enter()
-      .append("rect")
-      .attr("class", "row-bg")
-      .attr("x", 0)
-      .attr("y", (d) => yScale(d.id))
-      .attr("width", boundedWidth)
-      .attr("height", yScale.bandwidth())
-      .attr("fill", (d, i) => (i % 2 === 0 ? "#f9fafb" : "#ffffff"))
-      .attr("opacity", 0.5)
-
-    g.selectAll(".bar")
-      .data(ganttData)
-      .enter()
-      .append("rect")
-      .attr("class", "bar")
-      .attr("x", (d) => xScale(d.start))
-      .attr("y", (d) => yScale(d.id) + yScale.bandwidth() * 0.1)
-      .attr("width", (d) => Math.max(3, xScale(d.end) - xScale(d.start))) // Ensure minimum width
-      .attr("height", yScale.bandwidth() * 0.8)
-      .attr("rx", 4)
-      .attr("ry", 4)
-      .attr("fill", (d) => {
-        const dept = departments.find((dep) => dep.name === d.department)
-        return dept ? getHexColor(dept.color) : "#64748b"
-      })
-      .attr("stroke", (d) => {
-        switch (d.status) {
-          case "Completed":
-            return "#22c55e"
-          case "In Progress":
-            return "#3b82f6"
-          case "Pending":
-            return "#f59e0b"
-          default:
-            return "#64748b"
-        }
-      })
-      .attr("stroke-width", 3)
-      .attr("opacity", 0.85)
-      .style("cursor", "pointer")
-      .on("mouseover", function (event, d) {
-        d3.select(this).attr("opacity", 1).attr("stroke-width", 4)
-        tooltip
-          .style("opacity", 1)
-          .html(
-            `<div style="font-family: sans-serif;">
-              <strong style="font-size: 14px; color: #1f2937;">${d.title}</strong><br/>
-              <div style="margin-top: 8px; font-size: 12px; color: #4b5563;">
-                <strong>Department:</strong> ${d.department}<br/>
-                <strong>Status:</strong> <span style="color: ${d.status === "Completed" ? "#22c55e" : d.status === "In Progress" ? "#3b82f6" : "#f59e0b"};">${d.status}</span><br/>
-                <strong>Start:</strong> ${d.start.toLocaleDateString()}<br/>
-                <strong>End:</strong> ${d.end.toLocaleDateString()}<br/>
-                <strong>Duration:</strong> ${Math.ceil((d.end - d.start) / (1000 * 60 * 60 * 24))} days
-              </div>
-            </div>`,
-          )
-          .style("left", `${event.pageX + 15}px`)
-          .style("top", `${event.pageY - 15}px`)
-      })
-      .on("mouseout", function () {
-        d3.select(this).attr("opacity", 0.85).attr("stroke-width", 3)
-        tooltip.style("opacity", 0)
-      })
-
-    // Always show legend but adjust size for mobile
-    const legendX = isMobile ? width - 80 : width - 120
-    const legendY = isMobile ? margin.top : margin.top
-    const legend = svg.append("g").attr("transform", `translate(${legendX}, ${legendY})`)
-
-    legend
-      .append("text")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("font-size", isMobile ? "8px" : "10px")
-      .attr("font-weight", "bold")
-      .text("Departments")
-
-    departments.forEach((dept, i) => {
-      const g = legend.append("g").attr("transform", `translate(0, ${(isMobile ? 12 : 15) + i * (isMobile ? 12 : 15)})`)
-      g.append("circle")
-        .attr("r", isMobile ? 3 : 4)
-        .attr("fill", getHexColor(dept.color))
-      g.append("text")
-        .attr("x", 8)
-        .attr("y", 3)
-        .attr("font-size", isMobile ? "6px" : "8px")
-        .text(dept.name)
-    })
-
-    const statuses = [
-      { name: "Completed", color: "#22c55e" },
-      { name: "In Progress", color: "#3b82f6" },
-      { name: "Pending", color: "#f59e0b" },
-    ]
-
-    legend
-      .append("text")
-      .attr("x", 0)
-      .attr("y", (isMobile ? 12 : 15) + departments.length * (isMobile ? 12 : 15) + (isMobile ? 8 : 10))
-      .attr("font-size", isMobile ? "8px" : "10px")
-      .attr("font-weight", "bold")
-      .text("Status")
-
-    statuses.forEach((status, i) => {
-      const g = legend
-        .append("g")
-        .attr(
-          "transform",
-          `translate(0, ${(isMobile ? 12 : 15) + departments.length * (isMobile ? 12 : 15) + (isMobile ? 20 : 25) + i * (isMobile ? 12 : 15)})`,
-        )
-      g.append("circle")
-        .attr("r", isMobile ? 3 : 4)
-        .attr("fill", "none")
-        .attr("stroke", status.color)
-        .attr("stroke-width", 2)
-      g.append("text")
-        .attr("x", 8)
-        .attr("y", 3)
-        .attr("font-size", isMobile ? "6px" : "8px")
-        .text(status.name)
-    })
-
-    return { tooltip }
-  }
+  // Gantt view removed
 
   if (isLoading) {
     return (
@@ -630,7 +395,18 @@ export function DependencyGraph() {
               id="department"
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="w-full sm:w-auto border-2 border-muted rounded-xl px-4 py-2.5 text-sm font-medium bg-card hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+              style={{
+                backgroundColor: typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#18181b' : '#fff',
+                color: typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#fff' : 'inherit',
+                borderRadius: '0.75rem',
+                border: '1.5px solid #e5e7eb',
+                padding: '0.625rem 1rem',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                minWidth: '180px',
+                outline: 'none',
+                marginTop: '0.25rem',
+              }}
             >
               <option value="All">All Departments</option>
               {departments.map((dept) => (
@@ -639,28 +415,6 @@ export function DependencyGraph() {
                 </option>
               ))}
             </select>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => setViewMode("graph")}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                viewMode === "graph" 
-                  ? "bg-green-500 text-white shadow-lg hover:bg-green-600" 
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              Graph View
-            </button>
-            <button
-              onClick={() => setViewMode("gantt")}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                viewMode === "gantt" 
-                  ? "bg-green-500 text-white shadow-lg hover:bg-green-600" 
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              Gantt View
-            </button>
           </div>
         </div>
         <div ref={containerRef} className="w-full">

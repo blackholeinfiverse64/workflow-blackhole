@@ -111,7 +111,7 @@ const AttendanceAnalytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-background p-6 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -119,24 +119,29 @@ const AttendanceAnalytics = () => {
         className="max-w-7xl mx-auto space-y-6"
       >
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <motion.h1 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent"
-            >
-              Attendance Analytics
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-600 mt-1"
-            >
-              Real-time attendance insights and analytics
-            </motion.p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl font-bold tracking-tight"
+              >
+                Attendance Analytics
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-muted-foreground"
+              >
+                Real-time attendance insights and analytics
+              </motion.p>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -220,20 +225,20 @@ const AttendanceAnalytics = () => {
         {/* Main Content */}
         {analytics && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
-              <TabsTrigger value="overview" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4 border-2 rounded-xl p-1 bg-muted/20">
+              <TabsTrigger value="overview" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
                 <BarChart3 className="w-4 h-4" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="trends" className="flex items-center gap-2">
+              <TabsTrigger value="trends" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
                 <TrendingUp className="w-4 h-4" />
                 Trends
               </TabsTrigger>
-              <TabsTrigger value="performance" className="flex items-center gap-2">
+              <TabsTrigger value="performance" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
                 <Users className="w-4 h-4" />
                 Performance
               </TabsTrigger>
-              <TabsTrigger value="insights" className="flex items-center gap-2">
+              <TabsTrigger value="insights" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-green-500 data-[state=active]:text-white transition-all">
                 <Activity className="w-4 h-4" />
                 AI Insights
               </TabsTrigger>
