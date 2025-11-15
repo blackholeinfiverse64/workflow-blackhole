@@ -45,7 +45,7 @@ function AllAims() {
 
       try {
         // Try enhanced API first
-        const enhancedResponse = await axios.get(`${API_URL || 'http://localhost:5000/api'}/enhanced-aims/with-progress`, {
+        const enhancedResponse = await axios.get(`${API_URL}/enhanced-aims/with-progress`, {
           params: filters,
           headers: {
             'x-auth-token': localStorage.getItem('WorkflowToken')

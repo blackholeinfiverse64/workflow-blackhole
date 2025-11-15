@@ -218,7 +218,7 @@ export default function Login() {
               className="w-full h-12 border-2 border-border hover:border-primary/50 bg-background/50 backdrop-blur-sm hover:bg-muted transition-all duration-300 transform hover:scale-[1.02]"
               onClick={() => {
                 // Redirect to Google OAuth
-                window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/google`;
+                window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
               }}
             >
               <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
