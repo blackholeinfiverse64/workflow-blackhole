@@ -1,3 +1,7 @@
+// Root route for API status
+app.get('/', (req, res) => {
+  res.json({ status: 'API running', time: new Date().toISOString() });
+});
 
 
 // const express = require("express");
@@ -167,10 +171,21 @@ const io = socketIo(server, {
 });
 
 // CORS Configuration
+
+// Dynamic CORS origin from .env (comma-separated)
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
 const corsOptions = {
-  origin: ['http://localhost:5173','http://localhost:5174','http://192.168.1.2:5173','https://main-workflow.vercel.app','https://workflowmanager.vercel.app','https://infiverse-bhl.vercel.app'],  // Replace with your frontend's URL
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,  // Allow credentials (cookies, HTTP authentication)
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
