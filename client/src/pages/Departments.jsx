@@ -24,9 +24,16 @@ function Departments() {
   }
 
   return (
-    <div className="space-y-6">
-      <DepartmentHeader />
-      <DepartmentList onDepartmentSelect={handleDepartmentSelect} />
+    <div className="space-y-6 pb-8">
+      {/* Header Section */}
+      <div className="space-y-2">
+        <DepartmentHeader />
+      </div>
+      
+      {/* Content Section */}
+      <div className="mt-6">
+        <DepartmentList onDepartmentSelect={handleDepartmentSelect} />
+      </div>
     </div>
   );
 }
