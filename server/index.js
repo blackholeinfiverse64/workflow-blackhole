@@ -164,7 +164,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ['http://localhost:5173','http://localhost:5174','http://192.168.1.2:5173','https://blackhole-workflow.netlify.app'],  // Replace with your frontend's URL
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://192.168.1.2:5173',
+      'https://blackhole-workflow.netlify.app'
+    ],
     methods: ['GET', 'POST'],
     credentials: true,  // Allow credentials (cookies, HTTP authentication)
   },
