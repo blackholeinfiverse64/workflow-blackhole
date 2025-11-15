@@ -286,13 +286,7 @@ app.get('/api/test-browser-detection', async (req, res) => {
 });
 
 
-// Serve static files from Vite build
-app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Serve frontend only for non-API routes
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
 
 
 // Routes
