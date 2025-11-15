@@ -5,9 +5,6 @@ import * as d3 from "d3"
 import { Loader2 } from "lucide-react"
 import { api } from "../../lib/api"
 import { useToast } from "../../hooks/use-toast"
-import { useSocketContext } from "../../context/socket-context"
-import { OptimizationInsights } from "../optimization/optimization-insights"
-import { OptimizationActions } from "../optimization/optimization-actions"
 import { useIsMobile } from "../../hooks/use-mobile"
 
 // Utility function to map Tailwind colors to hex
@@ -26,42 +23,37 @@ export function DependencyGraph() {
   const svgRef = useRef(null)
   const containerRef = useRef(null)
   const { toast } = useToast()
-  const { events } = useSocketContext()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [tasks, setTasks] = useState([])
   const [departments, setDepartments] = useState([])
-  const [insights, setInsights] = useState([])
   const [selectedDepartment, setSelectedDepartment] = useState("All")
   const [viewMode, setViewMode] = useState("graph") // "graph" or "gantt"
   const isMobile = useIsMobile()
 
-  // Fetch tasks, departments, and insights
+  // Fetch tasks and departments
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const [tasksData, departmentsResponse, insightsData] = await Promise.all([
+        const [tasksData, departmentsResponse] = await Promise.all([
           api.tasks.getTasks(),
           api.departments.getDepartments(),
-          api.ai.getInsights(),
         ])
         console.log("Fetched tasks:", tasksData)
         console.log("Fetched departments:", departmentsResponse)
-        console.log("Fetched insights:", insightsData)
 
         // Handle new API response format for departments
         const departmentsData = departmentsResponse.success ? departmentsResponse.data : departmentsResponse
 
         setTasks(tasksData)
         setDepartments(Array.isArray(departmentsData) ? departmentsData : [])
-        setInsights(insightsData)
         setError(null)
       } catch (err) {
         setError(err.message || "Failed to load data")
         toast({
           title: "Error",
-          description: err.message || "Failed to load tasks, departments, or AI insights",
+          description: err.message || "Failed to load tasks and departments",
           variant: "destructive",
         })
       } finally {
@@ -72,32 +64,9 @@ export function DependencyGraph() {
     fetchData()
   }, [toast])
 
-  // Listen for socket events to update insights
-  useEffect(() => {
-    if (events.length > 0) {
-      const latestEvent = events[events.length - 1]
-      if (latestEvent.type === "optimization-suggestions") {
-        setInsights((prev) => [...prev, ...latestEvent.data])
-      }
-    }
-  }, [events])
-
   // Filter tasks by selected department
   const filteredTasks =
     selectedDepartment === "All" ? tasks : tasks.filter((task) => task.department?.name === selectedDepartment)
-
-  // Extract task IDs from insights for highlighting
-  const insightTaskIds = insights
-    .filter((insight) => insight.category === "Dependencies" || insight.category === "Deadlines")
-    .map((insight) => {
-      const match = insight.description.match(/Task '([^']+)'/)
-      if (match) {
-        const task = tasks.find((t) => t.title === match[1])
-        return task?._id
-      }
-      return null
-    })
-    .filter((id) => id)
 
   // Responsive sizing for the SVG
   useEffect(() => {
@@ -121,7 +90,8 @@ export function DependencyGraph() {
     updateSize()
 
     return () => window.removeEventListener("resize", updateSize)
-  }, [containerRef, svgRef, filteredTasks, departments, viewMode, insights])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [containerRef, svgRef, filteredTasks, departments, viewMode])
 
   // Render Dependency Graph
   const renderDependencyGraph = () => {
@@ -132,7 +102,6 @@ export function DependencyGraph() {
       title: task.title,
       department: task.department?.name || "Unknown",
       status: task.status,
-      isHighlighted: insightTaskIds.includes(task._id),
     }))
 
     const links = []
@@ -247,7 +216,6 @@ export function DependencyGraph() {
         return dept ? getHexColor(dept.color) : "#64748b"
       })
       .attr("stroke", (d) => {
-        if (d.isHighlighted) return "#ef4444"
         switch (d.status) {
           case "Completed":
             return "#22c55e"
@@ -259,7 +227,7 @@ export function DependencyGraph() {
             return "#000"
         }
       })
-      .attr("stroke-width", (d) => (d.isHighlighted ? 3 : 2))
+      .attr("stroke-width", 2)
 
     // Always add text labels but adjust size for mobile
     node
@@ -329,7 +297,6 @@ export function DependencyGraph() {
       { name: "Completed", color: "#22c55e" },
       { name: "In Progress", color: "#3b82f6" },
       { name: "Pending", color: "#f59e0b" },
-      { name: "AI Highlighted", color: "#ef4444" },
     ]
 
     legend
@@ -404,8 +371,8 @@ export function DependencyGraph() {
     const width = +svg.attr("width")
     const height = +svg.attr("height")
     const margin = isMobile
-      ? { top: 30, right: 10, bottom: 20, left: 60 }
-      : { top: 40, right: 150, bottom: 40, left: 100 }
+      ? { top: 50, right: 10, bottom: 30, left: 80 }
+      : { top: 60, right: 150, bottom: 50, left: 150 }
     const boundedWidth = width - margin.left - margin.right
     const boundedHeight = height - margin.top - margin.bottom
 
@@ -418,13 +385,15 @@ export function DependencyGraph() {
       .append("div")
       .attr("class", "tooltip")
       .style("position", "absolute")
-      .style("background", "#fff")
-      .style("padding", "8px")
-      .style("border", "1px solid #ccc")
-      .style("border-radius", "4px")
+      .style("background", "#ffffff")
+      .style("padding", "12px 16px")
+      .style("border", "2px solid #e5e7eb")
+      .style("border-radius", "8px")
+      .style("box-shadow", "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)")
       .style("pointer-events", "none")
       .style("opacity", 0)
       .style("z-index", 1000)
+      .style("max-width", "300px")
 
     const ganttData = filteredTasks.map((task) => ({
       id: task._id,
@@ -436,7 +405,6 @@ export function DependencyGraph() {
         ? new Date(task.dueDate)
         : new Date(new Date(task.createdAt).setDate(new Date(task.createdAt).getDate() + 7)),
       dependencies: task.dependencies?.map((dep) => dep._id) || [],
-      isHighlighted: insightTaskIds.includes(task._id),
     }))
 
     const xScale = d3
@@ -454,49 +422,79 @@ export function DependencyGraph() {
     const xAxis = d3
       .axisTop(xScale)
       .ticks(isMobile ? 5 : d3.timeDay.every(1))
-      .tickFormat(isMobile ? d3.timeFormat("%d") : d3.timeFormat("%b %d"))
+      .tickFormat(isMobile ? d3.timeFormat("%m/%d") : d3.timeFormat("%b %d"))
 
     const yAxis = d3.axisLeft(yScale).tickFormat((id) => {
       const task = ganttData.find((d) => d.id === id)
       if (!task) return ""
 
-      // Truncate text on mobile
-      if (isMobile && task.title.length > 15) {
-        return task.title.substring(0, 15) + "..."
+      // Truncate text based on screen size
+      const maxLength = isMobile ? 12 : 20
+      if (task.title.length > maxLength) {
+        return task.title.substring(0, maxLength) + "..."
       }
       return task.title
     })
+
+    // Add grid lines for better readability
+    g.append("g")
+      .attr("class", "grid")
+      .attr("opacity", 0.1)
+      .call(
+        d3
+          .axisTop(xScale)
+          .ticks(isMobile ? 5 : d3.timeDay.every(1))
+          .tickSize(-boundedHeight)
+          .tickFormat("")
+      )
 
     g.append("g")
       .attr("class", "x-axis")
       .call(xAxis)
       .selectAll("text")
-      .style("font-size", isMobile ? "8px" : "10px")
-      .attr("transform", isMobile ? "rotate(-45) translate(-5, -5)" : "rotate(-45)")
+      .style("font-size", isMobile ? "9px" : "11px")
+      .style("font-weight", "500")
+      .attr("transform", "rotate(-45)")
       .attr("text-anchor", "end")
+      .attr("dx", "-0.5em")
+      .attr("dy", "-0.3em")
 
     g.append("g")
       .attr("class", "y-axis")
       .call(yAxis)
       .selectAll("text")
-      .style("font-size", isMobile ? "8px" : "10px")
+      .style("font-size", isMobile ? "9px" : "11px")
+      .style("font-weight", "500")
 
-    const bars = g
-      .selectAll(".bar")
+    // Add alternating row backgrounds for better readability
+    g.selectAll(".row-bg")
+      .data(ganttData)
+      .enter()
+      .append("rect")
+      .attr("class", "row-bg")
+      .attr("x", 0)
+      .attr("y", (d) => yScale(d.id))
+      .attr("width", boundedWidth)
+      .attr("height", yScale.bandwidth())
+      .attr("fill", (d, i) => (i % 2 === 0 ? "#f9fafb" : "#ffffff"))
+      .attr("opacity", 0.5)
+
+    g.selectAll(".bar")
       .data(ganttData)
       .enter()
       .append("rect")
       .attr("class", "bar")
       .attr("x", (d) => xScale(d.start))
-      .attr("y", (d) => yScale(d.id))
-      .attr("width", (d) => Math.max(2, xScale(d.end) - xScale(d.start))) // Ensure minimum width
-      .attr("height", yScale.bandwidth())
+      .attr("y", (d) => yScale(d.id) + yScale.bandwidth() * 0.1)
+      .attr("width", (d) => Math.max(3, xScale(d.end) - xScale(d.start))) // Ensure minimum width
+      .attr("height", yScale.bandwidth() * 0.8)
+      .attr("rx", 4)
+      .attr("ry", 4)
       .attr("fill", (d) => {
         const dept = departments.find((dep) => dep.name === d.department)
         return dept ? getHexColor(dept.color) : "#64748b"
       })
       .attr("stroke", (d) => {
-        if (d.isHighlighted) return "#ef4444"
         switch (d.status) {
           case "Completed":
             return "#22c55e"
@@ -505,20 +503,33 @@ export function DependencyGraph() {
           case "Pending":
             return "#f59e0b"
           default:
-            return "#000"
+            return "#64748b"
         }
       })
-      .attr("stroke-width", (d) => (d.isHighlighted ? 3 : 2))
-      .on("mouseover", (event, d) => {
+      .attr("stroke-width", 3)
+      .attr("opacity", 0.85)
+      .style("cursor", "pointer")
+      .on("mouseover", function (event, d) {
+        d3.select(this).attr("opacity", 1).attr("stroke-width", 4)
         tooltip
           .style("opacity", 1)
           .html(
-            `<strong>${d.title}</strong><br>Department: ${d.department}<br>Status: ${d.status}<br>Start: ${d.start.toLocaleDateString()}<br>End: ${d.end.toLocaleDateString()}`,
+            `<div style="font-family: sans-serif;">
+              <strong style="font-size: 14px; color: #1f2937;">${d.title}</strong><br/>
+              <div style="margin-top: 8px; font-size: 12px; color: #4b5563;">
+                <strong>Department:</strong> ${d.department}<br/>
+                <strong>Status:</strong> <span style="color: ${d.status === "Completed" ? "#22c55e" : d.status === "In Progress" ? "#3b82f6" : "#f59e0b"};">${d.status}</span><br/>
+                <strong>Start:</strong> ${d.start.toLocaleDateString()}<br/>
+                <strong>End:</strong> ${d.end.toLocaleDateString()}<br/>
+                <strong>Duration:</strong> ${Math.ceil((d.end - d.start) / (1000 * 60 * 60 * 24))} days
+              </div>
+            </div>`,
           )
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY - 10}px`)
+          .style("left", `${event.pageX + 15}px`)
+          .style("top", `${event.pageY - 15}px`)
       })
-      .on("mouseout", () => {
+      .on("mouseout", function () {
+        d3.select(this).attr("opacity", 0.85).attr("stroke-width", 3)
         tooltip.style("opacity", 0)
       })
 
@@ -551,7 +562,6 @@ export function DependencyGraph() {
       { name: "Completed", color: "#22c55e" },
       { name: "In Progress", color: "#3b82f6" },
       { name: "Pending", color: "#f59e0b" },
-      { name: "AI Highlighted", color: "#ef4444" },
     ]
 
     legend
@@ -609,58 +619,53 @@ export function DependencyGraph() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
-      <div className="flex-1">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="w-full sm:w-auto">
-              <label htmlFor="department" className="block text-sm font-medium mb-1">
-                Department:
-              </label>
-              <select
-                id="department"
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full sm:w-auto border border-gray-300 rounded-md px-2 py-1 text-sm"
-              >
-                <option value="All">All</option>
-                {departments.map((dept) => (
-                  <option key={dept._id} value={dept.name}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setViewMode("graph")}
-                className={`flex-1 sm:flex-initial px-3 py-1 text-sm rounded-md ${
-                  viewMode === "graph" ? "bg-primary text-white" : "bg-gray-200"
-                }`}
-              >
-                Graph
-              </button>
-              <button
-                onClick={() => setViewMode("gantt")}
-                className={`flex-1 sm:flex-initial px-3 py-1 text-sm rounded-md ${
-                  viewMode === "gantt" ? "bg-primary text-white" : "bg-gray-200"
-                }`}
-              >
-                Gantt
-              </button>
-            </div>
+    <div className="w-full">
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-full sm:w-auto">
+            <label htmlFor="department" className="block text-sm font-semibold mb-2 text-foreground">
+              Department:
+            </label>
+            <select
+              id="department"
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="w-full sm:w-auto border-2 border-muted rounded-xl px-4 py-2.5 text-sm font-medium bg-card hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="All">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept.name}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <div ref={containerRef} className="w-full overflow-auto">
-            <svg ref={svgRef} className="w-full h-[400px] md:h-[600px] border border-gray-200 rounded-md" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setViewMode("graph")}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                viewMode === "graph" 
+                  ? "bg-green-500 text-white shadow-lg hover:bg-green-600" 
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Graph View
+            </button>
+            <button
+              onClick={() => setViewMode("gantt")}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                viewMode === "gantt" 
+                  ? "bg-green-500 text-white shadow-lg hover:bg-green-600" 
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Gantt View
+            </button>
           </div>
         </div>
-        <div className="mt-4">
-          <OptimizationInsights insights={insights} />
+        <div ref={containerRef} className="w-full">
+          <svg ref={svgRef} className="w-full h-[400px] md:h-[600px] border-2 border-muted rounded-xl shadow-inner bg-gradient-to-br from-background to-muted/20" />
         </div>
-      </div>
-      {/* Optimization actions panel - hidden on mobile */}
-      <div className="hidden lg:block w-80">
-        <OptimizationActions tasks={tasks} setTasks={setTasks} insights={insights} />
       </div>
     </div>
   )

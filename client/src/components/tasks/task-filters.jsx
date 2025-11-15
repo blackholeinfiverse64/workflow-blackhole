@@ -53,48 +53,50 @@ export function TaskFilters({ onFilterChange }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Filters</CardTitle>
+    <Card className="border-2 rounded-xl shadow-lg">
+      <CardHeader className="border-b bg-muted/30">
+        <CardTitle className="text-lg font-semibold">Filters</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Status</h3>
-          <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground/90">Status</h3>
+          <div className="space-y-2.5">
             {["Completed", "In Progress", "Pending"].map(stat => (
-              <div key={stat} className="flex items-center space-x-2">
+              <div key={stat} className="flex items-center space-x-2.5 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <Checkbox 
                   id={`status-${stat.toLowerCase()}`} 
                   onCheckedChange={(checked) => handleStatusChange(stat, checked)}
+                  className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                 />
-                <Label htmlFor={`status-${stat.toLowerCase()}`}>{stat}</Label>
+                <Label htmlFor={`status-${stat.toLowerCase()}`} className="cursor-pointer font-medium">{stat}</Label>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Department</h3>
-          <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground/90">Department</h3>
+          <div className="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar">
             {Array.isArray(departments) && departments.map(dept => (
-              <div key={dept._id} className="flex items-center space-x-2">
+              <div key={dept._id} className="flex items-center space-x-2.5 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <Checkbox
                   id={`dept-${dept._id}`}
                   onCheckedChange={(checked) => handleDepartmentChange(dept._id, checked)}
+                  className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                 />
-                <Label htmlFor={`dept-${dept._id}`}>{dept.name}</Label>
+                <Label htmlFor={`dept-${dept._id}`} className="cursor-pointer font-medium">{dept.name}</Label>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Priority</h3>
+          <h3 className="text-sm font-semibold text-foreground/90">Priority</h3>
           <RadioGroup value={priority} onValueChange={setPriority}>
             {["all", "High", "Medium", "Low"].map(prio => (
-              <div key={prio} className="flex items-center space-x-2">
-                <RadioGroupItem value={prio} id={`priority-${prio.toLowerCase()}`} />
-                <Label htmlFor={`priority-${prio.toLowerCase()}`}>
+              <div key={prio} className="flex items-center space-x-2.5 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <RadioGroupItem value={prio} id={`priority-${prio.toLowerCase()}`} className="border-2" />
+                <Label htmlFor={`priority-${prio.toLowerCase()}`} className="cursor-pointer font-medium">
                   {prio === "all" ? "All" : prio}
                 </Label>
               </div>
@@ -102,7 +104,7 @@ export function TaskFilters({ onFilterChange }) {
           </RadioGroup>
         </div>
 
-        <Button className="w-full" onClick={handleApplyFilters}>
+        <Button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold" onClick={handleApplyFilters}>
           Apply Filters
         </Button>
       </CardContent>

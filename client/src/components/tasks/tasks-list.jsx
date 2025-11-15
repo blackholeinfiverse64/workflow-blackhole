@@ -326,15 +326,15 @@ export function TasksList({ filters }) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks by Department</CardTitle>
+      <Card className="border-2 rounded-xl shadow-lg">
+        <CardHeader className="border-b bg-muted/30">
+          <CardTitle className="text-lg font-semibold">Tasks by Department</CardTitle>
           <CardDescription>View tasks grouped by department</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center items-center py-10">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p>Loading tasks...</p>
+        <CardContent>
+          <div className="flex flex-col justify-center items-center p-12 space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-green-500" />
+            <p className="text-muted-foreground font-medium">Loading tasks...</p>
           </div>
         </CardContent>
       </Card>
@@ -343,17 +343,17 @@ export function TasksList({ filters }) {
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks by Department</CardTitle>
+      <Card className="border-2 rounded-xl shadow-lg border-red-200">
+        <CardHeader className="border-b bg-red-50">
+          <CardTitle className="text-lg font-semibold text-red-600">Tasks by Department</CardTitle>
           <CardDescription>View tasks grouped by department</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 text-center text-red-500">
-            <p>Error loading tasks: {error}</p>
+          <div className="p-8 text-center">
+            <p className="text-red-600 font-semibold text-lg mb-4">Error loading tasks: {error}</p>
             <Button
               variant="outline"
-              className="mt-4"
+              className="border-2 border-red-500 text-red-500 hover:bg-red-50 rounded-xl"
               onClick={() => window.location.reload()}
             >
               Try Again
@@ -367,33 +367,33 @@ export function TasksList({ filters }) {
   return (
     <div className="space-y-6">
       {/* Search Bar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Tasks</CardTitle>
+      <Card className="border-2 rounded-xl shadow-lg">
+        <CardHeader className="border-b bg-muted/30">
+          <CardTitle className="text-lg font-semibold">Search Tasks</CardTitle>
           <CardDescription>Search by task name, assignee, department, or description</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               placeholder="Search tasks by name, user, department, or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10"
+              className="pl-11 pr-10 h-11 rounded-xl border-2 focus-visible:ring-green-500"
             />
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearSearch}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-red-100 rounded-lg"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 text-red-500" />
               </Button>
             )}
           </div>
           {searchQuery && (
-            <div className="mt-2 text-sm text-muted-foreground">
+            <div className="mt-3 text-sm font-medium text-green-600 bg-green-50 p-2 rounded-lg">
               Found {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} matching "{searchQuery}"
             </div>
           )}
@@ -402,69 +402,72 @@ export function TasksList({ filters }) {
 
       {/* Tasks List */}
       {Object.keys(groupedTasks).length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="border-2 rounded-xl shadow-lg">
+          <CardContent className="text-center py-12 text-muted-foreground">
             {searchQuery ? (
               <div>
-                <p>No tasks found matching your search criteria.</p>
-                <Button variant="outline" onClick={clearSearch} className="mt-2">
+                <p className="text-lg font-medium mb-3">No tasks found matching your search criteria.</p>
+                <Button variant="outline" onClick={clearSearch} className="border-2 rounded-xl hover:border-green-500">
                   Clear search
                 </Button>
               </div>
             ) : (
-              <p>No tasks found matching the selected filters.</p>
+              <p className="text-lg font-medium">No tasks found matching the selected filters.</p>
             )}
           </CardContent>
         </Card>
       ) : (
         Object.entries(groupedTasks).map(([deptName, deptTasks]) => (
-          <Card key={deptName}>
-            <CardHeader>
-              <CardTitle>
-                {deptName} Tasks 
-                <Badge variant="secondary" className="ml-2">
+          <Card key={deptName} className="border-2 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="border-b bg-gradient-to-r from-muted/30 to-muted/10">
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-lg font-semibold">{deptName} Tasks</span>
+                <Badge className="bg-green-500 text-white hover:bg-green-600 font-semibold">
                   {deptTasks.length}
                 </Badge>
               </CardTitle>
-              <CardDescription>Tasks assigned to the {deptName} department</CardDescription>
+              <CardDescription className="font-medium">Tasks assigned to the {deptName} department</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Assignee</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                    <TableRow className="border-b-2 bg-muted/20 hover:bg-muted/20">
+                      <TableHead className="font-semibold text-foreground">Title</TableHead>
+                      <TableHead className="font-semibold text-foreground">Assignee</TableHead>
+                      <TableHead className="font-semibold text-foreground">Status</TableHead>
+                      <TableHead className="font-semibold text-foreground">Priority</TableHead>
+                      <TableHead className="font-semibold text-foreground">Due Date</TableHead>
+                      <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deptTasks.map((task) => (
-                      <TableRow key={task._id}>
-                        <TableCell>
+                    {deptTasks.map((task, index) => (
+                      <TableRow 
+                        key={task._id} 
+                        className={`hover:bg-muted/50 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}
+                      >
+                        <TableCell className="py-4">
                           <div>
-                            <div className="font-medium">{task.title}</div>
+                            <div className="font-semibold text-foreground">{task.title}</div>
                             {task.description && (
-                              <div className="text-sm text-muted-foreground truncate max-w-xs">
+                              <div className="text-sm text-muted-foreground truncate max-w-xs mt-1">
                                 {task.description}
                               </div>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{task.assignee?.name || "Unassigned"}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
+                        <TableCell className="py-4 font-medium">{task.assignee?.name || <span className="text-muted-foreground italic">Unassigned</span>}</TableCell>
+                        <TableCell className="py-4">
+                          <Badge className={`${getStatusColor(task.status)} font-semibold`}>{task.status}</Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
+                        <TableCell className="py-4">
+                          <Badge className={`${getPriorityColor(task.priority)} font-semibold`}>{task.priority}</Badge>
                         </TableCell>
-                        <TableCell>
-                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No date"}
+                        <TableCell className="py-4 font-medium">
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span className="text-muted-foreground italic">No date</span>}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right py-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">

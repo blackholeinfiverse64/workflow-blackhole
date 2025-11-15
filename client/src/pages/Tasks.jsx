@@ -17,9 +17,10 @@ function Tasks() {
   }
 
   return (
-    <div className="h-screen flex flex-col space-y-6 overflow-y-auto">
+    <div className="space-y-6 pb-8">
       <TasksHeader />
-      <div className="flex flex-col md:flex-row gap-6 flex-1 px-4 md:px-6 pb-6">
+      
+      <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-1/4">
           <TaskFilters onFilterChange={handleFilterChange} />
         </div>
