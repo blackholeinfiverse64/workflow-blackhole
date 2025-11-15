@@ -1,7 +1,3 @@
-// Root route for API status
-app.get('/', (req, res) => {
-  res.json({ status: 'API running', time: new Date().toISOString() });
-});
 
 
 // const express = require("express");
