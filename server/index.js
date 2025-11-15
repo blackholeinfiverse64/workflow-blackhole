@@ -1,3 +1,7 @@
+// Root route for API status
+app.get('/', (req, res) => {
+  res.json({ status: 'API running', time: new Date().toISOString() });
+});
 
 
 // const express = require("express");
@@ -160,7 +164,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ['http://localhost:5173','http://localhost:5174','http://192.168.1.2:5173','https://main-workflow.vercel.app','https://workflowmanager.vercel.app','https://infiverse-bhl.vercel.app'],  // Replace with your frontend's URL
+    origin: ['http://localhost:5173','http://localhost:5174','http://192.168.1.2:5173','https://blackhole-workflow.netlify.app',  // Replace with your frontend's URL
     methods: ['GET', 'POST'],
     credentials: true,  // Allow credentials (cookies, HTTP authentication)
   },
@@ -168,21 +172,6 @@ const io = socketIo(server, {
 
 // CORS Configuration
 
-// Dynamic CORS origin from .env (comma-separated)
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
-};
 app.use(cors(corsOptions));
 
 app.use(express.json());
