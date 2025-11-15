@@ -158,7 +158,7 @@ export function CreateDepartmentDialog({ open, onOpenChange }) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <span className="font-semibold">
-                          {users.find(u => u.id === formData.lead)?.name || "Select department lead..."}
+                          {users.find(u => (u._id || u.id) === formData.lead)?.name || "Select department lead..."}
                         </span>
                       </div>
                     ) : null}
@@ -168,8 +168,8 @@ export function CreateDepartmentDialog({ open, onOpenChange }) {
                   {users.length > 0 ? (
                     users.map((user) => (
                       <SelectItem 
-                        key={user.id} 
-                        value={user.id}
+                        key={user._id || user.id} 
+                        value={user._id || user.id}
                         className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-blue-500/30 dark:hover:bg-blue-500/40 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-white"
                       >
                         <div className="flex items-center gap-2">
