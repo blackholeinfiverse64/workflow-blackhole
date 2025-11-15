@@ -150,46 +150,37 @@ const LocationPopup = ({ isOpen, onClose, onLocationConfirmed, loading }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-lg p-0 overflow-hidden rounded-2xl border border-blue-200 dark:border-zinc-800 shadow-2xl"
+        className="max-w-lg p-0 overflow-hidden rounded-2xl border-2 border-blue-300 dark:border-blue-800 shadow-2xl"
         style={{
-          background: 'linear-gradient(135deg, rgba(245,247,250,0.82) 0%, rgba(220,230,255,0.60) 100%)',
-          backdropFilter: 'blur(28px) saturate(1.3)',
-          WebkitBackdropFilter: 'blur(28px) saturate(1.3)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.65) 0%, rgba(200,220,255,0.35) 100%)',
+          backdropFilter: 'blur(32px) saturate(1.5)',
+          WebkitBackdropFilter: 'blur(32px) saturate(1.5)',
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px 0 rgba(80, 120, 255, 0.10) inset',
-          border: '1.5px solid rgba(120,180,255,0.18)',
-          ...(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? {
-                background: 'linear-gradient(135deg, rgba(26,26,26,0.92) 0%, rgba(17,17,17,0.88) 100%)',
-                border: '1.5px solid #23263a',
-                boxShadow: '0 8px 32px 0 rgba(20,20,30,0.55), 0 1.5px 8px 0 rgba(80, 120, 255, 0.10) inset',
-              }
-            : {})
+          border: '2px solid rgba(120,180,255,0.25)',
         }}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 text-xl font-semibold tracking-tight text-zinc-900 dark:text-[#E6E6E6]">
-            <span className="relative flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-blue-500 drop-shadow-[0_0_8px_rgba(80,180,255,0.7)] dark:text-blue-400" style={{ filter: 'drop-shadow(0 0 8px #60a5fa88)' }} />
-            </span>
+          <DialogTitle className="flex items-center space-x-2 text-xl">
+            <MapPin className="w-6 h-6 text-blue-600" />
             <span>Location Verification</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-zinc-500 dark:text-[#B3B3B3] font-normal">
+          <DialogDescription>
             Please verify your work location to start your day
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Current Time & Status Bar */}
-          <div className="text-center p-4 rounded-lg border border-blue-100 dark:border-zinc-800 bg-gradient-to-r from-blue-50/60 to-purple-50/60 dark:from-[#23263a]/80 dark:to-[#181a23]/80 shadow-sm flex flex-col items-center">
-            <div className="flex items-center justify-center gap-2 text-lg font-semibold text-zinc-900 dark:text-[#E6E6E6]">
-              <Clock className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+          {/* Current Time */}
+          <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-center gap-2 text-lg font-semibold text-gray-900">
+              <Clock className="w-5 h-5 text-blue-600" />
               {new Date().toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
               })}
             </div>
-            <p className="text-sm mt-1 text-zinc-500 dark:text-[#B3B3B3]">
+            <p className="text-sm text-gray-600 mt-1">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',
@@ -200,20 +191,22 @@ const LocationPopup = ({ isOpen, onClose, onLocationConfirmed, loading }) => {
 
           {/* Location Status */}
           <div className="text-center">
-            <div className={`w-16 h-16 ${getLocationStatusColor()} rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg ring-2 ring-blue-200 dark:ring-blue-700/40`} style={{ boxShadow: '0 0 16px 2px #60a5fa55, 0 2px 8px 0 #23263a22' }}>
+            <div className={`w-16 h-16 ${getLocationStatusColor()} rounded-full flex items-center justify-center mx-auto mb-4`}>
               {locationLoading ? (
-                <div className="w-8 h-8 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : workFromHome ? (
-                <Home className="w-8 h-8 text-white dark:text-zinc-200" />
+                <Home className="w-8 h-8 text-white" />
               ) : isInOfficeRange ? (
-                <CheckCircle className="w-8 h-8 text-white dark:text-zinc-200" />
+                <CheckCircle className="w-8 h-8 text-white" />
               ) : (
-                <AlertTriangle className="w-8 h-8 text-white dark:text-zinc-200" />
+                <AlertTriangle className="w-8 h-8 text-white" />
               )}
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-[#E6E6E6]">{getLocationStatusText()}</h3>
+            
+            <h3 className="text-lg font-semibold mb-2">{getLocationStatusText()}</h3>
+            
             {location && (
-              <div className="text-sm text-zinc-500 dark:text-[#B3B3B3] space-y-1">
+              <div className="text-sm text-gray-600 space-y-1">
                 <p>Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
                 <p>Accuracy: ±{Math.round(location.accuracy)}m</p>
                 {distanceFromOffice !== null && (
@@ -287,54 +280,54 @@ const LocationPopup = ({ isOpen, onClose, onLocationConfirmed, loading }) => {
           {/* Work Location Options */}
           {location && (
             <div className="space-y-3">
-              <h4 className="font-medium text-zinc-900 dark:text-[#E6E6E6]">Choose Work Location:</h4>
+              <h4 className="font-medium text-gray-900">Choose Work Location:</h4>
+              
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant={!workFromHome ? "default" : "outline"}
                   onClick={() => setWorkFromHome(false)}
                   disabled={!isInOfficeRange && !workFromHome}
-                  className="h-20 flex-col space-y-2 rounded-xl bg-gradient-to-br from-green-400/90 to-green-600/90 dark:from-green-500/80 dark:to-green-700/90 shadow-md border-none text-white dark:text-zinc-100 hover:from-green-500 hover:to-green-700 focus:ring-2 focus:ring-green-400/40"
-                  style={!workFromHome ? { boxShadow: '0 2px 12px 0 #22c55e44, 0 1.5px 8px 0 #23263a22' } : {}}
+                  className="h-20 flex-col space-y-2"
                 >
                   <Building className="w-6 h-6" />
                   <span>Office</span>
                   {!isInOfficeRange && !workFromHome && (
-                    <span className="text-xs text-red-400">Too far</span>
+                    <span className="text-xs text-red-600">Too far</span>
                   )}
                 </Button>
+                
                 <Button
                   variant={workFromHome ? "default" : "outline"}
                   onClick={() => setWorkFromHome(true)}
-                  className="h-20 flex-col space-y-2 rounded-xl bg-gradient-to-br from-zinc-200/80 to-zinc-400/80 dark:from-zinc-700/80 dark:to-zinc-900/80 shadow-md border-none text-zinc-800 dark:text-zinc-100 hover:from-zinc-300 hover:to-zinc-500 dark:hover:from-zinc-600 dark:hover:to-zinc-800 focus:ring-2 focus:ring-blue-400/30"
-                  style={workFromHome ? { boxShadow: '0 2px 12px 0 #60a5fa44, 0 1.5px 8px 0 #23263a22' } : {}}
+                  className="h-20 flex-col space-y-2"
                 >
                   <Home className="w-6 h-6" />
                   <span>Work From Home</span>
-                  {workFromHome && <span className="text-xs text-green-400">🏠 WFH</span>}
+                  {workFromHome && <span className="text-xs text-green-600">🏠 WFH</span>}
                 </Button>
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex space-x-3 mt-6">
+          <div className="flex space-x-3">
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200/90 dark:hover:bg-zinc-700/90 focus:ring-2 focus:ring-blue-400/30"
+              className="flex-1"
               disabled={loading}
             >
               Cancel
             </Button>
+            
             <Button
               onClick={handleConfirmLocation}
               disabled={loading || !location || (!isInOfficeRange && !workFromHome)}
-              className="flex-1 h-12 rounded-xl bg-gradient-to-br from-green-400/90 to-green-600/90 dark:from-green-500/80 dark:to-green-700/90 shadow-lg border-none text-white dark:text-zinc-100 font-semibold text-base tracking-tight hover:from-green-500 hover:to-green-700 focus:ring-2 focus:ring-green-400/40"
-              style={{ boxShadow: '0 2px 16px 0 #22c55e55, 0 1.5px 8px 0 #23263a22' }}
+              className="flex-1 h-12"
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Starting Day...</span>
                 </div>
               ) : (
