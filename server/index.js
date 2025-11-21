@@ -157,7 +157,7 @@ const io = socketIo(server, {
       'http://localhost:5173',
       'http://localhost:5174',
       'http://192.168.1.2:5173',
-      'https://blackhole-workflow.netlify.app'
+      'https://blackhole-workflow.vercel.app/login'
     ],
     methods: ['GET', 'POST'],
     credentials: true,  // Allow credentials (cookies, HTTP authentication)
@@ -171,7 +171,7 @@ const corsOptions = {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://192.168.1.2:5173',
-    'https://blackhole-workflow.netlify.app'
+    'https://blackhole-workflow.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
