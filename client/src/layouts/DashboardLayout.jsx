@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Outlet } from "react-router-dom"
 import { DashboardSidebar } from "../components/dashboard/sidebar"
+import UniverseBackground from "../components/UniverseBackground"
+import { useTheme } from "../components/theme-provider"
 import { DashboardHeader } from "../components/dashboard/header"
 import EnhancedStartDayDialog from "../components/attendance/EnhancedStartDayDialog"
 import { useAuth } from "../context/auth-context"
@@ -10,6 +12,7 @@ import api from "../lib/api"
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { theme } = useTheme()
   const { user } = useAuth()
   const [showStartDayDialog, setShowStartDayDialog] = useState(false)
   const [checkedPrompt, setCheckedPrompt] = useState(false)
@@ -66,6 +69,9 @@ export function DashboardLayout() {
     <div className="h-screen w-screen bg-gradient-to-br from-background via-background to-muted/20 flex overflow-hidden">
       {/* Premium Background Elements */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.05),transparent)] pointer-events-none"></div>
+
+      {/* Universe particle canvas (render only when universe theme is active) */}
+      {theme === 'universe' && <UniverseBackground />}
 
       {/* Enhanced Overlay for mobile */}
       {sidebarOpen && (

@@ -15,24 +15,29 @@ export function ThemeProvider({ children, defaultTheme = "light", storageKey = "
 
   useEffect(() => {
     const root = window.document.documentElement
-    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    
-    // Remove both classes first
-    root.classList.remove("light", "dark")
-    
-    // Then add the appropriate class
-    root.classList.add(isDark ? "dark" : "light")
-    
-    // Add event listener for system preference changes if using system theme
-    if (theme === "system") {
+
+    // Compute which class to apply: 'light' | 'dark' | 'universe'
+    let themeClass
+    if (theme === 'system') {
+      themeClass = window.matchMedia("(prefers-color-scheme: dark)").matches ? 'dark' : 'light'
+    } else {
+      themeClass = theme // 'light' | 'dark' | 'universe'
+    }
+
+    // Remove any of the theme classes then add the one we want
+    root.classList.remove('light', 'dark', 'universe')
+    root.classList.add(themeClass)
+
+    // If using system, listen for changes and update between light/dark (not universe)
+    if (theme === 'system') {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
       const handleChange = () => {
-        root.classList.remove("light", "dark")
-        root.classList.add(mediaQuery.matches ? "dark" : "light")
+        root.classList.remove('light', 'dark', 'universe')
+        root.classList.add(mediaQuery.matches ? 'dark' : 'light')
       }
-      
-      mediaQuery.addEventListener("change", handleChange)
-      return () => mediaQuery.removeEventListener("change", handleChange)
+
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
     }
   }, [theme])
 
