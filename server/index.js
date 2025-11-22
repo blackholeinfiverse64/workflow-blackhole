@@ -10,11 +10,12 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: ['http://localhost:5173','http://192.168.1.2:5173','https://blackhole-workflow.vercel.app'],
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
 });
 
+// CORS must be before routes
 app.use(cors({
   origin: ['http://localhost:5173','http://192.168.1.2:5173','https://blackhole-workflow.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -22,6 +23,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 require('dotenv').config();
 
@@ -42,13 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/ping', (req, res) => {
-  res.json({ message: 'Pong!' });
-});
-
-app.use(express.static(path.join(__dirname, '../client/dist')));
-
-// Load only essential routes
+// API routes BEFORE static files
 const authRoutes = require('./routes/auth');
 app.use("/api/auth", authRoutes);
 
@@ -58,7 +54,15 @@ app.use("/api/users", userRoutes);
 const taskRoutes = require("./routes/tasks");
 app.use("/api/tasks", taskRoutes);
 
-app.get(/^\/(?!api).*/, (req, res) => {
+app.get('/api/ping', (req, res) => {
+  res.json({ message: 'Pong!' });
+});
+
+// Static files AFTER API routes
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all handler LAST
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
