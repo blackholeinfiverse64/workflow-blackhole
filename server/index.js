@@ -173,6 +173,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Ensure preflight (OPTIONS) requests are handled for all routes
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
 // Connect to MongoDB

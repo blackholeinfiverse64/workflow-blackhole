@@ -1,4 +1,19 @@
-export const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '')
+// Determine API base URL:
+// 1. Use build-time `VITE_API_URL` when provided by Vercel.
+// 2. If not set and running on the known Vercel frontend domain, use the Render backend URL.
+// 3. Otherwise fall back to same-origin `/api` (useful for local previews).
+let API_URL = '';
+if (import.meta.env.VITE_API_URL) {
+  API_URL = import.meta.env.VITE_API_URL;
+} else if (typeof window !== 'undefined') {
+  const host = window.location.hostname;
+  if (host === 'workflow-blackhole.vercel.app' || host.endsWith('.vercel.app')) {
+    API_URL = 'https://blackhole-workflow.onrender.com/api';
+  } else {
+    API_URL = `${window.location.origin}/api`;
+  }
+}
+export { API_URL }
 
 // Helper function for API requests
 async function fetchAPI(endpoint, options = {}) {
