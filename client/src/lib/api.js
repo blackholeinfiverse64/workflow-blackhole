@@ -27,6 +27,13 @@ async function fetchAPI(endpoint, options = {}) {
   }
 
   try {
+    console.log('🔍 API Debug:', {
+      fullURL: `${API_URL}${endpoint}`,
+      API_URL,
+      endpoint,
+      method: options.method || 'GET'
+    });
+    
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
