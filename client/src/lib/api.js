@@ -1,11 +1,15 @@
+//-----------------------------------------------------
 // Determine API base URL
+//-----------------------------------------------------
 let API_URL = '';
+
 if (import.meta.env.VITE_API_URL) {
   API_URL = import.meta.env.VITE_API_URL + '/api';
   console.log('🔧 Using VITE_API_URL:', API_URL);
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
   console.log('🌐 Current hostname:', host);
+
   if (host === 'blackhole-workflow.vercel.app' || host.endsWith('.vercel.app')) {
     API_URL = 'https://blackholeworkflow.onrender.com/api';
     console.log('🎯 Using Render backend:', API_URL);
@@ -16,264 +20,305 @@ if (import.meta.env.VITE_API_URL) {
 } else {
   console.log('⚠️ Window not available, API_URL will be empty');
 }
-console.log('✅ Final API_URL:', API_URL);
-export { API_URL }
 
+console.log('✅ Final API_URL:', API_URL);
+export { API_URL };
+
+
+//-----------------------------------------------------
 // Helper function for API requests
+//-----------------------------------------------------
 async function fetchAPI(endpoint, options = {}) {
-  // Get token from localStorage if available
-  const token = localStorage.getItem("WorkflowToken")
+  const token = localStorage.getItem("WorkflowToken");
 
   const headers = {
     "Content-Type": "application/json",
     ...(token && { "x-auth-token": token }),
     ...options.headers,
-  }
+  };
 
   try {
     console.log('🔍 API Debug:', {
       fullURL: `${API_URL}${endpoint}`,
       API_URL,
       endpoint,
-      method: options.method || 'GET',
-      hostname: typeof window !== 'undefined' ? window.location.hostname : 'N/A'
+      method: options.method || 'GET'
     });
-    
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
-    })
+    });
 
-    // Handle unauthorized responses
     if (response.status === 401) {
-      // Clear token and redirect to login if needed
-      localStorage.removeItem("WorkflowToken")
-      localStorage.removeItem("WorkflowUser")
-      // You might want to redirect to login page here
-      // window.location.href = '/login';
-      throw new Error("Unauthorized: Please log in again")
+      localStorage.removeItem("WorkflowToken");
+      localStorage.removeItem("WorkflowUser");
+      throw new Error("Unauthorized: Please log in again");
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || `API error: ${response.statusText}`)
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `API error: ${response.statusText}`);
     }
 
-    return response.json()
+    return response.json();
   } catch (error) {
-    console.error(`API Error (${endpoint}):`, error)
-    throw error
+    console.error(`API Error (${endpoint}):`, error);
+    throw error;
   }
 }
 
-// Auth API
+
+//-----------------------------------------------------
+// Auth API (FIXED)
+//-----------------------------------------------------
 const auth = {
   login: (credentials) =>
     fetchAPI("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
+
   register: (userData) =>
     fetchAPI("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     }),
-  getCurrentUser: () => fetchAPI("/auth/me"),
-}
 
+  getCurrentUser: () => fetchAPI("/auth/me"),
+};
+
+
+//-----------------------------------------------------
 // Tasks API
+//-----------------------------------------------------
 const tasks = {
   getTasks: (filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach(val => queryParams.append(key, val))
-      } else if (value) {
-        queryParams.append(key, value)
-      }
-    })
+        value.forEach(val => queryParams.append(key, val));
+      } else if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/tasks${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/tasks${queryString ? `?${queryString}` : ""}`);
   },
+
   getTask: (id) => fetchAPI(`/tasks/${id}`),
+
   createTask: (task) =>
     fetchAPI("/tasks", {
       method: "POST",
       body: JSON.stringify(task),
     }),
+
   updateTask: (id, task) =>
     fetchAPI(`/tasks/${id}`, {
       method: "PUT",
       body: JSON.stringify(task),
     }),
-  deleteTask: (id) =>
-    fetchAPI(`/tasks/${id}`, {
-      method: "DELETE",
-    }),
-}
 
+  deleteTask: (id) => fetchAPI(`/tasks/${id}`, { method: "DELETE" }),
+};
+
+
+//-----------------------------------------------------
 // Departments API
+//-----------------------------------------------------
 const departments = {
   getDepartments: () => fetchAPI("/departments"),
   getDepartment: (id) => fetchAPI(`/departments/${id}`),
+
   createDepartment: (department) =>
     fetchAPI("/departments", {
       method: "POST",
       body: JSON.stringify(department),
     }),
+
   updateDepartment: (id, department) =>
     fetchAPI(`/departments/${id}`, {
       method: "PUT",
       body: JSON.stringify(department),
     }),
+
   deleteDepartment: (id) =>
-    fetchAPI(`/departments/${id}`, {
-      method: "DELETE",
-    }),
+    fetchAPI(`/departments/${id}`, { method: "DELETE" }),
+
   getDepartmentTasks: (id, filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
+      if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/departments/${id}/tasks${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/departments/${id}/tasks${queryString ? `?${queryString}` : ""}`);
   },
-}
+};
 
+
+//-----------------------------------------------------
 // Users API
+//-----------------------------------------------------
 const users = {
   getUsers: () => fetchAPI("/users"),
   getUser: (id) => fetchAPI(`/users/${id}`),
+
   createUser: (user) =>
     fetchAPI("/users", {
       method: "POST",
       body: JSON.stringify(user),
     }),
+
   updateUser: (id, user) =>
     fetchAPI(`/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(user),
     }),
-  deleteUser: (id) =>
-    fetchAPI(`/users/${id}`, {
-      method: "DELETE",
-    }),
-  getUserTasks: (id, filters = {}) => {
-    const queryParams = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/users/${id}/tasks${queryString ? `?${queryString}` : ""}`)
+  deleteUser: (id) =>
+    fetchAPI(`/users/${id}`, { method: "DELETE" }),
+
+  getUserTasks: (id, filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const queryString = queryParams.toString();
+    return fetchAPI(`/users/${id}/tasks${queryString ? `?${queryString}` : ""}`);
   },
+
   changePassword: (id, passwordData) =>
     fetchAPI(`/users/${id}/password`, {
       method: "PUT",
       body: JSON.stringify(passwordData),
     }),
+
   updateUserStatus: (id, stillExist) =>
     fetchAPI(`/users/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ stillExist }),
     }),
-  getAllUsersIncludingExited: () => fetchAPI("/admin/users/all"),
-}
 
+  getAllUsersIncludingExited: () => fetchAPI("/admin/users/all"),
+};
+
+
+//-----------------------------------------------------
 // AI Optimization API
+//-----------------------------------------------------
 const ai = {
   getInsights: () => fetchAPI("/new/ai/insights"),
   optimizeWorkflow: () => fetchAPI("/new/ai/optimize", { method: "POST" }),
   getDependencyAnalysis: () => fetchAPI("/new/ai/dependencies"),
-}
+};
 
+
+//-----------------------------------------------------
 // Admin API
+//-----------------------------------------------------
 const admin = {
-  getUsers: (includeExited = false) => fetchAPI(`/admin/users${includeExited ? '?includeExited=true' : ''}`),
+  getUsers: (includeExited = false) =>
+    fetchAPI(`/admin/users${includeExited ? "?includeExited=true" : ""}`),
+
   getAllUsers: () => fetchAPI("/admin/users/all"),
   getUser: (id) => fetchAPI(`/admin/users/${id}`),
+
   createUser: (userData) =>
     fetchAPI("/admin/users", {
       method: "POST",
       body: JSON.stringify(userData),
     }),
+
   updateUser: (id, userData) =>
     fetchAPI(`/admin/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
     }),
+
   updateUserStatus: (id, stillExist) =>
     fetchAPI(`/admin/users/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ stillExist }),
     }),
+
   deleteUser: (id) =>
-    fetchAPI(`/admin/users/${id}`, {
-      method: "DELETE",
-    }),
+    fetchAPI(`/admin/users/${id}`, { method: "DELETE" }),
+
   getDepartments: () => fetchAPI("/admin/departments"),
   getDepartment: (id) => fetchAPI(`/admin/departments/${id}`),
-  createDepartment: (departmentData) =>
+
+  createDepartment: (data) =>
     fetchAPI("/admin/departments", {
       method: "POST",
-      body: JSON.stringify(departmentData),
+      body: JSON.stringify(data),
     }),
-  updateDepartment: (id, departmentData) =>
+
+  updateDepartment: (id, data) =>
     fetchAPI(`/admin/departments/${id}`, {
       method: "PUT",
-      body: JSON.stringify(departmentData),
+      body: JSON.stringify(data),
     }),
+
   deleteDepartment: (id) =>
-    fetchAPI(`/admin/departments/${id}`, {
-      method: "DELETE",
-    }),
+    fetchAPI(`/admin/departments/${id}`, { method: "DELETE" }),
+
   getDepartmentTasks: (id, filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
+      if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/admin/departments/${id}/tasks${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/admin/departments/${id}/tasks${queryString ? `?${queryString}` : ""}`);
   },
-}
+};
 
+
+//-----------------------------------------------------
 // Progress API
+//-----------------------------------------------------
 const progress = {
   getTaskProgress: (taskId) => fetchAPI(`/progress/task/${taskId}`),
   getUserProgress: (userId) => fetchAPI(`/progress/user/${userId}`),
-  createProgress: (progressData) =>
+
+  createProgress: (data) =>
     fetchAPI("/progress", {
       method: "POST",
-      body: JSON.stringify(progressData),
+      body: JSON.stringify(data),
     }),
-  updateProgress: (id, progressData) =>
+
+  updateProgress: (id, data) =>
     fetchAPI(`/progress/${id}`, {
       method: "PUT",
-      body: JSON.stringify(progressData),
+      body: JSON.stringify(data),
     }),
+
   deleteProgress: (id) =>
-    fetchAPI(`/progress/${id}`, {
-      method: "DELETE",
-    }),
+    fetchAPI(`/progress/${id}`, { method: "DELETE" }),
 };
 
+
+//-----------------------------------------------------
 // Notifications API
+//-----------------------------------------------------
 const notifications = {
   broadcastReminders: () =>
     fetchAPI("/notifications/broadcast-reminders", {
       method: "POST",
     }),
+
   broadcastAimReminders: () =>
     fetchAPI("/notifications/broadcast-aim-reminders", {
       method: "POST",
     }),
+
   generateReports: () =>
     fetchAPI("/notifications/generate-reports", {
       method: "POST",
     }),
+
   toggleAutomation: (settings) =>
     fetchAPI("/notifications/toggle-automation", {
       method: "POST",
@@ -281,7 +326,10 @@ const notifications = {
     }),
 };
 
+
+//-----------------------------------------------------
 // Dashboard API
+//-----------------------------------------------------
 const dashboard = {
   getStats: () => fetchAPI("/dashboard/stats"),
   getRecentActivity: () => fetchAPI("/dashboard/activity"),
@@ -289,157 +337,83 @@ const dashboard = {
   getTasksOverview: () => fetchAPI("/dashboard/tasks-overview"),
   getUserStats: (userId) => fetchAPI(`/dashboard/user-stats/${userId}`),
   getAIInsights: () => fetchAPI("/new/ai/insights"),
-}
+};
 
+
+//-----------------------------------------------------
 // Aims API
+//-----------------------------------------------------
 const aims = {
   getAims: (filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
+      if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/aims${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/aims${queryString ? `?${queryString}` : ""}`);
   },
-  getTodayAim: (userId) => {
-    if (!userId) {
-      throw new Error("User ID is required")
-    }
-    return fetchAPI(`/aims/today/${userId}`)
-  },
+
+  getTodayAim: (userId) => fetchAPI(`/aims/today/${userId}`),
+
   getUserAims: (userId, filters = {}) => {
-    if (!userId) {
-      throw new Error("User ID is required")
-    }
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
+      if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/aims/user/${userId}${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/aims/user/${userId}${queryString ? `?${queryString}` : ""}`);
   },
-  createAim: (aim, userId) => {
-    if (!userId) {
-      throw new Error("User ID is required")
-    }
-    return fetchAPI(`/aims/postaim/${userId}`, {
+
+  createAim: (aim, userId) =>
+    fetchAPI(`/aims/postaim/${userId}`, {
       method: "POST",
       body: JSON.stringify(aim),
-    })
-  },
+    }),
+
   updateAim: (id, aim) =>
     fetchAPI(`/aims/${id}`, {
       method: "PUT",
       body: JSON.stringify(aim),
     }),
+
   deleteAim: (id) =>
-    fetchAPI(`/aims/${id}`, {
-      method: "DELETE",
-    }),
+    fetchAPI(`/aims/${id}`, { method: "DELETE" }),
+
   getAimsWithProgress: (filters = {}) => {
-    const queryParams = new URLSearchParams()
+    const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
+      if (value) queryParams.append(key, value);
+    });
 
-    const queryString = queryParams.toString()
-    return fetchAPI(`/aims/with-progress${queryString ? `?${queryString}` : ""}`)
+    const queryString = queryParams.toString();
+    return fetchAPI(`/aims/with-progress${queryString ? `?${queryString}` : ""}`);
   },
-}
-
-// Generic HTTP methods for direct API calls
-const httpMethods = {
-  get: (endpoint, options = {}) => fetchAPI(endpoint, { method: 'GET', ...options }),
-  post: (endpoint, data, options = {}) => fetchAPI(endpoint, {
-    method: 'POST',
-    body: JSON.stringify(data),
-    ...options
-  }),
-  put: (endpoint, data, options = {}) => fetchAPI(endpoint, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-    ...options
-  }),
-  delete: (endpoint, options = {}) => fetchAPI(endpoint, { method: 'DELETE', ...options }),
-  patch: (endpoint, data, options = {}) => fetchAPI(endpoint, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-    ...options
-  })
 };
 
-// Attendance API
-const attendance = {
-  getLiveAttendance: (filters = {}) => {
-    const queryParams = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
-    const queryString = queryParams.toString()
-    return fetchAPI(`/attendance/live${queryString ? `?${queryString}` : ""}`)
-  },
-  startDay: (userId, data) =>
-    fetchAPI(`/attendance/start-day/${userId}`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  endDay: (userId, data) =>
-    fetchAPI(`/attendance/end-day/${userId}`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  verify: (userId, date = null) => {
-    const queryString = date ? `?date=${date}` : '';
-    return fetchAPI(`/attendance/verify/${userId}${queryString}`);
-  },
-  uploadBiometric: (formData) =>
-    fetchAPI("/attendance/upload-biometric", {
-      method: "POST",
-      body: formData,
-      headers: {}, // Let browser set Content-Type for FormData
-    }),
-  getAttendanceAnalytics: (filters = {}) => {
-    const queryParams = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value)
-    })
-    const queryString = queryParams.toString()
-    return fetchAPI(`/attendance/analytics${queryString ? `?${queryString}` : ""}`)
-  },
-}
 
-// Attendance Data Management API (Admin Only)
-const attendanceDataManagement = {
-  getStats: () => fetchAPI('/attendance-data/stats'),
-  clearAll: (confirmationCode) =>
-    fetchAPI('/attendance-data/clear-all', {
-      method: 'DELETE',
-      body: JSON.stringify({ confirmationCode }),
-    }),
-  clearByDateRange: (startDate, endDate, confirmationCode) =>
-    fetchAPI('/attendance-data/clear-by-date', {
-      method: 'DELETE',
-      body: JSON.stringify({ startDate, endDate, confirmationCode }),
-    }),
-}
+//-----------------------------------------------------
+// Generic HTTP Methods
+//-----------------------------------------------------
+const httpMethods = {
+  get: (endpoint, options = {}) => fetchAPI(endpoint, { method: "GET", ...options }),
+  post: (endpoint, data, options = {}) =>
+    fetchAPI(endpoint, { method: "POST", body: JSON.stringify(data), ...options }),
+  put: (endpoint, data, options = {}) =>
+    fetchAPI(endpoint, { method: "PUT", body: JSON.stringify(data), ...options }),
+  delete: (endpoint, options = {}) =>
+    fetchAPI(endpoint, { method: "DELETE", ...options }),
+  patch: (endpoint, data, options = {}) =>
+    fetchAPI(endpoint, { method: "PATCH", body: JSON.stringify(data), ...options }),
+};
 
-// Procurement API
-const procurement = {
-  runAnalysis: () => fetchAPI('/procurement/run-analysis', { method: 'POST' }),
-  getReport: () => fetchAPI('/procurement/report'),
-  getAvailableEmployees: (minScore = 50) => fetchAPI(`/procurement/available-employees?minScore=${minScore}`),
-  getTopPerformers: (limit = 5) => fetchAPI(`/procurement/top-performers?limit=${limit}`),
-  getEmployeeStats: (employeeId) => fetchAPI(`/procurement/employee-stats/${employeeId}`),
-}
 
-// Update the exported API object
+//-----------------------------------------------------
+// Combine All API Modules
+//-----------------------------------------------------
 export const api = {
-  // HTTP methods
   ...httpMethods,
-
-  // Specific modules
   auth,
   tasks,
   departments,
@@ -450,9 +424,6 @@ export const api = {
   admin,
   dashboard,
   aims,
-  attendance,
-  attendanceDataManagement,
-  procurement,
-}
+};
 
-export default api
+export default api;
