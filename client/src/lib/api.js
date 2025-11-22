@@ -7,7 +7,7 @@ if (import.meta.env.VITE_API_URL) {
   API_URL = import.meta.env.VITE_API_URL;
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
-  if (host === 'workflow-blackhole.vercel.app' || host.endsWith('.vercel.app')) {
+  if (host === 'blackhole-workflow.vercel.app' || host.endsWith('.vercel.app')) {
     API_URL = 'https://blackhole-workflow.onrender.com/api';
   } else {
     API_URL = `${window.location.origin}/api`;
