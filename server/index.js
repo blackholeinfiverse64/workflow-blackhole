@@ -34,6 +34,13 @@
 //   },
 // });
 
+// // CORS Configuration
+// const corsOptions = {
+//   origin: ['http://localhost:5173','http://192.168.1.2:5173','https://main-workflow.vercel.app'],  // Replace with your frontend's URL
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true,  // Allow credentials (cookies, HTTP authentication)
+// };
+// app.use(cors(corsOptions));
 
 // app.use(express.json());
 
@@ -140,8 +147,7 @@ const aimRoutes = require('./routes/aims_universal');
 const pushRoutes = require('./routes/push'); // Add this line
 const attendanceRoutes = require('./routes/attendance'); // New attendance routes
 const leaveRoutes = require('./routes/leave'); // New leave routes
-const salaryRoutes = require('./routes/salary'); // Old salary routes
-const biometricSalaryRoutes = require('./routes/salaryRoutes'); // New biometric salary routes
+const salaryRoutes = require('./routes/salary'); // New salary routes
 const enhancedAimsRoutes = require('./routes/enhancedAims'); // Enhanced aims routes
 const consentRoutes = require('./routes/consent'); // Consent routes
 const alertRoutes = require('./routes/alerts'); // Alert routes
@@ -151,62 +157,20 @@ const app = express();
 
 // Create HTTP server and initialize Socket.IO
 const server = http.createServer(app);
-// Prepare allowed origins for Socket.IO and CORS
-const socketDefaultOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://192.168.1.2:5173',
-  'https://blackhole-workflow.vercel.app',
-  'https://workflow-blackhole.vercel.app'
-];
-const socketEnvFrontend = process.env.FRONTEND_URL || '';
-const socketEnvOrigins = socketEnvFrontend
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
-const socketAllowedOrigins = Array.from(new Set([...socketDefaultOrigins, ...socketEnvOrigins]));
-
 const io = socketIo(server, {
   cors: {
-    origin: socketAllowedOrigins,
+    origin: ['http://localhost:5173','http://192.168.1.2:5173','https://blackhole-workflow.vercel.app',],  // Replace with your frontend's URL
     methods: ['GET', 'POST'],
     credentials: true,  // Allow credentials (cookies, HTTP authentication)
   },
 });
 
-
 // CORS Configuration
-// Build allowed origins from environment variable or defaults
-const defaultOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://192.168.1.2:5173',
-  'https://blackhole-workflow.vercel.app',
-  'https://workflow-blackhole.vercel.app'
-];
-
-const envFrontend = process.env.FRONTEND_URL || '';
-const envOrigins = envFrontend
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
-
-const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
-    const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-    return callback(new Error(msg), false);
-  },
+  origin: ['http://localhost:5173','http://192.168.1.2:5173','https://blackhole-workflow.vercel.app'],  // Replace with your frontend's URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,
+  credentials: true,  // Allow credentials (cookies, HTTP authentication)
 };
-
 app.use(cors(corsOptions));
 
 app.use(express.json());
@@ -321,7 +285,13 @@ app.get('/api/test-browser-detection', async (req, res) => {
 });
 
 
+// Serve static files from Vite build
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
+// Serve frontend only for non-API routes
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 
 // Routes
@@ -342,15 +312,10 @@ app.use("/api/push", pushRoutes) // Added push routes use
 app.use("/api/monitoring", require("./routes/monitoring")); // Employee monitoring routes
 app.use("/api/attendance", attendanceRoutes); // Attendance management routes
 app.use("/api/leave", leaveRoutes); // Leave management routes
-app.use("/api/salary", salaryRoutes); // Old salary management routes
-app.use("/api/biometric-salary", biometricSalaryRoutes); // New biometric salary routes
+app.use("/api/salary", salaryRoutes); // Salary management routes
 app.use("/api/enhanced-aims", enhancedAimsRoutes); // Enhanced aims with progress routes
 app.use('/api/consent', consentRoutes);
 app.use('/api/alerts', alertRoutes);
-app.use('/api/compliance', require('./routes/compliance')); // Sankalp's compliance middleware
-app.use('/api/ems', require('./routes/ems')); // Rishabh's EMS automation
-app.use('/api/procurement', require('./routes/procurement')); // Procurement agent for task assignment
-app.use('/api/ai-review', require('./routes/aiReview')); // AI-powered task submission review
 
 // app.use('/api/new/ai',aiRoutePy)
 
@@ -408,89 +373,6 @@ const autoEndDayJob = async () => {
 
 // Run auto-end day job every 30 minutes
 setInterval(autoEndDayJob, 30 * 60 * 1000);
-
-// Process scheduled emails every 5 minutes
-const emsAutomation = require('./services/emsAutomation');
-setInterval(async () => {
-  try {
-    const processed = await emsAutomation.processScheduledEmails();
-    if (processed > 0) {
-      console.log(`📧 Processed ${processed} scheduled emails`);
-    }
-  } catch (error) {
-    console.error('Error processing scheduled emails:', error);
-  }
-}, 5 * 60 * 1000);
-
-// Send daily task reminders every morning at 9 AM
-setInterval(async () => {
-  try {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    // Check if it's 9:00 AM
-    if (currentHour === 9 && currentMinute === 0) {
-      console.log('🌅 Sending daily task reminders...');
-
-      // Import the router to access the function
-      const emsRouter = require('./routes/ems');
-      const express = require('express');
-      const app = express();
-
-      // Create a mock request/response for the daily reminders
-      const mockReq = {
-        body: {},
-        app: app
-      };
-
-      const mockRes = {
-        json: (data) => {
-          console.log(`✅ Daily reminders sent: ${data.message}`);
-          return data;
-        },
-        status: (code) => ({
-          json: (data) => {
-            console.error(`❌ Daily reminders failed (${code}):`, data);
-            return data;
-          }
-        })
-      };
-
-      // Call the daily reminders function
-      await emsRouter.stack.find(layer =>
-        layer.route && layer.route.path === '/send-daily-reminders' && layer.route.methods.post
-      ).handle(mockReq, mockRes, () => {});
-    }
-  } catch (error) {
-    console.error('Error in daily reminder automation:', error);
-  }
-}, 60 * 1000); // Check every minute
-
-// Run procurement analysis every 2 hours
-const procurementAgent = require('./services/procurementAgent');
-setInterval(async () => {
-  try {
-    const User = require('./models/User');
-    const admins = await User.find({ role: 'Admin' });
-    
-    for (const admin of admins) {
-      const analysis = await procurementAgent.analyzeEmployeeAvailability(admin._id);
-      if (analysis.lowTaskEmployees.length > 0) {
-        console.log(`🚨 Procurement Alert: ${analysis.lowTaskEmployees.length} employees with low task count`);
-        
-        // Emit socket event to admin
-        io.emit('procurement:low-task-alert', {
-          adminId: admin._id,
-          count: analysis.lowTaskEmployees.length,
-          employees: analysis.lowTaskEmployees.map(e => ({ name: e.name, activeTasks: e.activeTasks }))
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Error in procurement monitoring:', error);
-  }
-}, 2 * 60 * 60 * 1000); // Every 2 hours
 
 // Error handling middleware
 app.use((err, req, res, next) => {
