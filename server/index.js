@@ -151,14 +151,24 @@ const app = express();
 
 // Create HTTP server and initialize Socket.IO
 const server = http.createServer(app);
+// Prepare allowed origins for Socket.IO and CORS
+const socketDefaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://192.168.1.2:5173',
+  'https://blackhole-workflow.vercel.app',
+  'https://workflow-blackhole.vercel.app'
+];
+const socketEnvFrontend = process.env.FRONTEND_URL || '';
+const socketEnvOrigins = socketEnvFrontend
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+const socketAllowedOrigins = Array.from(new Set([...socketDefaultOrigins, ...socketEnvOrigins]));
+
 const io = socketIo(server, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://192.168.1.2:5173',
-      'https://blackhole-workflow.vercel.app/login'
-    ],
+    origin: socketAllowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true,  // Allow credentials (cookies, HTTP authentication)
   },
@@ -166,16 +176,37 @@ const io = socketIo(server, {
 
 
 // CORS Configuration
+// Build allowed origins from environment variable or defaults
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://192.168.1.2:5173',
+  'https://blackhole-workflow.vercel.app',
+  'https://workflow-blackhole.vercel.app'
+];
+
+const envFrontend = process.env.FRONTEND_URL || '';
+const envOrigins = envFrontend
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://192.168.1.2:5173',
-    'https://blackhole-workflow.vercel.app'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+    return callback(new Error(msg), false);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 
 app.use(express.json());
