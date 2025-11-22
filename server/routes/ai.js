@@ -167,9 +167,12 @@ const router = express.Router();
 const Task = require("../models/Task");
 const Department = require("../models/Department");
 const auth = require("../middleware/auth");
-const { v4: uuidv4 } = require("uuid");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const crypto = require("crypto");
 require("dotenv").config();
+
+// Generate UUID using crypto module (Node.js built-in)
+const uuidv4 = () => crypto.randomUUID();
 
 // Validate environment variables
 if (!process.env.GEMINI_API_KEY) {
