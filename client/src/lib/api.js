@@ -5,14 +5,21 @@
 let API_URL = '';
 if (import.meta.env.VITE_API_URL) {
   API_URL = import.meta.env.VITE_API_URL;
+  console.log('🔧 Using VITE_API_URL:', API_URL);
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
+  console.log('🌐 Current hostname:', host);
   if (host === 'blackhole-workflow.vercel.app' || host.endsWith('.vercel.app')) {
     API_URL = 'https://blackhole-workflow.onrender.com/api';
+    console.log('🎯 Using Render backend:', API_URL);
   } else {
     API_URL = `${window.location.origin}/api`;
+    console.log('🏠 Using same-origin API:', API_URL);
   }
+} else {
+  console.log('⚠️ Window not available, API_URL will be empty');
 }
+console.log('✅ Final API_URL:', API_URL);
 export { API_URL }
 
 // Helper function for API requests
@@ -31,7 +38,8 @@ async function fetchAPI(endpoint, options = {}) {
       fullURL: `${API_URL}${endpoint}`,
       API_URL,
       endpoint,
-      method: options.method || 'GET'
+      method: options.method || 'GET',
+      hostname: typeof window !== 'undefined' ? window.location.hostname : 'N/A'
     });
     
     const response = await fetch(`${API_URL}${endpoint}`, {
