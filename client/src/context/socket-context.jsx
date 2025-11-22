@@ -27,7 +27,9 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       // Initialize socket connection
-      const socketInstance = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000', {
+      const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || (typeof window !== 'undefined' ? window.location.origin : '');
+      const socketUrl = apiBase || undefined; // undefined lets socket.io connect to current origin at runtime
+      const socketInstance = io(socketUrl, {
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
