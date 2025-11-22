@@ -4,7 +4,7 @@
 let API_URL = '';
 
 if (import.meta.env.VITE_API_URL) {
-  API_URL = import.meta.env.VITE_API_URL + '/api';
+  API_URL = import.meta.env.VITE_API_URL;
   console.log('🔧 Using VITE_API_URL:', API_URL);
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
