@@ -1,6 +1,7 @@
 const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
 const ComplianceAuditLog = require('../models/ComplianceAuditLog');
+
+const uuidv4 = () => crypto.randomUUID();
 
 class ComplianceAuditLogger {
   constructor() {
