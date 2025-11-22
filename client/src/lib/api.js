@@ -1,10 +1,7 @@
-// Determine API base URL:
-// 1. Use build-time `VITE_API_URL` when provided by Vercel.
-// 2. If not set and running on the known Vercel frontend domain, use the Render backend URL.
-// 3. Otherwise fall back to same-origin `/api` (useful for local previews).
+// Determine API base URL
 let API_URL = '';
 if (import.meta.env.VITE_API_URL) {
-  API_URL = import.meta.env.VITE_API_URL;
+  API_URL = import.meta.env.VITE_API_URL + '/api';
   console.log('🔧 Using VITE_API_URL:', API_URL);
 } else if (typeof window !== 'undefined') {
   const host = window.location.hostname;
