@@ -5,7 +5,33 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Determine API URL with fallback logic
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    console.log('🔧 Using VITE_API_URL from env:', import.meta.env.VITE_API_URL);
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    
+    if (host === 'blackhole-workflow.vercel.app' || host.endsWith('.vercel.app')) {
+      console.log('🎯 Using Render backend for production');
+      return 'https://blackholeworkflow.onrender.com/api';
+    } else {
+      console.log('🏠 Using same-origin API');
+      return `${window.location.origin}/api`;
+    }
+  }
+  
+  // Fallback for SSR or build time
+  console.warn('⚠️ No API URL configured, using default localhost');
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = getApiUrl();
+console.log('✅ Auth Context API_URL:', API_URL);
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
