@@ -71,6 +71,13 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 25, // Default hourly rate in USD
   },
+  // Password reset fields
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpires: {
+    type: Date,
+  },
 })
 
 // Update the updatedAt field before saving

@@ -532,6 +532,212 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 })
 
+// Forgot Password - Request password reset
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() })
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.status(200).json({ 
+        message: "If an account exists with this email, a password reset link has been sent." 
+      })
+    }
+
+    // Generate reset token (random string)
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || "jwtSecret",
+      { expiresIn: "1h" } // Token expires in 1 hour
+    )
+
+    // Save reset token and expiry to user
+    user.resetPasswordToken = resetToken
+    user.resetPasswordExpires = Date.now() + 3600000 // 1 hour from now
+    await user.save()
+
+    // Create reset URL
+    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`
+
+    // Send password reset email
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #3b82f6;">Password Reset Request</h2>
+        <p>Hello ${user.name},</p>
+        
+        <p>We received a request to reset your password for your WorkflowAI account.</p>
+        
+        <p>Click the button below to reset your password:</p>
+        
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${resetUrl}" 
+             style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Reset Password
+          </a>
+        </div>
+        
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="background-color: #f3f4f6; padding: 10px; border-radius: 5px; word-break: break-all;">
+          ${resetUrl}
+        </p>
+        
+        <p><strong>This link will expire in 1 hour.</strong></p>
+        
+        <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <p style="color: #6b7280; font-size: 0.9em;">
+          This is an automated email. Please do not reply to this message.
+        </p>
+      </div>
+    `
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Request - WorkflowAI",
+      html: emailContent,
+    }
+
+    await transporter.sendMail(mailOptions)
+    console.log(`Password reset email sent to ${user.email}`)
+
+    res.status(200).json({ 
+      message: "If an account exists with this email, a password reset link has been sent." 
+    })
+  } catch (error) {
+    console.error("Forgot password error:", error)
+    res.status(500).json({ error: "Server error. Please try again later." })
+  }
+})
+
+// Verify Reset Token - Check if token is valid
+router.get("/verify-reset-token/:token", async (req, res) => {
+  const { token } = req.params
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "jwtSecret")
+
+    // Find user with this token
+    const user = await User.findOne({
+      _id: decoded.id,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if token hasn't expired
+    })
+
+    if (!user) {
+      return res.status(400).json({ 
+        error: "Password reset token is invalid or has expired." 
+      })
+    }
+
+    res.status(200).json({ 
+      message: "Token is valid",
+      email: user.email 
+    })
+  } catch (error) {
+    console.error("Verify reset token error:", error)
+    res.status(400).json({ 
+      error: "Password reset token is invalid or has expired." 
+    })
+  }
+})
+
+// Reset Password - Update password with valid token
+router.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params
+  const { password } = req.body
+
+  try {
+    // Validate password
+    if (!password || password.length < 6) {
+      return res.status(400).json({ 
+        error: "Password must be at least 6 characters long." 
+      })
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "jwtSecret")
+
+    // Find user with this token
+    const user = await User.findOne({
+      _id: decoded.id,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({ 
+        error: "Password reset token is invalid or has expired." 
+      })
+    }
+
+    // Update password (stored as plain text as per your current implementation)
+    user.password = password
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+    await user.save()
+
+    // Send confirmation email
+    const emailContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #10b981;">Password Successfully Reset</h2>
+        <p>Hello ${user.name},</p>
+        
+        <p>Your password has been successfully reset.</p>
+        
+        <p>You can now log in to your account using your new password.</p>
+        
+        <div style="margin: 30px 0; text-align: center;">
+          <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/login" 
+             style="background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Go to Login
+          </a>
+        </div>
+        
+        <p>If you didn't make this change, please contact support immediately.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <p style="color: #6b7280; font-size: 0.9em;">
+          This is an automated email. Please do not reply to this message.
+        </p>
+      </div>
+    `
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Confirmation - WorkflowAI",
+      html: emailContent,
+    }
+
+    await transporter.sendMail(mailOptions).catch(err => {
+      console.error("Failed to send confirmation email:", err)
+    })
+
+    console.log(`Password reset successful for ${user.email}`)
+
+    res.status(200).json({ 
+      message: "Password has been reset successfully. You can now log in with your new password." 
+    })
+  } catch (error) {
+    console.error("Reset password error:", error)
+    
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(400).json({ 
+        error: "Password reset token is invalid or has expired." 
+      })
+    }
+    
+    res.status(500).json({ error: "Server error. Please try again later." })
+  }
+})
+
 // Google OAuth removed: authentication uses email/password only
 
 module.exports = router
