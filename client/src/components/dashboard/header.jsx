@@ -127,8 +127,8 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
   return (
     <div className="w-full h-16 border-b border-border bg-card/95 backdrop-blur-sm shadow-sm">
       <div className="h-full flex items-center justify-between px-4 md:px-6 lg:px-8 gap-4">
-        {/* Left Section - Mobile Menu + Brand (optional) */}
-        <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Left Spacer - Mobile Menu */}
+        <div className="flex items-center flex-shrink-0 w-auto">
           <div className="md:hidden">
             <MobileMenuButton 
               isOpen={sidebarOpen} 
@@ -138,20 +138,20 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
           </div>
         </div>
 
-        {/* Right Section - Search + Actions */}
-        <div className="flex items-center gap-2 md:gap-3 flex-1 justify-end">
-          {/* Enhanced Search Bar - Desktop */}
-          <div className="hidden md:block flex-1 max-w-md">
+        {/* Center Section - Search Bar (Desktop) */}
+        <div className="hidden md:flex flex-1 items-center justify-center">
+          <div className="w-full max-w-2xl">
             <EnhancedSearch onUserSelect={handleUserSelect} />
           </div>
+        </div>
 
-          {/* Mobile Search - Icon Only */}
-          <div className="md:hidden">
-            <EnhancedSearch onUserSelect={handleUserSelect} compact />
-          </div>
+        {/* Mobile Search - Icon Only */}
+        <div className="md:hidden flex-1">
+          <EnhancedSearch onUserSelect={handleUserSelect} compact />
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+        {/* Right Section - Action Buttons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
             <NotificationsPopover />
             <Alerts />
             <SimpleModeToggle />
@@ -229,7 +229,6 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
         </div>
       </div>
 

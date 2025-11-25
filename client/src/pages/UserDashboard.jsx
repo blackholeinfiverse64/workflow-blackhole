@@ -39,7 +39,7 @@ import { SubmissionFeedbackCard } from "../components/dashboard/SubmissionFeedba
 import { DashboardProvider } from "../context/DashboardContext" // New import
 import { api } from "@/lib/api"
 import { WorkHoursManager } from "../components/monitoring/WorkHoursManager"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
 
 function UserDashboard() {
   const navigate = useNavigate()
@@ -454,69 +454,91 @@ function UserDashboard() {
                 <>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
+                      <BarChart
                         data={[
                           { 
                             name: 'Tasks', 
+                            'Total Tasks': userStats.totalTasks,
                             Completed: userStats.completedTasks,
-                            'In Progress': userStats.inProgressTasks,
                             Pending: userStats.pendingTasks
                           }
                         ]}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        barGap={8}
+                        barCategoryGap="20%"
                       >
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          allowDecimals={false}
+                        />
                         <Tooltip 
                           contentStyle={{ 
                             backgroundColor: 'hsl(var(--background))', 
                             border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
+                            borderRadius: '8px',
+                            padding: '12px'
                           }}
+                          labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
+                          cursor={{ fill: 'hsl(var(--primary) / 0.1)' }}
                         />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px' }}
+                          iconType="rect"
+                        />
+                        {/* Blue Bar - Total Tasks */}
+                        <Bar 
+                          dataKey="Total Tasks" 
+                          fill="#3b82f6" 
+                          radius={[8, 8, 0, 0]}
+                          maxBarSize={80}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                        />
+                        {/* Green Bar - Completed Tasks */}
+                        <Bar 
                           dataKey="Completed" 
-                          stroke="#22c55e" 
-                          strokeWidth={2}
-                          dot={{ fill: '#22c55e', r: 6 }}
+                          fill="#22c55e" 
+                          radius={[8, 8, 0, 0]}
+                          maxBarSize={80}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="In Progress" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', r: 6 }}
-                        />
-                        <Line 
-                          type="monotone" 
+                        {/* Red Bar - Pending Tasks */}
+                        <Bar 
                           dataKey="Pending" 
-                          stroke="#f59e0b" 
-                          strokeWidth={2}
-                          dot={{ fill: '#f59e0b', r: 6 }}
+                          fill="#ef4444" 
+                          radius={[8, 8, 0, 0]}
+                          maxBarSize={80}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
                         />
-                      </LineChart>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                   
                   {/* Task Count Summary */}
                   <div className="grid grid-cols-3 gap-4 mt-6">
-                    <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <div className="text-center p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {userStats.totalTasks}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Total Tasks</div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {userStats.completedTasks}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">Completed</div>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {userStats.inProgressTasks}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">In Progress</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    <div className="text-center p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {userStats.pendingTasks}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">Pending</div>
