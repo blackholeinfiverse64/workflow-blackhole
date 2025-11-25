@@ -7,11 +7,11 @@ Go to: **Vercel Dashboard → Your Project → Settings → Environment Variable
 ### Required Environment Variables:
 
 ```
-VITE_API_URL=https://blackholeworkflow.onrender.com
+VITE_API_URL=https://blackholeworkflow.onrender.com/api
 VITE_SOCKET_URL=https://blackholeworkflow.onrender.com
 ```
 
-**Note**: Do NOT include `/api` in VITE_API_URL - it's added automatically by the code.
+**⚠️ IMPORTANT**: You MUST include `/api` in VITE_API_URL - it's NOT added automatically!
 
 ---
 
@@ -29,11 +29,11 @@ VITE_SOCKET_URL=https://blackholeworkflow.onrender.com
 For each variable:
 1. Click **Add New**
 2. Enter **Key**: `VITE_API_URL`
-3. Enter **Value**: `https://blackholeworkflow.onrender.com`
+3. Enter **Value**: `https://blackholeworkflow.onrender.com/api` ⚠️ (Must include /api)
 4. Select environments: **Production**, **Preview**, **Development**
 5. Click **Save**
 
-Repeat for `VITE_SOCKET_URL`
+Repeat for `VITE_SOCKET_URL` with value `https://blackholeworkflow.onrender.com` (no /api for socket)
 
 ### 4. Redeploy
 After adding variables:
