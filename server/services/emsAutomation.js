@@ -13,6 +13,13 @@ class EMSAutomation {
   }
 
   createTransporter() {
+    // Only create transporter if email credentials are provided
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠️  EMS: Email credentials not configured. Running in MOCK MODE.');
+      console.warn('   Add EMAIL_USER and EMAIL_PASS to .env file to enable real email sending.');
+      return null;
+    }
+
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: process.env.EMAIL_PORT || 587,
@@ -220,6 +227,29 @@ class EMSAutomation {
 
   async sendEmail(subject, htmlBody, recipients, senderId) {
     try {
+      // If email is not configured, use mock mode (log only)
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('📧 [MOCK MODE] Email would be sent:');
+        console.log(`   Subject: ${subject}`);
+        console.log(`   To: ${recipients.join(', ')}`);
+        console.log(`   Recipients: ${recipients.length}`);
+        
+        // Log the email activity
+        await auditLogger.logEvent(
+          senderId || 'system',
+          'email_mock_sent',
+          'ems_automation',
+          {
+            subject,
+            recipients,
+            message_id: `mock-${Date.now()}`
+          }
+        );
+
+        console.log(`✅ Email logged successfully (${recipients.length} recipients) - Configure EMAIL_USER and EMAIL_PASS in .env to send real emails`);
+        return { success: true, messageId: `mock-${Date.now()}`, mode: 'mock' };
+      }
+
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: recipients.join(', '),
