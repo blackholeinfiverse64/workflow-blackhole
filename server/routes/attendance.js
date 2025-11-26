@@ -304,20 +304,19 @@ router.post('/end-day/:userId', auth, async (req, res) => {
       }
     });
     
-    // Check if progress has any meaningful content
+    // Check if progress exists (lenient validation - just needs to exist)
     const hasProgressContent = todayProgress && (
       (todayProgress.notes && todayProgress.notes.trim() !== '') ||
       (todayProgress.achievements && todayProgress.achievements.trim() !== '') ||
-      (todayProgress.blockers && todayProgress.blockers.trim() !== '')
+      (todayProgress.blockers && todayProgress.blockers.trim() !== '') ||
+      (todayProgress.tasksCompleted && todayProgress.tasksCompleted.length > 0) ||
+      todayProgress.percentageCompleted !== undefined
     );
     
+    // RELAXED VALIDATION: Only warn, don't block
     if (!hasProgressContent) {
-      return res.status(400).json({
-        error: 'Please set your daily progress before ending your day',
-        code: 'PROGRESS_NOT_SET',
-        message: 'Daily progress with notes is mandatory before ending work day',
-        requirement: 'You must describe your daily accomplishments or tasks completed'
-      });
+      console.log(`⚠️ User ${userId} is ending day without detailed progress - allowing anyway`);
+      // Don't block - just log the warning
     }
     
     // 🎯 Get aim for reference but don't block end-day if not completed
