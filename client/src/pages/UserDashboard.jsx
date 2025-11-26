@@ -525,20 +525,20 @@ function UserDashboard() {
                   
                   {/* Task Count Summary */}
                   <div className="grid grid-cols-3 gap-4 mt-6">
-                    <div className="text-center p-4 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                    <div className="text-center p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {userStats.totalTasks}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">Total Tasks</div>
                     </div>
-                    <div className="text-center p-4 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                    <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {userStats.completedTasks}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">Completed</div>
                     </div>
-                    <div className="text-center p-4 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
+                    <div className="text-center p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {userStats.pendingTasks}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">Pending</div>
