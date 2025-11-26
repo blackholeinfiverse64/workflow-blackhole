@@ -724,44 +724,12 @@ function UserDashboard() {
                 )}
               </CardContent>
             </Card>
-
-            {recentReviews.length > 0 && (
-              <Card className="mt-6 neo-card shadow-lg border-l-4 border-l-blue-500 animate-slide-up">
-                <CardHeader className="border-b bg-gradient-to-r from-blue-500/5 to-transparent">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <Bell className="h-4 w-4 text-blue-500" />
-                    </div>
-                    Recent Reviews
-                  </CardTitle>
-                  <CardDescription>Feedback on your recent submissions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentReviews.map((review) => (
-                      <SubmissionFeedbackCard
-                        key={review._id}
-                        submission={review}
-                        onViewDetails={(submission) => {
-                          setSelectedSubmission(submission)
-                          setIsSubmissionDetailsOpen(true)
-                        }}
-                        onSubmitRevision={(submission) => {
-                          setSelectedSubmission(submission)
-                          setIsRevisionDialogOpen(true)
-                        }}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>
 
          <Dialog open={isSubmissionDetailsOpen} onOpenChange={setIsSubmissionDetailsOpen}>
-          <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-hidden flex flex-col bg-white dark:bg-gray-950">
-            <DialogHeader className="border-b pb-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 -mx-6 -mt-6 px-6 pt-6 border-gray-200 dark:border-gray-800">
+          <DialogContent className="sm:max-w-[700px] h-[85vh] flex flex-col bg-white dark:bg-gray-950 p-0">
+            <DialogHeader className="flex-shrink-0 border-b pb-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 px-6 pt-6 border-gray-200 dark:border-gray-800">
               <div className="flex items-start justify-between">
                 <div className="space-y-1 flex-1">
                   <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
@@ -783,7 +751,7 @@ function UserDashboard() {
             </DialogHeader>
 
             {selectedSubmission && (
-              <div className="space-y-5 py-6 overflow-y-auto flex-1 px-1">
+              <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6 space-y-5 scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-600">
                 {/* Submission Info Card */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-3">
@@ -930,7 +898,7 @@ function UserDashboard() {
               </div>
             )}
 
-            <DialogFooter className="border-t border-gray-200 dark:border-gray-800 pt-4 gap-2 sm:gap-2 bg-gray-50 dark:bg-gray-900 -mx-6 -mb-6 px-6 pb-6">
+            <DialogFooter className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 pt-4 gap-2 sm:gap-2 bg-gray-50 dark:bg-gray-900 px-6 pb-6">
               <Button 
                 variant="outline" 
                 onClick={() => setIsSubmissionDetailsOpen(false)}
