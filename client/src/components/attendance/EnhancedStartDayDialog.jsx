@@ -268,54 +268,51 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 text-xl">
-            <Building className="w-6 h-6 text-blue-600" />
-            <span>Start Your Work Day</span>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-gray-700/90 dark:bg-gray-800/90 backdrop-blur-xl border-none shadow-2xl rounded-2xl">
+        <DialogHeader className="relative pb-2">
+          <DialogTitle className="text-lg font-semibold text-white">
+            Start Your Work Day
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-300 dark:text-gray-400 text-sm">
             Verify your location and start tracking your work hours
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Device Status Bar */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-1">
-                    {isOnline ? (
-                      <Wifi className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <WifiOff className="w-4 h-4 text-red-600" />
-                    )}
-                    <span className={isOnline ? 'text-green-600' : 'text-red-600'}>
-                      {isOnline ? 'Online' : 'Offline'}
-                    </span>
-                  </div>
-                  
-                  {batteryLevel !== null && (
-                    <div className="flex items-center space-x-1">
-                      <Battery className="w-4 h-4 text-gray-600" />
-                      <span>{batteryLevel}%</span>
-                    </div>
+          <div className="bg-gray-600/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-gray-500/30 dark:border-gray-600/30">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  {isOnline ? (
+                    <Wifi className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <WifiOff className="w-3.5 h-3.5 text-red-400" />
                   )}
-                  
-                  <div className="flex items-center space-x-1">
-                    <Smartphone className="w-4 h-4 text-gray-600" />
-                    <span>{deviceInfo.platform || 'Unknown'}</span>
-                  </div>
+                  <span className={`font-semibold ${isOnline ? 'text-green-400' : 'text-red-400'}`}>
+                    {isOnline ? 'Online' : 'Offline'}
+                  </span>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <span>{new Date().toLocaleTimeString()}</span>
+                {batteryLevel !== null && (
+                  <div className="flex items-center space-x-1">
+                    <Battery className="w-3.5 h-3.5 text-white" />
+                    <span className="font-semibold text-white">{batteryLevel}%</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-1">
+                  <Smartphone className="w-3.5 h-3.5 text-white" />
+                  <span className="font-semibold text-white">{deviceInfo.platform || 'Win32'}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              
+              <div className="flex items-center space-x-1.5">
+                <Clock className="w-3.5 h-3.5 text-white" />
+                <span className="font-bold text-white">{new Date().toLocaleTimeString()}</span>
+              </div>
+            </div>
+          </div>
 
           <AnimatePresence mode="wait">
             {/* Step 1: Location Detection */}
@@ -326,32 +323,34 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
               >
-                <div className="text-center">
-                  <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Location Required</h3>
-                  <p className="text-gray-600">
+                <div className="text-center py-6">
+                  <div className="inline-block p-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl shadow-xl mb-4">
+                    <MapPin className="w-20 h-20 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-white">
+                    Location Required
+                  </h3>
+                  <p className="text-gray-300 dark:text-gray-400 text-sm max-w-sm mx-auto">
                     We need to verify your location to start your work day
                   </p>
                 </div>
 
                 {locationError && (
-                  <Card className="border-red-200 bg-red-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
-                        <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
-                        <div>
-                          <h4 className="font-medium text-red-900">Location Error</h4>
-                          <p className="text-sm text-red-700 mt-1">{locationError}</p>
-                        </div>
+                  <div className="bg-red-900/30 backdrop-blur-sm border border-red-500/30 rounded-xl p-4 shadow-lg">
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-red-300 text-base">Location Error</h4>
+                        <p className="text-sm text-red-200 mt-1">{locationError}</p>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
 
                 <Button
                   onClick={handleGetLocation}
                   disabled={loading}
-                  className="w-full h-12 text-lg"
+                  className="w-full h-12 text-base bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 font-semibold rounded-xl"
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">
@@ -376,24 +375,27 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="text-center">
-                  <div className={`w-16 h-16 ${getLocationStatusColor()} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                    {workFromHome ? (
-                      <Home className="w-8 h-8 text-white" />
-                    ) : isInOfficeRange ? (
-                      <CheckCircle className="w-8 h-8 text-white" />
-                    ) : (
-                      <AlertTriangle className="w-8 h-8 text-white" />
-                    )}
+                <div className="text-center py-6">
+                  <div className="relative inline-block mb-4">
+                    <div className={`absolute inset-0 ${getLocationStatusColor()} opacity-30 rounded-full blur-2xl animate-pulse`}></div>
+                    <div className={`relative w-20 h-20 ${getLocationStatusColor()} rounded-full flex items-center justify-center shadow-2xl`}>
+                      {workFromHome ? (
+                        <Home className="w-10 h-10 text-white" />
+                      ) : isInOfficeRange ? (
+                        <CheckCircle className="w-10 h-10 text-white" />
+                      ) : (
+                        <AlertTriangle className="w-10 h-10 text-white" />
+                      )}
+                    </div>
                   </div>
                   
-                  <h3 className="text-xl font-semibold mb-2">Location Detected</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-white">Location Detected</h3>
                   <Badge 
                     variant="outline" 
-                    className={`px-4 py-2 text-sm font-medium ${
-                      workFromHome ? 'border-blue-300 text-blue-700' :
-                      isInOfficeRange ? 'border-green-300 text-green-700' : 
-                      'border-red-300 text-red-700'
+                    className={`px-5 py-2 text-sm font-bold shadow-lg backdrop-blur-sm border ${
+                      workFromHome ? 'border-blue-400 text-blue-300 bg-blue-500/20' :
+                      isInOfficeRange ? 'border-green-400 text-green-300 bg-green-500/20' : 
+                      'border-red-400 text-red-300 bg-red-500/20'
                     }`}
                   >
                     {getLocationStatusText()}
@@ -401,103 +403,144 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
                 </div>
 
                 {/* Location Details */}
-                <Card>
-                  <CardContent className="p-4 space-y-3">
+                <div className="bg-gray-600/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-500/30 dark:border-gray-600/30 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                      <Target className="w-4 h-4 text-blue-400" />
+                      Coordinates:
+                    </span>
+                    <span className="text-sm font-mono font-bold text-blue-400">
+                      {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                      <Navigation className="w-4 h-4 text-purple-400" />
+                      Accuracy:
+                    </span>
+                    <span className="text-sm font-bold text-purple-400">±{Math.round(location.accuracy)}m</span>
+                  </div>
+                  
+                  {distanceFromOffice !== null && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Coordinates:</span>
-                      <span className="text-sm font-mono">
-                        {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                      <span className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                        <MapPinned className="w-4 h-4 text-green-400" />
+                        Distance from Office:
+                      </span>
+                      <span className="text-sm font-bold text-green-400">
+                        {distanceFromOffice}m
                       </span>
                     </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Accuracy:</span>
-                      <span className="text-sm">±{Math.round(location.accuracy)}m</span>
-                    </div>
-                    
-                    {distanceFromOffice !== null && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Distance from Office:</span>
-                        <span className="text-sm font-medium">
-                          {distanceFromOffice}m
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
 
                 {/* Office Range Validation */}
                 {!workFromHome && (
-                  <Card className={isInOfficeRange ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
+                  <div className={`relative overflow-hidden rounded-xl p-5 shadow-lg backdrop-blur-sm border ${
+                    isInOfficeRange 
+                      ? 'border-green-500/30 bg-green-600/20' 
+                      : 'border-red-500/30 bg-red-600/20'
+                  }`}>
+                    <div className="flex items-start space-x-4">
+                      <div className={`p-3 rounded-2xl shadow-lg ${
+                        isInOfficeRange 
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}>
                         {isInOfficeRange ? (
-                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                          <CheckCircle className="w-7 h-7 text-white" />
                         ) : (
-                          <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                          <AlertTriangle className="w-7 h-7 text-white" />
                         )}
-                        <div className="flex-1">
-                          <h4 className={`font-medium ${isInOfficeRange ? 'text-green-900' : 'text-red-900'}`}>
-                            {isInOfficeRange ? '✅ At Blackhole Office' : '❌ Outside Office Range'}
-                          </h4>
-                          <p className={`text-sm mt-1 ${isInOfficeRange ? 'text-green-700' : 'text-red-700'}`}>
-                            {isInOfficeRange ? 
-                              '🏢 You are at Blackhole Infiverse LLP office location and can start your day.' :
-                              `📍 You are ${distanceFromOffice}m away from office (allowed: ${OFFICE_RADIUS}m). Please reach office or work from home.`
-                            }
-                          </p>
-                          
-                          {!isInOfficeRange && (
-                            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                              <p className="text-sm text-yellow-800 font-medium">
-                                🏢 Office Location:
-                              </p>
-                              <p className="text-xs text-yellow-700 mt-1">
-                                {OFFICE_ADDRESS}
-                              </p>
-                            </div>
-                          )}
-                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="flex-1">
+                        <h4 className={`font-bold text-lg mb-2 ${
+                          isInOfficeRange 
+                            ? 'text-green-300' 
+                            : 'text-red-300'
+                        }`}>
+                          {isInOfficeRange ? '✅ At Blackhole Office' : '❌ Outside Office Range'}
+                        </h4>
+                        <p className={`text-sm leading-relaxed ${
+                          isInOfficeRange 
+                            ? 'text-green-200' 
+                            : 'text-red-200'
+                        }`}>
+                          {isInOfficeRange ? 
+                            '🏢 You are at Blackhole Infiverse LLP office location and can start your day.' :
+                            `📍 You are ${distanceFromOffice}m away from office (allowed: ${OFFICE_RADIUS}m). Please reach office or work from home.`
+                          }
+                        </p>
+                        
+                        {!isInOfficeRange && (
+                          <div className="mt-4 p-4 bg-yellow-600/20 backdrop-blur-sm border border-yellow-500/30 rounded-xl shadow-md">
+                            <p className="text-sm text-yellow-300 font-bold mb-2 flex items-center gap-2">
+                              <Building className="w-5 h-5" />
+                              Office Location:
+                            </p>
+                            <p className="text-xs text-yellow-200 leading-relaxed">
+                              {OFFICE_ADDRESS}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Work Options */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-gray-900">Choose Work Location:</h4>
+                  <h4 className="font-bold text-base text-white flex items-center gap-2">
+                    <MapPinned className="w-5 h-5 text-blue-400" />
+                    Choose Work Location:
+                  </h4>
                   
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       variant={!workFromHome ? "default" : "outline"}
                       onClick={() => setWorkFromHome(false)}
                       disabled={!isInOfficeRange && !workFromHome}
-                      className="h-20 flex-col space-y-2"
+                      className={`relative h-20 flex-col space-y-2 transition-all duration-200 ${
+                        !workFromHome 
+                          ? 'bg-blue-500/90 hover:bg-blue-600/90 text-white shadow-lg border border-blue-400/50' 
+                          : 'border border-gray-500/30 bg-gray-600/50 hover:bg-gray-600/60 text-white backdrop-blur-sm'
+                      }`}
                     >
-                      <Building className="w-6 h-6" />
-                      <span>Office</span>
+                      <Building className="w-7 h-7" />
+                      <span className="font-semibold text-sm">Office</span>
                       {!isInOfficeRange && !workFromHome && (
-                        <span className="text-xs text-red-600">Too far</span>
+                        <span className="text-xs font-semibold bg-red-500/30 px-2 py-0.5 rounded-full text-red-200">Too far</span>
+                      )}
+                      {!workFromHome && (
+                        <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-lg"></div>
                       )}
                     </Button>
                     
                     <Button
                       variant={workFromHome ? "default" : "outline"}
                       onClick={() => setWorkFromHome(true)}
-                      className="h-20 flex-col space-y-2"
+                      className={`relative h-20 flex-col space-y-2 transition-all duration-200 ${
+                        workFromHome 
+                          ? 'bg-green-500/90 hover:bg-green-600/90 text-white shadow-lg border border-green-400/50' 
+                          : 'border border-gray-500/30 bg-gray-600/50 hover:bg-gray-600/60 text-white backdrop-blur-sm'
+                      }`}
                     >
-                      <Home className="w-6 h-6" />
-                      <span>Work From Home</span>
+                      <Home className="w-7 h-7" />
+                      <span className="font-semibold text-sm">Work From Home</span>
+                      {workFromHome && (
+                        <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-400 rounded-full animate-pulse shadow-lg"></div>
+                      )}
                     </Button>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-3">
+                <div className="flex space-x-3 pt-4">
                   <Button
                     variant="outline"
                     onClick={() => setStep('location')}
-                    className="flex-1"
+                    className="flex-1 h-11 border border-gray-500/30 bg-gray-600/50 hover:bg-gray-600/60 text-white backdrop-blur-sm font-semibold transition-all duration-200"
                   >
                     Back
                   </Button>
@@ -505,7 +548,7 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
                   <Button
                     onClick={handleStartDay}
                     disabled={loading || (!isInOfficeRange && !workFromHome)}
-                    className="flex-1 h-12"
+                    className="flex-1 h-11 bg-green-500/90 hover:bg-green-600/90 text-white shadow-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-green-400/50"
                   >
                     {loading ? (
                       <div className="flex items-center space-x-2">

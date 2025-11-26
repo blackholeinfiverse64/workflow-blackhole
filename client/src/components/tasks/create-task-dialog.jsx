@@ -21,7 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { isValid, parse } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Calendar } from "../ui/calendar";
+import { isValid, parse, format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/context/auth-context";
 import { getUserTasks } from "@/lib/user-api";
@@ -34,7 +37,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [documentFile, setDocumentFile] = useState(null);
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(null);
   const [dateError, setDateError] = useState("");
   const [assigneeSearch, setAssigneeSearch] = useState("");
   const [selectedUserTasks, setSelectedUserTasks] = useState([]);
@@ -182,25 +185,27 @@ export function CreateTaskDialog({ open, onOpenChange }) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDateChange = (e) => {
-    const value = e.target.value;
-    setDueDate(value);
-
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(value)) {
-      setDateError("Please enter a valid date in YYYY-MM-DD format");
+  const handleDateChange = (date) => {
+    if (!date) {
+      setDueDate(null);
+      setDateError("");
       return;
     }
 
-    const parsedDate = parse(value, "yyyy-MM-dd", new Date());
-    if (!isValid(parsedDate)) {
+    setDueDate(date);
+
+    // Validate the date
+    if (!isValid(date)) {
       setDateError("Invalid date");
       return;
     }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (parsedDate < today) {
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
       setDateError("Due date cannot be in the past");
       return;
     }
@@ -239,21 +244,17 @@ export function CreateTaskDialog({ open, onOpenChange }) {
     }
 
     if (dueDate) {
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(dueDate)) {
-        toast.error("Please enter a valid due date in YYYY-MM-DD format");
-        return;
-      }
-
-      const parsedDate = parse(dueDate, "yyyy-MM-dd", new Date());
-      if (!isValid(parsedDate)) {
+      if (!isValid(dueDate)) {
         toast.error("Invalid due date");
         return;
       }
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (parsedDate < today) {
+      const selectedDate = new Date(dueDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
         toast.error("Due date cannot be in the past");
         return;
       }
@@ -275,7 +276,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
       formDataToSend.append("links", formData.links || "");
 
       if (dueDate) {
-        formDataToSend.append("dueDate", dueDate);
+        formDataToSend.append("dueDate", format(dueDate, "yyyy-MM-dd"));
       }
       if (documentFile) {
         formDataToSend.append("document", documentFile);
@@ -548,19 +549,35 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
                 Due Date
               </Label>
-              <div className="relative">
-                <Input
-                  id="dueDate"
-                  type="text"
-                  placeholder="YYYY-MM-DD"
-                  value={dueDate}
-                  onChange={handleDateChange}
-                  className={cn("h-12 px-4 pr-11 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-info focus-visible:ring-4 focus-visible:ring-info/30 rounded-xl transition-all duration-300 text-base text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl", dateError && "border-red-400 focus:border-red-400 focus-visible:ring-red-400/30")}
-                />
-                <svg className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 dark:text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-12 w-full justify-start text-left font-normal bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 hover:bg-white/20 dark:hover:bg-slate-800/70 rounded-xl transition-all duration-300 backdrop-blur-xl",
+                      !dueDate && "text-gray-500 dark:text-slate-500",
+                      dateError && "border-red-400 hover:border-red-400"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border-2 border-primary/20" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={handleDateChange}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today;
+                    }}
+                    initialFocus
+                    className="rounded-lg"
+                  />
+                </PopoverContent>
+              </Popover>
               {dateError && <p className="text-sm text-destructive flex items-center gap-1.5 mt-1 font-medium">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
