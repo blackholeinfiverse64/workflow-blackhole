@@ -450,13 +450,13 @@ const ems = {
       if (value) queryParams.append(key, value);
     });
     const queryString = queryParams.toString();
-    return fetchAPI(`/ems/scheduled${queryString ? `?${queryString}` : ""}`);
+    return fetchAPI(`/ems/scheduled-emails${queryString ? `?${queryString}` : ""}`);
   },
 
   // Cancel scheduled email
   cancelScheduledEmail: (id) =>
-    fetchAPI(`/ems/scheduled/${id}/cancel`, {
-      method: "POST",
+    fetchAPI(`/ems/scheduled-emails/${id}`, {
+      method: "DELETE",
     }),
 
   // Process scheduled emails manually
