@@ -5,7 +5,11 @@ const { auditLogger } = require('./complianceAuditLogger');
 class ProcurementAgent {
   async analyzeEmployeeAvailability(adminId) {
     try {
-      const employees = await User.find({ role: 'User' }).select('name email department');
+      // Only fetch ACTIVE employees (exclude inactive/terminated employees)
+      const employees = await User.find({ 
+        role: 'User',
+        isActive: { $ne: false } // Only include active employees
+      }).select('name email department isActive');
       const analysis = [];
       const lowTaskEmployees = [];
 
@@ -105,7 +109,11 @@ class ProcurementAgent {
 
   async getTopPerformers(limit = 5) {
     try {
-      const employees = await User.find({ role: 'User' }).select('name email');
+      // Only fetch ACTIVE employees (exclude inactive/terminated employees)
+      const employees = await User.find({ 
+        role: 'User',
+        isActive: { $ne: false } // Only include active employees
+      }).select('name email isActive');
       const performers = [];
 
       for (const employee of employees) {
@@ -131,7 +139,11 @@ class ProcurementAgent {
 
   async getAvailableEmployees(minAvailabilityScore = 50) {
     try {
-      const employees = await User.find({ role: 'User' }).select('name email department');
+      // Only fetch ACTIVE employees (exclude inactive/terminated employees)
+      const employees = await User.find({ 
+        role: 'User',
+        isActive: { $ne: false } // Only include active employees
+      }).select('name email department isActive');
       const available = [];
 
       for (const employee of employees) {
