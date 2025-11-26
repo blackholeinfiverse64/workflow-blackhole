@@ -1192,11 +1192,13 @@ router.post('/work-session/end', async (req, res) => {
       blockers: todayProgress.blockers ? `"${todayProgress.blockers.substring(0, 50)}..."` : 'null'
     } : 'NO PROGRESS FOUND');
     
-    // Check if progress has any meaningful content
+    // Check if progress exists (lenient validation)
     const hasProgressContent = todayProgress && (
       (todayProgress.notes && todayProgress.notes.trim() !== '') ||
       (todayProgress.achievements && todayProgress.achievements.trim() !== '') ||
-      (todayProgress.blockers && todayProgress.blockers.trim() !== '')
+      (todayProgress.blockers && todayProgress.blockers.trim() !== '') ||
+      (todayProgress.tasksCompleted && todayProgress.tasksCompleted.length > 0) ||
+      todayProgress.percentageCompleted !== undefined
     );
     
     console.log(`📝 Progress validation result:`, {
@@ -1207,14 +1209,10 @@ router.post('/work-session/end', async (req, res) => {
       hasProgressContent
     });
     
+    // RELAXED VALIDATION: Only warn, don't block
     if (!hasProgressContent) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please set your daily progress before ending your work session',
-        code: 'PROGRESS_NOT_SET',
-        message: 'Daily progress with notes is mandatory before ending work session',
-        requirement: 'You must describe your daily accomplishments or tasks completed'
-      });
+      console.log(`⚠️ User ${employeeId} is ending session without detailed progress - allowing anyway`);
+      // Don't block - just log the warning
     }
     
     console.log(`✅ Progress validation passed for work session end - Employee: ${employeeId}, Progress content found: ${hasProgressContent}`);
