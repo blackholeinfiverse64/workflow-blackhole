@@ -45,6 +45,7 @@ export default function EMSDashboard() {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
   const [emailForm, setEmailForm] = useState({
     subject: "",
     message: "",
@@ -142,6 +143,31 @@ export default function EMSDashboard() {
     });
   };
 
+  const handleTemplateSelect = (templateId) => {
+    setSelectedTemplate(templateId);
+    
+    // Find the template and populate the form
+    const template = templates.find(t => t.templateId === templateId);
+    if (template) {
+      setEmailForm(prev => ({
+        ...prev,
+        subject: template.subject.replace(/\{.*?\}/g, '...'), // Remove placeholders
+        message: template.htmlBody
+          ? template.htmlBody.replace(/<[^>]*>/g, '').replace(/\{.*?\}/g, '...').trim()
+          : prev.message
+      }));
+    }
+  };
+
+  const handleClearTemplate = () => {
+    setSelectedTemplate("");
+    setEmailForm(prev => ({
+      ...prev,
+      subject: "",
+      message: ""
+    }));
+  };
+
   const handleSendCustomEmail = async () => {
     if (!emailForm.subject || !emailForm.message) {
       setError("Subject and message are required");
@@ -195,6 +221,7 @@ export default function EMSDashboard() {
         });
         setSelectedEmployees([]);
         setSelectAll(false);
+        setSelectedTemplate("");
         fetchStats();
         fetchScheduledEmails();
         setTimeout(() => setSuccess(null), 3000);
@@ -452,6 +479,43 @@ export default function EMSDashboard() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Template Selection */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Use Email Template (Optional)
+              </Label>
+              <div className="flex gap-2">
+                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a template..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template._id} value={template.templateId}>
+                        {template.name} ({template.category})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedTemplate && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearTemplate}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {selectedTemplate && (
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Template applied! You can customize the content below.
+                </p>
+              )}
+            </div>
+
             {/* Email Subject */}
             <div className="space-y-2">
               <Label htmlFor="subject">Subject *</Label>
@@ -578,6 +642,7 @@ export default function EMSDashboard() {
                 });
                 setSelectedEmployees([]);
                 setSelectAll(false);
+                setSelectedTemplate("");
               }}
             >
               Cancel
