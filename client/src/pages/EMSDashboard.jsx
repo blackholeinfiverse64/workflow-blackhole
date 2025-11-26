@@ -21,7 +21,7 @@ export default function EMSDashboard() {
 
   const fetchStats = async () => {
     try {
-      const response = await api.get('/ems/stats');
+      const response = await api.ems.getStats();
       if (response.success) {
         setStats(response.data);
       }
@@ -36,7 +36,7 @@ export default function EMSDashboard() {
     setError(null);
 
     try {
-      const response = await api.post('/ems/send-task-reminders', {
+      const response = await api.ems.sendTaskReminders({
         reminderType: "due_soon"
       });
 

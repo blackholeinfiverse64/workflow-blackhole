@@ -394,6 +394,80 @@ const aims = {
 
 
 //-----------------------------------------------------
+// EMS (Email Management System) API
+//-----------------------------------------------------
+const ems = {
+  // Get EMS statistics
+  getStats: () => fetchAPI("/ems/stats"),
+
+  // Send task assignment email
+  sendTaskAssignment: (data) =>
+    fetchAPI("/ems/send-task-assignment", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Send task reminders
+  sendTaskReminders: (data) =>
+    fetchAPI("/ems/send-task-reminders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Send overdue alerts
+  sendOverdueAlerts: () =>
+    fetchAPI("/ems/send-overdue-alerts", {
+      method: "POST",
+    }),
+
+  // Get email templates
+  getTemplates: () => fetchAPI("/ems/templates"),
+
+  // Create email template
+  createTemplate: (data) =>
+    fetchAPI("/ems/templates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Update email template
+  updateTemplate: (id, data) =>
+    fetchAPI(`/ems/templates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete email template
+  deleteTemplate: (id) =>
+    fetchAPI(`/ems/templates/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Get scheduled emails
+  getScheduledEmails: (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    const queryString = queryParams.toString();
+    return fetchAPI(`/ems/scheduled${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Cancel scheduled email
+  cancelScheduledEmail: (id) =>
+    fetchAPI(`/ems/scheduled/${id}/cancel`, {
+      method: "POST",
+    }),
+
+  // Process scheduled emails manually
+  processScheduledEmails: () =>
+    fetchAPI("/ems/process-scheduled", {
+      method: "POST",
+    }),
+};
+
+
+//-----------------------------------------------------
 // Attendance API
 //-----------------------------------------------------
 const attendance = {
@@ -482,6 +556,7 @@ export const api = {
   dashboard,
   aims,
   attendance,
+  ems,
 };
 
 export default api;

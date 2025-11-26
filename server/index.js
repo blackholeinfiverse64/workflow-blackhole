@@ -151,6 +151,7 @@ const salaryRoutes = require('./routes/salary'); // New salary routes
 const enhancedAimsRoutes = require('./routes/enhancedAims'); // Enhanced aims routes
 const consentRoutes = require('./routes/consent'); // Consent routes
 const alertRoutes = require('./routes/alerts'); // Alert routes
+const emsRoutes = require('./routes/ems'); // EMS automation routes
 // const aiRoutePy = require('./routes/aiRoutePy')
 // Create Express app
 const app = express();
@@ -316,6 +317,7 @@ app.use("/api/salary", salaryRoutes); // Salary management routes
 app.use("/api/enhanced-aims", enhancedAimsRoutes); // Enhanced aims with progress routes
 app.use('/api/consent', consentRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/ems', emsRoutes); // EMS automation routes
 
 // app.use('/api/new/ai',aiRoutePy)
 
