@@ -298,17 +298,17 @@ export function EnhancedSearch({ onUserSelect }) {
 
                       {/* Avatar */}
                       <div className="relative flex-shrink-0">
-                        <Avatar className={cn(
+                      <Avatar className={cn(
                           "h-14 w-14 ring-2 transition-all duration-300 shadow-lg flex-shrink-0 relative z-10",
-                          isSelected 
+                        isSelected 
                             ? "ring-primary/70 ring-4 shadow-2xl shadow-primary/30 scale-110" 
                             : "ring-primary/30 group-hover/item:ring-primary/60 group-hover/item:ring-4 group-hover/item:shadow-2xl group-hover/item:shadow-primary/25 group-hover/item:scale-105"
-                        )}>
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-sm">
-                            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                      )}>
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback className="gradient-primary text-primary-foreground font-bold text-sm">
+                          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                         {/* Avatar Glow */}
                         <div className={cn(
                           "absolute inset-0 rounded-full blur-lg transition-opacity duration-300",

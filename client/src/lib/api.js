@@ -394,6 +394,63 @@ const aims = {
 
 
 //-----------------------------------------------------
+// Attendance API
+//-----------------------------------------------------
+const attendance = {
+  // Start day
+  startDay: (userId, attendanceData) =>
+    fetchAPI(`/attendance/start-day/${userId}`, {
+      method: "POST",
+      body: JSON.stringify(attendanceData),
+    }),
+
+  // End day
+  endDay: (userId, attendanceData) =>
+    fetchAPI(`/attendance/end-day/${userId}`, {
+      method: "POST",
+      body: JSON.stringify(attendanceData),
+    }),
+
+  // Get today's attendance
+  getTodayAttendance: (userId) => 
+    fetchAPI(`/attendance/today/${userId}`),
+
+  // Get user attendance records
+  getUserAttendance: (userId, filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const queryString = queryParams.toString();
+    return fetchAPI(`/attendance/user/${userId}${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Get all attendance records (admin)
+  getAllAttendance: (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+    
+    const queryString = queryParams.toString();
+    return fetchAPI(`/attendance${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Update attendance record
+  updateAttendance: (id, data) =>
+    fetchAPI(`/attendance/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete attendance record
+  deleteAttendance: (id) =>
+    fetchAPI(`/attendance/${id}`, { method: "DELETE" }),
+};
+
+
+//-----------------------------------------------------
 // Generic HTTP Methods
 //-----------------------------------------------------
 const httpMethods = {
@@ -424,6 +481,7 @@ export const api = {
   admin,
   dashboard,
   aims,
+  attendance,
 };
 
 export default api;

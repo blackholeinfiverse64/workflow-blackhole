@@ -143,12 +143,12 @@ export function DashboardHeader({ sidebarOpen, onSidebarToggle }) {
           <div className="w-full max-w-2xl">
             <EnhancedSearch onUserSelect={handleUserSelect} />
           </div>
-        </div>
+          </div>
 
-        {/* Mobile Search - Icon Only */}
+          {/* Mobile Search - Icon Only */}
         <div className="md:hidden flex-1">
-          <EnhancedSearch onUserSelect={handleUserSelect} compact />
-        </div>
+            <EnhancedSearch onUserSelect={handleUserSelect} compact />
+          </div>
 
         {/* Right Section - Action Buttons */}
         <div className="flex items-center gap-2 flex-shrink-0">
