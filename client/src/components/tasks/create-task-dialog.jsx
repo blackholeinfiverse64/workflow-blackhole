@@ -24,7 +24,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { isValid, parse, format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/context/auth-context";
 import { getUserTasks } from "@/lib/user-api";
@@ -549,41 +549,48 @@ export function CreateTaskDialog({ open, onOpenChange }) {
                 <div className="h-1.5 w-1.5 rounded-full bg-info shadow-lg shadow-info/50"></div>
                 Due Date
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
+              <div className="relative">
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={dueDate ? format(dueDate, "yyyy-MM-dd") : ""}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleDateChange(new Date(e.target.value));
+                    } else {
+                      handleDateChange(null);
+                    }
+                  }}
+                  min={format(new Date(), "yyyy-MM-dd")}
+                  className={cn(
+                    "h-12 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700",
+                    "hover:border-white/50 dark:hover:border-slate-600",
+                    "focus:border-primary dark:focus:border-primary",
+                    "rounded-xl transition-all duration-300 backdrop-blur-xl",
+                    "text-gray-900 dark:text-slate-100 font-medium",
+                    dateError && "border-red-400 dark:border-red-500"
+                  )}
+                />
+                {dueDate && (
                   <Button
-                    variant="outline"
-                    className={cn(
-                      "h-12 w-full justify-start text-left font-normal bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 hover:bg-white/20 dark:hover:bg-slate-800/70 rounded-xl transition-all duration-300 backdrop-blur-xl",
-                      !dueDate && "text-gray-500 dark:text-slate-500",
-                      dateError && "border-red-400 hover:border-red-400"
-                    )}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDateChange(null)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                    <X className="h-4 w-4" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border-2 border-primary/20" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={handleDateChange}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today;
-                    }}
-                    initialFocus
-                    className="rounded-lg"
-                  />
-                </PopoverContent>
-              </Popover>
-              {dateError && <p className="text-sm text-destructive flex items-center gap-1.5 mt-1 font-medium">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {dateError}
-              </p>}
+                )}
+              </div>
+              {dateError && (
+                <p className="text-sm text-destructive flex items-center gap-1.5 mt-1 font-medium">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {dateError}
+                </p>
+              )}
             </div>
           </div>
 
