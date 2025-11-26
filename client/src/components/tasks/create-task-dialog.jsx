@@ -266,7 +266,8 @@ export function CreateTaskDialog({ open, onOpenChange }) {
       // ✅ FIXED: Use authenticated API method for task creation
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
+      // ✅ Provide default description if empty (backend requires description)
+      formDataToSend.append("description", formData.description.trim() || "No description provided");
       formDataToSend.append("department", formData.department);
       formDataToSend.append("assignee", formData.assignee);
       formDataToSend.append("priority", formData.priority);
