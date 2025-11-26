@@ -468,6 +468,34 @@ const ems = {
 
 
 //-----------------------------------------------------
+// Procurement API
+//-----------------------------------------------------
+const procurement = {
+  // Run procurement analysis
+  runAnalysis: () =>
+    fetchAPI("/procurement/run-analysis", {
+      method: "POST",
+    }),
+
+  // Get procurement report
+  getReport: () => fetchAPI("/procurement/report"),
+
+  // Get available employees
+  getAvailableEmployees: () => fetchAPI("/procurement/available-employees"),
+
+  // Get workload distribution
+  getWorkloadDistribution: () => fetchAPI("/procurement/workload-distribution"),
+
+  // Assign task to employee
+  assignTask: (data) =>
+    fetchAPI("/procurement/assign-task", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+
+//-----------------------------------------------------
 // Attendance API
 //-----------------------------------------------------
 const attendance = {
@@ -557,6 +585,7 @@ export const api = {
   aims,
   attendance,
   ems,
+  procurement,
 };
 
 export default api;
