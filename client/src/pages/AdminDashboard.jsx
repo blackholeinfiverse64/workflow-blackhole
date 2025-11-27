@@ -1093,78 +1093,106 @@ const AdminDashboard = () => {
       {/* Change Password Dialog with Show/Hide Password (Admin/Manager Only) */}
       {isAdminOrManager && (
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-amber-500" />
-              Change Password
-            </DialogTitle>
-            <DialogDescription>
-              {selectedUserForPassword && (
-                <>
-                  Update password for <strong>{selectedUserForPassword.name}</strong>
-                </>
-              )}
-            </DialogDescription>
+        <DialogContent className="sm:max-w-[500px] border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white dark:from-gray-800 dark:to-gray-900">
+          <DialogHeader className="pb-4 border-b border-amber-100 dark:border-amber-900">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
+                <KeyRound className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent">
+                  Update Password
+                </DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400 mt-1">
+                  {selectedUserForPassword && (
+                    <>
+                      Change password for <strong className="text-gray-900 dark:text-gray-100">{selectedUserForPassword.name}</strong>
+                    </>
+                  )}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          
+          <div className="grid gap-6 py-6">
+            {/* New Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <div className="relative">
+              <Label htmlFor="new-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                New Password
+              </Label>
+              <div className="relative group">
                 <Input
                   id="new-password"
                   type={showNewPassword ? "text" : "password"}
                   placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="pr-10"
+                  className="pr-12 h-12 border-2 border-gray-200 dark:border-gray-700 focus:border-amber-500 dark:focus:border-amber-500 bg-white dark:bg-gray-800 transition-all duration-200"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-10 w-10 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all duration-200"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-amber-600 dark:text-gray-500 dark:hover:text-amber-400 transition-colors" />
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
-              </p>
+              <div className="flex items-center gap-2 text-xs">
+                <div className={`w-1.5 h-1.5 rounded-full ${newPassword.length >= 6 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                <p className={`${newPassword.length >= 6 ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                  Must be at least 6 characters
+                </p>
+              </div>
             </div>
+
+            {/* Confirm Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <div className="relative">
+              <Label htmlFor="confirm-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                Confirm New Password
+              </Label>
+              <div className="relative group">
                 <Input
                   id="confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Re-enter new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pr-10"
+                  className="pr-12 h-12 border-2 border-gray-200 dark:border-gray-700 focus:border-amber-500 dark:focus:border-amber-500 bg-white dark:bg-gray-800 transition-all duration-200"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-10 w-10 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all duration-200"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-amber-600 dark:text-gray-500 dark:hover:text-amber-400 transition-colors" />
                   )}
                 </Button>
               </div>
+              {confirmPassword && (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className={`w-1.5 h-1.5 rounded-full ${newPassword === confirmPassword && confirmPassword.length >= 6 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <p className={`${newPassword === confirmPassword && confirmPassword.length >= 6 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {newPassword === confirmPassword && confirmPassword.length >= 6 ? 'Passwords match!' : 'Passwords must match'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="pt-4 border-t border-amber-100 dark:border-amber-900 gap-3">
             <Button
               variant="outline"
               onClick={() => {
@@ -1175,15 +1203,26 @@ const AdminDashboard = () => {
                 setShowNewPassword(false)
                 setShowConfirmPassword(false)
               }}
+              className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 h-11 px-6"
             >
               Cancel
             </Button>
             <Button
               onClick={handleChangePassword}
-              disabled={isLoading || !newPassword || !confirmPassword}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              disabled={isLoading || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-11 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Updating..." : "Update Password"}
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Update Password
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
