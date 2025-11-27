@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Building2, Users, Plus, Trash2, RefreshCw, Search, Edit, UserPlus, UserCog, KeyRound } from "lucide-react"
+import { Building2, Users, Plus, Trash2, RefreshCw, Search, Edit, UserPlus, UserCog } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -81,13 +81,6 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState(null)
   const [showDepartmentDialog, setShowDepartmentDialog] = useState(false)
   const [showUserDialog, setShowUserDialog] = useState(false)
-  
-  // Password management states
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
-  const [selectedUserForPassword, setSelectedUserForPassword] = useState(null)
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [passwordSearchTerm, setPasswordSearchTerm] = useState("")
 
   // Set auth header for all requests
   useEffect(() => {
@@ -337,70 +330,6 @@ const AdminDashboard = () => {
     }
   }
 
-  const handleChangePassword = async () => {
-    if (!selectedUserForPassword) {
-      toast({
-        title: "Error",
-        description: "No user selected",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!newPassword || !confirmPassword) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter and confirm the new password",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (newPassword.length < 6) {
-      toast({
-        title: "Validation Error",
-        description: "Password must be at least 6 characters",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Validation Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      await api.put(`/admin/users/${selectedUserForPassword._id}`, {
-        password: newPassword
-      })
-
-      setShowPasswordDialog(false)
-      setSelectedUserForPassword(null)
-      setNewPassword("")
-      setConfirmPassword("")
-
-      toast({
-        title: "Success",
-        description: `Password updated successfully for ${selectedUserForPassword.name}`,
-      })
-    } catch (err) {
-      console.error("Error changing password:", err)
-      toast({
-        title: "Error",
-        description: err.response?.data?.error || "Failed to change password",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const filteredDepartments = departments.filter((department) =>
     department.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
@@ -604,15 +533,12 @@ const AdminDashboard = () => {
 
       {/* Premium Tabs */}
       <Tabs defaultValue="departments" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="w-full max-w-3xl mx-auto grid grid-cols-3 bg-muted/50 p-1 rounded-lg">
+        <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 bg-muted/50 p-1 rounded-lg">
           <TabsTrigger value="departments" className="text-sm font-medium rounded-md data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
             <Building2 className="mr-2 h-4 w-4" /> Departments
           </TabsTrigger>
           <TabsTrigger value="users" className="text-sm font-medium rounded-md data-[state=active]:gradient-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-lg transition-all duration-300">
             <Users className="mr-2 h-4 w-4" /> Users
-          </TabsTrigger>
-          <TabsTrigger value="passwords" className="text-sm font-medium rounded-md data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
-            <KeyRound className="mr-2 h-4 w-4" /> Passwords
           </TabsTrigger>
         </TabsList>
 
@@ -980,168 +906,7 @@ const AdminDashboard = () => {
                 </Card>
               </div>
             </TabsContent>
-
-            <TabsContent value="passwords" className="mt-6">
-              <Card className="border-l-4 border-l-amber-500 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-2xl font-heading font-bold tracking-tight flex items-center gap-2">
-                        <KeyRound className="h-6 w-6 text-amber-500" />
-                        Password Management
-                      </CardTitle>
-                      <CardDescription className="mt-2">Search and change employee passwords</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {/* Search Bar */}
-                  <div className="relative mb-6">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search employees by name or email..."
-                      value={passwordSearchTerm}
-                      onChange={(e) => setPasswordSearchTerm(e.target.value)}
-                      className="pl-9 w-full"
-                    />
-                  </div>
-
-                  {/* Employee List */}
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                    {users
-                      .filter(
-                        (user) =>
-                          user.name.toLowerCase().includes(passwordSearchTerm.toLowerCase()) ||
-                          user.email.toLowerCase().includes(passwordSearchTerm.toLowerCase())
-                      )
-                      .map((user) => {
-                        const userDepartment = getDepartmentById(user.department)
-                        return (
-                          <Card
-                            key={user._id}
-                            className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-md transition-all duration-200"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <Avatar className="h-12 w-12">
-                                    {user.avatar ? (
-                                      <AvatarImage src={user.avatar} alt={user.name} />
-                                    ) : (
-                                      <AvatarFallback className="bg-amber-100 text-amber-700 font-semibold">
-                                        {getInitials(user.name)}
-                                      </AvatarFallback>
-                                    )}
-                                  </Avatar>
-                                  <div>
-                                    <p className="font-semibold text-lg">{user.name}</p>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      {getRoleBadge(user.role)}
-                                      {userDepartment && (
-                                        <Badge variant="outline" className="text-xs">
-                                          <div className={`w-2 h-2 rounded-full mr-1 ${userDepartment.color}`}></div>
-                                          {userDepartment.name}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedUserForPassword(user)
-                                    setShowPasswordDialog(true)
-                                  }}
-                                  className="bg-amber-500 hover:bg-amber-600 text-white"
-                                >
-                                  <KeyRound className="mr-2 h-4 w-4" />
-                                  Change Password
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
-                    
-                    {users.filter(
-                      (user) =>
-                        user.name.toLowerCase().includes(passwordSearchTerm.toLowerCase()) ||
-                        user.email.toLowerCase().includes(passwordSearchTerm.toLowerCase())
-                    ).length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>No employees found matching "{passwordSearchTerm}"</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
-
-      {/* Change Password Dialog */}
-      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-amber-500" />
-              Change Password
-            </DialogTitle>
-            <DialogDescription>
-              {selectedUserForPassword && (
-                <>
-                  Update password for <strong>{selectedUserForPassword.name}</strong>
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Must be at least 6 characters
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowPasswordDialog(false)
-                setSelectedUserForPassword(null)
-                setNewPassword("")
-                setConfirmPassword("")
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleChangePassword}
-              disabled={isLoading || !newPassword || !confirmPassword}
-              className="bg-amber-500 hover:bg-amber-600 text-white"
-            >
-              {isLoading ? "Updating..." : "Update Password"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Department Dialog */}
       <Dialog open={showDepartmentDialog} onOpenChange={setShowDepartmentDialog}>
