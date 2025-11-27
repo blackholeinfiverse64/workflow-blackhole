@@ -958,16 +958,21 @@ const AdminDashboard = () => {
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-2" style={{ pointerEvents: 'auto' }}>
                                   {/* View Details Button */}
                                   <Button
+                                    type="button"
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      console.log('View clicked for user:', user.name)
                                       setViewingUser(user)
                                       setShowViewUserDialog(true)
                                     }}
-                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-all duration-200"
+                                    className="cursor-pointer border-2 border-purple-400 text-purple-700 hover:bg-purple-100 dark:border-purple-600 dark:text-purple-400 dark:hover:bg-purple-900/50 transition-all duration-200 font-semibold"
+                                    style={{ pointerEvents: 'auto' }}
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
                                     View
@@ -975,13 +980,18 @@ const AdminDashboard = () => {
 
                                   {/* Edit Button */}
                                   <Button
+                                    type="button"
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      console.log('Edit clicked for user:', user.name)
                                       setEditingUser(user)
                                       setShowUserDialog(true)
                                     }}
-                                    className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200"
+                                    className="cursor-pointer border-2 border-blue-400 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/50 transition-all duration-200 font-semibold"
+                                    style={{ pointerEvents: 'auto' }}
                                   >
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit
@@ -989,14 +999,19 @@ const AdminDashboard = () => {
                                   
                                   {/* Delete Button */}
                                   <Button
+                                    type="button"
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      console.log('Delete clicked for user:', user.name)
                                       if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
                                         handleDeleteUser(user._id)
                                       }
                                     }}
-                                    className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30 transition-all duration-200"
+                                    className="cursor-pointer border-2 border-red-400 text-red-700 hover:bg-red-100 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/50 transition-all duration-200 font-semibold"
+                                    style={{ pointerEvents: 'auto' }}
                                   >
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     Delete
