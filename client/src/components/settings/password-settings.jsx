@@ -18,17 +18,11 @@ import {
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
 import { KeyRound, Search, Users, Lock, RefreshCw } from "lucide-react"
-import axios from "axios"
 import { API_URL } from "@/lib/api"
-
-// Configure axios with base URL
-const api = axios.create({
-  baseURL: `${API_URL}`,
-})
 
 export function PasswordSettings() {
   const { toast } = useToast()
-  const { user: currentUser, token } = useAuth()
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -38,13 +32,6 @@ export function PasswordSettings() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
-
-  // Set auth header for all requests
-  useEffect(() => {
-    if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-    }
-  }, [token])
 
   // Fetch users if admin or manager
   useEffect(() => {
@@ -56,14 +43,27 @@ export function PasswordSettings() {
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true)
-      const response = await api.get("/admin/users")
-      console.log("Fetched users:", response.data.length)
-      setUsers(response.data)
+      const token = localStorage.getItem("WorkflowToken")
+      
+      const response = await fetch(`${API_URL}/admin/users`, {
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log("Fetched users:", data.length)
+      setUsers(data)
     } catch (err) {
       console.error("Error fetching users:", err)
       toast({
         title: "Error",
-        description: "Failed to load employees",
+        description: "Failed to load employees. Please check your permissions.",
         variant: "destructive",
       })
     } finally {
@@ -110,9 +110,23 @@ export function PasswordSettings() {
 
     try {
       setIsLoading(true)
-      await api.put(`/admin/users/${selectedUser._id}`, {
-        password: newPassword
+      const token = localStorage.getItem("WorkflowToken")
+      
+      const response = await fetch(`${API_URL}/admin/users/${selectedUser._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token,
+        },
+        body: JSON.stringify({
+          password: newPassword
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to update password")
+      }
 
       setShowPasswordDialog(false)
       setSelectedUser(null)
@@ -128,7 +142,7 @@ export function PasswordSettings() {
       console.error("Error changing password:", err)
       toast({
         title: "Error",
-        description: err.response?.data?.error || "Failed to change password",
+        description: err.message || "Failed to change password",
         variant: "destructive",
       })
     } finally {
