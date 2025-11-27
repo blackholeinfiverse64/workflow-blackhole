@@ -17,7 +17,7 @@ import {
 } from "../ui/dialog"
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
-import { KeyRound, Search, Users, Lock } from "lucide-react"
+import { KeyRound, Search, Users, Lock, RefreshCw } from "lucide-react"
 import axios from "axios"
 import { API_URL } from "@/lib/api"
 
@@ -37,6 +37,7 @@ export function PasswordSettings() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
   // Set auth header for all requests
   useEffect(() => {
@@ -54,124 +55,84 @@ export function PasswordSettings() {
 
   const fetchUsers = async () => {
     try {
+      setIsLoadingUsers(true)
       const response = await api.get("/admin/users")
+      console.log("Fetched users:", response.data.length)
       setUsers(response.data)
     } catch (err) {
       console.error("Error fetching users:", err)
+      toast({
+        title: "Error",
+        description: "Failed to load employees",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingUsers(false)
     }
   }
 
   const handleChangePassword = async () => {
-    // For admins changing other users' passwords
-    if (selectedUser && selectedUser._id !== currentUser.id) {
-      if (!newPassword || !confirmPassword) {
-        toast({
-          title: "Validation Error",
-          description: "Please enter and confirm the new password",
-          variant: "destructive",
-        })
-        return
-      }
+    if (!selectedUser) {
+      toast({
+        title: "Error",
+        description: "No user selected",
+        variant: "destructive",
+      })
+      return
+    }
 
-      if (newPassword.length < 6) {
-        toast({
-          title: "Validation Error",
-          description: "Password must be at least 6 characters",
-          variant: "destructive",
-        })
-        return
-      }
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter and confirm the new password",
+        variant: "destructive",
+      })
+      return
+    }
 
-      if (newPassword !== confirmPassword) {
-        toast({
-          title: "Validation Error",
-          description: "Passwords do not match",
-          variant: "destructive",
-        })
-        return
-      }
+    if (newPassword.length < 6) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      })
+      return
+    }
 
-      try {
-        setIsLoading(true)
-        await api.put(`/admin/users/${selectedUser._id}`, {
-          password: newPassword
-        })
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Validation Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      })
+      return
+    }
 
-        setShowPasswordDialog(false)
-        setSelectedUser(null)
-        setCurrentPassword("")
-        setNewPassword("")
-        setConfirmPassword("")
+    try {
+      setIsLoading(true)
+      await api.put(`/admin/users/${selectedUser._id}`, {
+        password: newPassword
+      })
 
-        toast({
-          title: "Success",
-          description: `Password updated successfully for ${selectedUser.name}`,
-        })
-      } catch (err) {
-        console.error("Error changing password:", err)
-        toast({
-          title: "Error",
-          description: err.response?.data?.error || "Failed to change password",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    } else {
-      // User changing their own password
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        toast({
-          title: "Validation Error",
-          description: "All fields are required",
-          variant: "destructive",
-        })
-        return
-      }
+      setShowPasswordDialog(false)
+      setSelectedUser(null)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
 
-      if (newPassword.length < 6) {
-        toast({
-          title: "Validation Error",
-          description: "Password must be at least 6 characters",
-          variant: "destructive",
-        })
-        return
-      }
-
-      if (newPassword !== confirmPassword) {
-        toast({
-          title: "Validation Error",
-          description: "Passwords do not match",
-          variant: "destructive",
-        })
-        return
-      }
-
-      try {
-        setIsLoading(true)
-        await api.put(`/admin/users/${currentUser.id}`, {
-          password: newPassword
-        })
-
-        setShowPasswordDialog(false)
-        setSelectedUser(null)
-        setCurrentPassword("")
-        setNewPassword("")
-        setConfirmPassword("")
-
-        toast({
-          title: "Success",
-          description: "Your password has been updated successfully",
-        })
-      } catch (err) {
-        console.error("Error changing password:", err)
-        toast({
-          title: "Error",
-          description: err.response?.data?.error || "Failed to change password",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
+      toast({
+        title: "Success",
+        description: `Password updated successfully for ${selectedUser.name}`,
+      })
+    } catch (err) {
+      console.error("Error changing password:", err)
+      toast({
+        title: "Error",
+        description: err.response?.data?.error || "Failed to change password",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -251,18 +212,26 @@ export function PasswordSettings() {
       {isAdminOrManager && (
         <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="bg-gradient-to-r from-purple-500/5 to-transparent">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <KeyRound className="h-4 w-4 text-purple-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Employee Password Management</CardTitle>
-                    <CardDescription className="mt-1">Search and change employee passwords</CardDescription>
-                  </div>
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <KeyRound className="h-4 w-4 text-purple-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold">Employee Password Management</CardTitle>
+                  <CardDescription className="mt-1">Search and change employee passwords</CardDescription>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchUsers}
+                disabled={isLoadingUsers}
+                className="flex-shrink-0"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingUsers ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -277,50 +246,66 @@ export function PasswordSettings() {
               />
             </div>
 
+            {/* Employee Count */}
+            {!isLoadingUsers && users.length > 0 && (
+              <div className="mb-4 text-sm text-muted-foreground">
+                Showing {filteredUsers.length} of {users.length} employees
+              </div>
+            )}
+
             {/* Employee List */}
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-              {filteredUsers.map((user) => (
-                <Card
-                  key={user._id}
-                  className="border-l-4 border-l-purple-200 hover:border-l-purple-500 hover:shadow-md transition-all duration-200"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                          {user.avatar ? (
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                          ) : (
-                            <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
-                              {getInitials(user.name)}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-lg">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            {getRoleBadge(user.role)}
+              {isLoadingUsers ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p>Loading employees...</p>
+                </div>
+              ) : filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <Card
+                    key={user._id}
+                    className="border-l-4 border-l-purple-200 hover:border-l-purple-500 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <Avatar className="h-12 w-12 flex-shrink-0">
+                            {user.avatar ? (
+                              <AvatarImage src={user.avatar} alt={user.name} />
+                            ) : (
+                              <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
+                                {getInitials(user.name)}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-lg truncate">{user.name}</p>
+                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              {getRoleBadge(user.role)}
+                            </div>
                           </div>
                         </div>
+                        <Button
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setShowPasswordDialog(true)
+                          }}
+                          className="bg-purple-500 hover:bg-purple-600 text-white flex-shrink-0"
+                        >
+                          <KeyRound className="mr-2 h-4 w-4" />
+                          Change Password
+                        </Button>
                       </div>
-                      <Button
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setShowPasswordDialog(true)
-                        }}
-                        variant="outline"
-                        className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/30"
-                      >
-                        <KeyRound className="mr-2 h-4 w-4" />
-                        Change Password
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {filteredUsers.length === 0 && (
+                    </CardContent>
+                  </Card>
+                ))
+              ) : users.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No employees found in the system</p>
+                </div>
+              ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No employees found matching "{searchTerm}"</p>
@@ -350,18 +335,6 @@ export function PasswordSettings() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {selectedUser && selectedUser._id === currentUser.id && (
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  type="password"
-                  placeholder="Enter your current password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <Input
