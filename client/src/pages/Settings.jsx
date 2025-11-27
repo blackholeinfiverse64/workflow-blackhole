@@ -2,7 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { ProfileSettings } from "../components/settings/profile-settings"
 import { NotificationSettings } from "../components/settings/notification-settings"
 import  ConsentSettings  from "../components/settings/ConsentSettings"
-import { Settings as SettingsIcon, User, Bell, ShieldCheck } from "lucide-react"
+import { PasswordSettings } from "../components/settings/password-settings"
+import { Settings as SettingsIcon, User, Bell, ShieldCheck, KeyRound } from "lucide-react"
 
 function Settings() {
   return (
@@ -22,7 +23,7 @@ function Settings() {
 
       <Tabs defaultValue="profile" className="w-full">
         {/* Tabs Navigation - Separated from content */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6 flex-wrap">
           <TabsList className="h-auto p-0 bg-transparent">
             <TabsTrigger 
               value="profile" 
@@ -45,6 +46,16 @@ function Settings() {
           
           <TabsList className="h-auto p-0 bg-transparent">
             <TabsTrigger 
+              value="password" 
+              className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-amber-500 data-[state=active]:border-amber-500 data-[state=active]:text-white transition-all duration-200 hover:border-amber-500/50"
+            >
+              <KeyRound className="h-4 w-4" />
+              <span className="hidden sm:inline font-semibold">Password</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsList className="h-auto p-0 bg-transparent">
+            <TabsTrigger 
               value="consent" 
               className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-green-500 data-[state=active]:border-green-500 data-[state=active]:text-white transition-all duration-200 hover:border-green-500/50"
             >
@@ -61,6 +72,9 @@ function Settings() {
           </TabsContent>
           <TabsContent value="notifications" className="m-0">
             <NotificationSettings />
+          </TabsContent>
+          <TabsContent value="password" className="m-0">
+            <PasswordSettings />
           </TabsContent>
           <TabsContent value="consent" className="m-0">
             <ConsentSettings />
