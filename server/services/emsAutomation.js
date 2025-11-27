@@ -20,14 +20,22 @@ class EMSAutomation {
       return null;
     }
 
+    const port = parseInt(process.env.EMAIL_PORT || '587');
+    const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT || 587,
-      secure: false,
+      port: port,
+      secure: secure,
+      connectionTimeout: 10000, // 10 seconds timeout
+      greetingTimeout: 5000,
+      socketTimeout: 15000,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      pool: true,
+      maxConnections: 5
     });
   }
 
@@ -252,7 +260,12 @@ class EMSAutomation {
       const result = await this.transporter.sendMail(mailOptions);
 
       console.log(`✅ Email sent successfully to ${recipients.length} recipients`);
-      return { success: true, messageId: result.messageId };
+      console.log(`   MessageId: ${result?.messageId || 'No messageId'}`);
+      return { 
+        success: true, 
+        messageId: result?.messageId || `sent-${Date.now()}`,
+        response: result?.response
+      };
     } catch (error) {
       console.error('❌ Error sending email:', error);
       throw error;

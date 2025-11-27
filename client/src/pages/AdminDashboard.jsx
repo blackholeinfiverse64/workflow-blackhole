@@ -961,12 +961,12 @@ const AdminDashboard = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
-                                      setEditingUser(user)
-                                      setShowUserDialog(true)
-                                    }}
+                                      onClick={() => {
+                                        setEditingUser(user)
+                                        setShowUserDialog(true)
+                                      }}
                                     className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200"
-                                  >
+                                    >
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit
                                   </Button>
@@ -981,7 +981,7 @@ const AdminDashboard = () => {
                                       }
                                     }}
                                     className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30 transition-all duration-200"
-                                  >
+                                    >
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     Delete
                                   </Button>

@@ -160,6 +160,7 @@ router.post('/send-custom-email', auth, adminAuth, async (req, res) => {
     }
 
     let result;
+    const senderId = req.user?.id || req.user?._id || null;
     
     if (scheduleTime) {
       result = await emsAutomation.scheduleEmail(
@@ -168,10 +169,10 @@ router.post('/send-custom-email', auth, adminAuth, async (req, res) => {
         recipients,
         scheduleTime,
         'system_notification',
-        req.user.id
+        senderId
       );
     } else {
-      result = await emsAutomation.sendEmail(subject, htmlBody, recipients, req.user.id);
+      result = await emsAutomation.sendEmail(subject, htmlBody, recipients, senderId);
     }
 
     res.json({
@@ -181,9 +182,11 @@ router.post('/send-custom-email', auth, adminAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error sending custom email:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       error: 'Failed to send email',
-      message: error.message
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
