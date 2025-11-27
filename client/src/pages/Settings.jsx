@@ -2,9 +2,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { ProfileSettings } from "../components/settings/profile-settings"
 import { NotificationSettings } from "../components/settings/notification-settings"
 import  ConsentSettings  from "../components/settings/ConsentSettings"
-import { Settings as SettingsIcon, User, Bell, ShieldCheck } from "lucide-react"
+import { PasswordSettings } from "../components/settings/password-settings"
+import { Settings as SettingsIcon, User, Bell, ShieldCheck, KeyRound } from "lucide-react"
+import { useAuth } from "../context/auth-context"
 
 function Settings() {
+  const { user } = useAuth()
+  
+  // Check if user is Admin or Manager
+  const isAdminOrManager = user && (user.role === "Admin" || user.role === "Manager")
+  
   return (
     <div className="space-y-6 pb-8">
       {/* Header Section */}
@@ -52,6 +59,18 @@ function Settings() {
               <span className="hidden sm:inline font-semibold">Consent</span>
             </TabsTrigger>
           </TabsList>
+          
+          {isAdminOrManager && (
+            <TabsList className="h-auto p-0 bg-transparent">
+              <TabsTrigger 
+                value="password" 
+                className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-amber-500 data-[state=active]:border-amber-500 data-[state=active]:text-white transition-all duration-200 hover:border-amber-500/50"
+              >
+                <KeyRound className="h-4 w-4" />
+                <span className="hidden sm:inline font-semibold">Update Password</span>
+              </TabsTrigger>
+            </TabsList>
+          )}
         </div>
 
         {/* Content Area - Separated from tabs */}
@@ -65,6 +84,11 @@ function Settings() {
           <TabsContent value="consent" className="m-0">
             <ConsentSettings />
           </TabsContent>
+          {isAdminOrManager && (
+            <TabsContent value="password" className="m-0">
+              <PasswordSettings />
+            </TabsContent>
+          )}
         </div>
       </Tabs>
     </div>
