@@ -44,9 +44,6 @@ export function PasswordSettings() {
       setIsLoadingUsers(true)
       const token = localStorage.getItem("WorkflowToken")
       
-      console.log("🔍 Fetching users...")
-      console.log("Token exists:", !!token)
-      
       const response = await fetch(`${API_URL}/admin/users`, {
         method: "GET",
         headers: {
@@ -60,15 +57,9 @@ export function PasswordSettings() {
       }
 
       const data = await response.json()
-      console.log("✅ Users loaded:", data.length)
       setUsers(data)
-      
-      toast({
-        title: "Employees Loaded",
-        description: `${data.length} employees found`,
-      })
     } catch (err) {
-      console.error("❌ Error fetching users:", err)
+      console.error("Error fetching users:", err)
       toast({
         title: "Error",
         description: "Failed to load employees. Please refresh the page.",
@@ -199,34 +190,8 @@ export function PasswordSettings() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Debug logs
-  console.log("📊 Password Settings Debug:")
-  console.log("- Current User:", currentUser)
-  console.log("- Total Users:", users.length)
-  console.log("- Search Term:", searchTerm)
-  console.log("- Filtered Users:", filteredUsers.length)
-  console.log("- Is Loading:", isLoadingUsers)
-  console.log("- Show Dialog:", showPasswordDialog)
-  console.log("- Selected User:", selectedUser?.name)
-
   return (
     <div className="space-y-6">
-      {/* Debug Info Card */}
-      <Card className="border-blue-500 bg-blue-50 dark:bg-blue-900/20">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-            <span className="font-semibold">Debug Info:</span>
-            <span>Total Employees: {users.length}</span>
-            <span>•</span>
-            <span>Filtered: {filteredUsers.length}</span>
-            <span>•</span>
-            <span>Search: {searchTerm || "(none)"}</span>
-            <span>•</span>
-            <span>Dialog: {showPasswordDialog ? "OPEN" : "closed"}</span>
-          </div>
-        </CardContent>
-      </Card>
       {/* Employee Password Management */}
       <Card className="border-l-4 border-l-amber-500">
         <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
@@ -260,11 +225,7 @@ export function PasswordSettings() {
               <Input
                 placeholder="Search employees by name or email..."
                 value={searchTerm}
-                onChange={(e) => {
-                  const value = e.target.value
-                  console.log("🔍 Search input changed:", value)
-                  setSearchTerm(value)
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12 text-base border-2 focus:border-amber-500 dark:focus:border-amber-500"
               />
               {searchTerm && (
@@ -306,34 +267,30 @@ export function PasswordSettings() {
               filteredUsers.map((user) => (
                 <Card
                   key={user._id}
-                  className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
+                  className="border-l-4 border-l-amber-300 hover:border-l-amber-500 border-r border-t border-b border-gray-200 dark:border-gray-700 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group bg-white dark:bg-gray-800"
                   onClick={(e) => {
                     e.stopPropagation()
-                    console.log("🖱️ Card clicked!")
-                    console.log("👤 Selected user:", user.name, user.email)
-                    console.log("📧 User ID:", user._id)
                     setSelectedUser(user)
                     setShowPasswordDialog(true)
-                    console.log("✅ Dialog should now open")
                   }}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-5 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-900/10 dark:to-transparent">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <Avatar className="h-14 w-14 flex-shrink-0 ring-2 ring-amber-200 group-hover:ring-amber-500 transition-all duration-200">
+                        <Avatar className="h-14 w-14 flex-shrink-0 ring-2 ring-amber-300 group-hover:ring-amber-500 transition-all duration-200 shadow-md">
                           {user.avatar ? (
                             <AvatarImage src={user.avatar} alt={user.name} />
                           ) : (
-                            <AvatarFallback className="bg-amber-100 text-amber-700 font-semibold text-lg group-hover:bg-amber-200 transition-colors">
+                            <AvatarFallback className="bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-800 dark:to-amber-900 text-amber-800 dark:text-amber-200 font-bold text-lg group-hover:from-amber-200 group-hover:to-amber-300 dark:group-hover:from-amber-700 dark:group-hover:to-amber-800 transition-colors">
                               {getInitials(user.name)}
                             </AvatarFallback>
                           )}
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-lg truncate text-gray-900 dark:text-gray-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          <p className="font-bold text-lg truncate text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                             {user.name}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {getRoleBadge(user.role)}
                           </div>
@@ -341,8 +298,8 @@ export function PasswordSettings() {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <div className="hidden sm:flex flex-col items-end">
-                          <span className="text-xs text-muted-foreground">Click to</span>
-                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Change Password</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Click to</span>
+                          <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Change Password</span>
                         </div>
                         <KeyRound className="h-6 w-6 text-amber-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:scale-110 transition-all duration-200" />
                       </div>
@@ -388,7 +345,6 @@ export function PasswordSettings() {
       <Dialog 
         open={showPasswordDialog} 
         onOpenChange={(open) => {
-          console.log("🔔 Dialog state changing to:", open)
           setShowPasswordDialog(open)
           if (!open) {
             setSelectedUser(null)
