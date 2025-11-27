@@ -46,21 +46,21 @@ function Settings() {
           
           <TabsList className="h-auto p-0 bg-transparent">
             <TabsTrigger 
-              value="password" 
-              className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-amber-500 data-[state=active]:border-amber-500 data-[state=active]:text-white transition-all duration-200 hover:border-amber-500/50"
-            >
-              <KeyRound className="h-4 w-4" />
-              <span className="hidden sm:inline font-semibold">Password</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsList className="h-auto p-0 bg-transparent">
-            <TabsTrigger 
               value="consent" 
               className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-green-500 data-[state=active]:border-green-500 data-[state=active]:text-white transition-all duration-200 hover:border-green-500/50"
             >
               <ShieldCheck className="h-4 w-4" />
               <span className="hidden sm:inline font-semibold">Consent</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsList className="h-auto p-0 bg-transparent">
+            <TabsTrigger 
+              value="password" 
+              className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-amber-500 data-[state=active]:border-amber-500 data-[state=active]:text-white transition-all duration-200 hover:border-amber-500/50"
+            >
+              <KeyRound className="h-4 w-4" />
+              <span className="hidden sm:inline font-semibold">Update Password</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -73,11 +73,11 @@ function Settings() {
           <TabsContent value="notifications" className="m-0">
             <NotificationSettings />
           </TabsContent>
-          <TabsContent value="password" className="m-0">
-            <PasswordSettings />
-          </TabsContent>
           <TabsContent value="consent" className="m-0">
             <ConsentSettings />
+          </TabsContent>
+          <TabsContent value="password" className="m-0">
+            <PasswordSettings />
           </TabsContent>
         </div>
       </Tabs>
