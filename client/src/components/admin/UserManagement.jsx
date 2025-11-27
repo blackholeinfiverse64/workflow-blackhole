@@ -32,6 +32,7 @@ import {
   Search, 
   MoreHorizontal, 
   Eye, 
+  EyeOff,
   Edit, 
   Trash,
   AlertTriangle,
@@ -64,6 +65,7 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState(null)
   const [showViewDialog, setShowViewDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Fetch all users including exited ones
   useEffect(() => {
@@ -229,6 +231,7 @@ export function UserManagement() {
 
       setShowEditDialog(false)
       setEditingUser(null)
+      setShowPassword(false)
 
       toast({
         title: "Success",
@@ -460,6 +463,7 @@ export function UserManagement() {
                                 console.log('Edit User clicked for:', user.name)
                                 setEditingUser(user)
                                 setShowEditDialog(true)
+                                setShowPassword(false)
                               }}
                               className="cursor-pointer"
                             >
@@ -544,17 +548,17 @@ export function UserManagement() {
 
       {/* View Details Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="sm:max-w-[650px] border-l-4 border-l-purple-500 dark:border-l-purple-400">
-          <DialogHeader className="pb-6 border-b border-purple-100 dark:border-purple-900/50">
+        <DialogContent className="sm:max-w-[650px] border-l-4 border-l-purple-600 dark:border-l-purple-400 shadow-2xl">
+          <DialogHeader className="pb-6 border-b-2 border-purple-200 dark:border-purple-900/50 bg-gradient-to-r from-purple-50 via-purple-50/50 to-transparent dark:from-purple-950/20 dark:via-purple-950/10 dark:to-transparent -mx-6 -mt-6 px-6 pt-6 mb-4 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <Eye className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 shadow-lg">
+                <Eye className="h-6 w-6 text-white" />
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   User Details
                 </DialogTitle>
-                <DialogDescription className="text-base mt-1">
+                <DialogDescription className="text-base mt-1 text-gray-600 dark:text-gray-400">
                   Complete information about this user
                 </DialogDescription>
               </div>
@@ -564,14 +568,14 @@ export function UserManagement() {
           {viewingUser && (
             <div className="space-y-6 py-4">
               {/* User Header Card */}
-              <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border border-purple-200 dark:border-purple-800">
+              <div className="p-5 rounded-xl bg-gradient-to-r from-purple-100 via-purple-50 to-blue-100 dark:from-purple-950/30 dark:via-purple-950/20 dark:to-blue-950/30 border-2 border-purple-300 dark:border-purple-800 shadow-md">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700 flex items-center justify-center text-2xl font-bold text-white shadow-lg ring-4 ring-purple-200 dark:ring-purple-900/50">
                     {viewingUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{viewingUser.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                    <p className="text-sm text-gray-700 dark:text-gray-400 flex items-center gap-1 mt-1">
                       <Mail className="h-3 w-3" />
                       {viewingUser.email}
                     </p>
@@ -583,53 +587,53 @@ export function UserManagement() {
               {/* Information Grid */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Role Card */}
-                <div className="p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 transition-all hover:shadow-md">
-                  <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
-                    <UserCog className="h-3 w-3" />
+                <div className="p-4 rounded-xl border-2 border-blue-300 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-950/30 transition-all hover:shadow-lg hover:scale-105 duration-200">
+                  <Label className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
+                    <UserCog className="h-4 w-4" />
                     Role
                   </Label>
-                  <div className="mt-2">
-                    <Badge variant="outline" className="text-sm font-semibold border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300">
+                  <div className="mt-3">
+                    <Badge variant="outline" className="text-sm font-bold border-2 border-blue-400 dark:border-blue-700 text-blue-800 dark:text-blue-300 bg-white dark:bg-blue-950/50 px-3 py-1">
                       {viewingUser.role}
                     </Badge>
                   </div>
                 </div>
 
                 {/* Department Card */}
-                <div className="p-4 rounded-lg border-2 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 transition-all hover:shadow-md">
-                  <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
+                <div className="p-4 rounded-xl border-2 border-green-300 dark:border-green-800 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-950/30 transition-all hover:shadow-lg hover:scale-105 duration-200">
+                  <Label className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider flex items-center gap-1">
+                    <Building2 className="h-4 w-4" />
                     Department
                   </Label>
-                  <div className="mt-2">
-                    <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                  <div className="mt-3">
+                    <span className="text-sm font-bold text-green-800 dark:text-green-300">
                       {viewingUser.department?.name || "No Department"}
                     </span>
                   </div>
                 </div>
 
                 {/* Joined Date Card */}
-                <div className="p-4 rounded-lg border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 transition-all hover:shadow-md col-span-2">
-                  <Label className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                <div className="p-4 rounded-xl border-2 border-amber-300 dark:border-amber-800 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-950/30 transition-all hover:shadow-lg hover:scale-105 duration-200 col-span-2">
+                  <Label className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
                     Joined Date
                   </Label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-sm font-bold text-amber-800 dark:text-amber-300">
                       {format(new Date(viewingUser.createdAt), "MMMM d, yyyy")}
                     </span>
-                    <span className="text-xs text-amber-600 dark:text-amber-400">
-                      ({format(new Date(viewingUser.createdAt), "EEEE")})
+                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded">
+                      {format(new Date(viewingUser.createdAt), "EEEE")}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Additional Info */}
-              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-900/50 dark:to-gray-800/50 border-2 border-gray-300 dark:border-gray-700 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">User ID</span>
-                  <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">User ID</span>
+                  <code className="text-xs font-mono bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 font-semibold">
                     {viewingUser._id}
                   </code>
                 </div>
@@ -637,11 +641,11 @@ export function UserManagement() {
             </div>
           )}
           
-          <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-700 gap-2">
+          <DialogFooter className="pt-6 border-t-2 border-gray-300 dark:border-gray-700 gap-2 bg-gray-50 dark:bg-transparent -mx-6 -mb-6 px-6 pb-6 mt-6 rounded-b-lg">
             <Button 
               variant="outline" 
               onClick={() => setShowViewDialog(false)}
-              className="border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800 font-semibold"
             >
               Close
             </Button>
@@ -650,8 +654,9 @@ export function UserManagement() {
                 setShowViewDialog(false)
                 setEditingUser(viewingUser)
                 setShowEditDialog(true)
+                setShowPassword(false)
               }}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 shadow-lg font-semibold"
             >
               <Edit className="mr-2 h-4 w-4" />
               Edit User
@@ -662,17 +667,17 @@ export function UserManagement() {
 
       {/* Edit User Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[550px] border-l-4 border-l-blue-500 dark:border-l-blue-400">
-          <DialogHeader className="pb-6 border-b border-blue-100 dark:border-blue-900/50">
+        <DialogContent className="sm:max-w-[550px] border-l-4 border-l-blue-600 dark:border-l-blue-400 shadow-2xl">
+          <DialogHeader className="pb-6 border-b-2 border-blue-200 dark:border-blue-900/50 bg-gradient-to-r from-blue-50 via-blue-50/50 to-transparent dark:from-blue-950/20 dark:via-blue-950/10 dark:to-transparent -mx-6 -mt-6 px-6 pt-6 mb-4 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <Edit className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 shadow-lg">
+                <Edit className="h-6 w-6 text-white" />
               </div>
               <div>
                 <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Edit User
                 </DialogTitle>
-                <DialogDescription className="text-base mt-1">
+                <DialogDescription className="text-base mt-1 text-gray-600 dark:text-gray-400">
                   Make changes to the user details
                 </DialogDescription>
               </div>
@@ -683,7 +688,7 @@ export function UserManagement() {
             <div className="grid gap-5 py-4">
               {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="edit-name" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Label htmlFor="edit-name" className="text-sm font-bold text-gray-800 dark:text-gray-300 flex items-center gap-2">
                   <UserCog className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Full Name
                 </Label>
@@ -691,14 +696,14 @@ export function UserManagement() {
                   id="edit-name"
                   value={editingUser.name}
                   onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
+                  className="border-2 border-gray-300 dark:border-gray-700 focus:border-blue-600 dark:focus:border-blue-400 bg-white dark:bg-gray-800 h-11 font-medium text-gray-900 dark:text-gray-100"
                   placeholder="Enter full name"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Label htmlFor="edit-email" className="text-sm font-bold text-gray-800 dark:text-gray-300 flex items-center gap-2">
                   <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Email Address
                 </Label>
@@ -707,33 +712,47 @@ export function UserManagement() {
                   type="email"
                   value={editingUser.email}
                   onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
+                  className="border-2 border-gray-300 dark:border-gray-700 focus:border-blue-600 dark:focus:border-blue-400 bg-white dark:bg-gray-800 h-11 font-medium text-gray-900 dark:text-gray-100"
                   placeholder="Enter email address"
                 />
               </div>
 
               {/* Password */}
               <div className="space-y-2">
-                <Label htmlFor="edit-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Label htmlFor="edit-password" className="text-sm font-bold text-gray-800 dark:text-gray-300 flex items-center gap-2">
                   <svg className="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   Password
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(leave blank to keep current)</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 font-normal bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">(optional)</span>
                 </Label>
-                <Input
-                  id="edit-password"
-                  type="password"
-                  placeholder="Enter new password"
-                  value={editingUser.password || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
-                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
-                />
+                <div className="relative">
+                  <Input
+                    id="edit-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={editingUser.password || ""}
+                    onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                    className="border-2 border-gray-300 dark:border-gray-700 focus:border-blue-600 dark:focus:border-blue-400 bg-white dark:bg-gray-800 pr-10 h-11 font-medium text-gray-900 dark:text-gray-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Role */}
               <div className="space-y-2">
-                <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Label htmlFor="edit-role" className="text-sm font-bold text-gray-800 dark:text-gray-300 flex items-center gap-2">
                   <UserCog className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Role
                 </Label>
@@ -741,25 +760,25 @@ export function UserManagement() {
                   value={editingUser.role}
                   onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
                 >
-                  <SelectTrigger id="edit-role" className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800">
+                  <SelectTrigger id="edit-role" className="border-2 border-gray-300 dark:border-gray-700 focus:border-blue-600 dark:focus:border-blue-400 bg-white dark:bg-gray-800 h-11 font-medium">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Admin">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                      <div className="flex items-center gap-2 font-medium">
+                        <div className="h-2.5 w-2.5 rounded-full bg-red-500"></div>
                         Admin
                       </div>
                     </SelectItem>
                     <SelectItem value="Manager">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                      <div className="flex items-center gap-2 font-medium">
+                        <div className="h-2.5 w-2.5 rounded-full bg-blue-500"></div>
                         Manager
                       </div>
                     </SelectItem>
                     <SelectItem value="User">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                      <div className="flex items-center gap-2 font-medium">
+                        <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
                         User
                       </div>
                     </SelectItem>
@@ -768,31 +787,32 @@ export function UserManagement() {
               </div>
 
               {/* Info Alert */}
-              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                  <AlertTriangle className="h-3 w-3" />
+              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-950/20 dark:to-blue-950/10 border-2 border-blue-300 dark:border-blue-800 shadow-sm">
+                <p className="text-sm text-blue-800 dark:text-blue-300 flex items-center gap-2 font-medium">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                   Changes will be saved immediately and the user will be notified.
                 </p>
               </div>
             </div>
           )}
           
-          <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-700 gap-2">
+          <DialogFooter className="pt-6 border-t-2 border-gray-300 dark:border-gray-700 gap-2 bg-gray-50 dark:bg-transparent -mx-6 -mb-6 px-6 pb-6 mt-6 rounded-b-lg">
             <Button
               variant="outline"
               onClick={() => {
                 setShowEditDialog(false)
                 setEditingUser(null)
+                setShowPassword(false)
               }}
               disabled={isUpdating}
-              className="border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800 font-semibold"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleUpdateUser} 
               disabled={isUpdating}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 min-w-[140px]"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 min-w-[140px] shadow-lg font-semibold"
             >
               {isUpdating ? (
                 <>
