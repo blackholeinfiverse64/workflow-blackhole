@@ -17,7 +17,7 @@ import {
 } from "../ui/dialog"
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
-import { KeyRound, Search, Users, Eye, EyeOff, RefreshCw } from "lucide-react"
+import { KeyRound, Search, Users, Eye, EyeOff, RefreshCw, Filter, UserCheck, UserX } from "lucide-react"
 import { API_URL } from "@/lib/api"
 
 export function PasswordSettings() {
@@ -25,6 +25,7 @@ export function PasswordSettings() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all") // "all", "existing", "exited"
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
   const [newPassword, setNewPassword] = useState("")
@@ -184,11 +185,41 @@ export function PasswordSettings() {
     }
   }
 
-  const filteredUsers = users.filter(
-    (user) =>
+  const getStatusBadge = (stillExist) => {
+    if (stillExist === 1) {
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-300">
+          <UserCheck className="h-3 w-3 mr-1" />
+          Active
+        </Badge>
+      )
+    } else {
+      return (
+        <Badge className="bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-300">
+          <UserX className="h-3 w-3 mr-1" />
+          Exited
+        </Badge>
+      )
+    }
+  }
+
+  const filteredUsers = users.filter((user) => {
+    // Search filter
+    const matchesSearch = 
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    
+    // Status filter
+    let matchesStatus = true
+    if (statusFilter === "existing") {
+      matchesStatus = user.stillExist === 1
+    } else if (statusFilter === "exited") {
+      matchesStatus = user.stillExist === 0
+    }
+    // "all" shows everyone
+    
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <div className="space-y-6">
@@ -239,6 +270,51 @@ export function PasswordSettings() {
                 </Button>
               )}
             </div>
+
+            {/* Status Filter Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 mr-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filter:</span>
+              </div>
+              <Button
+                variant={statusFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("all")}
+                className={statusFilter === "all" ? "bg-amber-500 hover:bg-amber-600 text-white" : "border-2"}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                All Users
+                <Badge variant="secondary" className="ml-2 bg-white/20 text-white dark:bg-black/20">
+                  {users.length}
+                </Badge>
+              </Button>
+              <Button
+                variant={statusFilter === "existing" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("existing")}
+                className={statusFilter === "existing" ? "bg-green-500 hover:bg-green-600 text-white" : "border-2"}
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                Existing
+                <Badge variant="secondary" className="ml-2 bg-white/20 text-white dark:bg-black/20">
+                  {users.filter(u => u.stillExist === 1).length}
+                </Badge>
+              </Button>
+              <Button
+                variant={statusFilter === "exited" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("exited")}
+                className={statusFilter === "exited" ? "bg-red-500 hover:bg-red-600 text-white" : "border-2"}
+              >
+                <UserX className="h-4 w-4 mr-2" />
+                Exited
+                <Badge variant="secondary" className="ml-2 bg-white/20 text-white dark:bg-black/20">
+                  {users.filter(u => u.stillExist === 0).length}
+                </Badge>
+              </Button>
+            </div>
+
             {users.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <p className="text-muted-foreground">
@@ -246,6 +322,11 @@ export function PasswordSettings() {
                     ? `Showing all ${users.length} employees`
                     : `Found ${filteredUsers.length} of ${users.length} employees`
                   }
+                  {statusFilter !== "all" && (
+                    <span className="ml-2 text-amber-600 dark:text-amber-400 font-medium">
+                      ({statusFilter === "existing" ? "Existing only" : "Exited only"})
+                    </span>
+                  )}
                 </p>
                 {searchTerm && (
                   <p className="text-amber-600 dark:text-amber-400 font-medium">
@@ -291,8 +372,9 @@ export function PasswordSettings() {
                             {user.name}
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {getRoleBadge(user.role)}
+                            {getStatusBadge(user.stillExist)}
                           </div>
                         </div>
                       </div>
