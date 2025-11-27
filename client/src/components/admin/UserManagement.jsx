@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { Input } from "../ui/input"
+import { Label } from "../ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import {
@@ -35,7 +37,11 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Loader2
+  Loader2,
+  UserCog,
+  Building2,
+  Mail,
+  Calendar
 } from 'lucide-react'
 import { useToast } from "../../hooks/use-toast"
 import { api } from "../../lib/api"
@@ -52,6 +58,12 @@ export function UserManagement() {
   const [actionType, setActionType] = useState("") // "exit" or "reactivate"
   const [isUpdating, setIsUpdating] = useState(false)
   const [activeTab, setActiveTab] = useState("active")
+  
+  // View and Edit states
+  const [viewingUser, setViewingUser] = useState(null)
+  const [editingUser, setEditingUser] = useState(null)
+  const [showViewDialog, setShowViewDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Fetch all users including exited ones
   useEffect(() => {
@@ -188,6 +200,51 @@ export function UserManagement() {
         description: "Failed to update user status",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleUpdateUser = async () => {
+    if (!editingUser || !editingUser.name || !editingUser.email) {
+      toast({
+        title: "Validation Error",
+        description: "Name and email are required",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsUpdating(true)
+      const userToUpdate = { ...editingUser }
+      if (!userToUpdate.password) {
+        delete userToUpdate.password
+      }
+
+      await api.admin.updateUser(editingUser._id, userToUpdate)
+      
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user._id === editingUser._id ? editingUser : user
+      ))
+
+      setShowEditDialog(false)
+      setEditingUser(null)
+
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      })
+
+      fetchUsers()
+    } catch (error) {
+      console.error("Error updating user:", error)
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to update user",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -383,11 +440,17 @@ export function UserManagement() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setViewingUser(user)
+                              setShowViewDialog(true)
+                            }}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setEditingUser(user)
+                              setShowEditDialog(true)
+                            }}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit User
                             </DropdownMenuItem>
@@ -462,6 +525,154 @@ export function UserManagement() {
                 <XCircle className="mr-2 h-4 w-4" />
               )}
               {actionType === "reactivate" ? "Reactivate Users" : "Mark as Exited"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Details Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-purple-600" />
+              User Details
+            </DialogTitle>
+            <DialogDescription>View complete information about this user</DialogDescription>
+          </DialogHeader>
+          {viewingUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Full Name</Label>
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{viewingUser.name}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Email</Label>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">{viewingUser.email}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Role</Label>
+                  <Badge variant="outline">{viewingUser.role}</Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Department</Label>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{viewingUser.department?.name || "No Department"}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Status</Label>
+                  {getStatusBadge(viewingUser.stillExist)}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Joined Date</Label>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">{format(new Date(viewingUser.createdAt), "MMM d, yyyy")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setShowViewDialog(false)
+              setEditingUser(viewingUser)
+              setShowEditDialog(true)
+            }}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Edit User
+            </DialogTitle>
+            <DialogDescription>Make changes to the user details</DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">Password (leave blank to keep current)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Enter new password"
+                  value={editingUser.password || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select
+                  value={editingUser.role}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
+                >
+                  <SelectTrigger id="edit-role">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="User">User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditDialog(false)
+                setEditingUser(null)
+              }}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateUser} disabled={isUpdating}>
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle className="mr-2 h-4 w-4" />
+              )}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
