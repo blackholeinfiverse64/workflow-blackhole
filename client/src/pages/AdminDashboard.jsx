@@ -84,6 +84,8 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState(null)
   const [showDepartmentDialog, setShowDepartmentDialog] = useState(false)
   const [showUserDialog, setShowUserDialog] = useState(false)
+  const [viewingUser, setViewingUser] = useState(null)
+  const [showViewUserDialog, setShowViewUserDialog] = useState(false)
   
   // Password management states
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -924,7 +926,7 @@ const AdminDashboard = () => {
                           <TableHead>Email</TableHead>
                           <TableHead className="w-[100px]">Role</TableHead>
                           <TableHead className="w-[150px]">Department</TableHead>
-                          <TableHead className="text-right w-[200px]">Actions</TableHead>
+                          <TableHead className="text-right w-[280px]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -957,16 +959,30 @@ const AdminDashboard = () => {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
+                                  {/* View Details Button */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setViewingUser(user)
+                                      setShowViewUserDialog(true)
+                                    }}
+                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-all duration-200"
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+
                                   {/* Edit Button */}
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                      onClick={() => {
-                                        setEditingUser(user)
-                                        setShowUserDialog(true)
-                                      }}
+                                    onClick={() => {
+                                      setEditingUser(user)
+                                      setShowUserDialog(true)
+                                    }}
                                     className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200"
-                                    >
+                                  >
                                     <Edit className="h-4 w-4 mr-1" />
                                     Edit
                                   </Button>
@@ -981,7 +997,7 @@ const AdminDashboard = () => {
                                       }
                                     }}
                                     className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30 transition-all duration-200"
-                                    >
+                                  >
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     Delete
                                   </Button>
@@ -1310,6 +1326,132 @@ const AdminDashboard = () => {
               Cancel
             </Button>
             <Button onClick={handleUpdateDepartment}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View User Details Dialog */}
+      <Dialog open={showViewUserDialog} onOpenChange={setShowViewUserDialog}>
+        <DialogContent className="sm:max-w-[600px] border-l-4 border-l-purple-500">
+          <DialogHeader className="pb-4 border-b border-purple-100 dark:border-purple-900">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-16 w-16 border-4 border-purple-100 dark:border-purple-900">
+                {viewingUser?.avatar ? (
+                  <AvatarImage src={viewingUser.avatar} alt={viewingUser.name} />
+                ) : (
+                  <AvatarFallback className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 text-xl font-bold">
+                    {viewingUser && getInitials(viewingUser.name)}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div>
+                <DialogTitle className="text-2xl font-bold">{viewingUser?.name}</DialogTitle>
+                <DialogDescription className="text-base mt-1">{viewingUser?.email}</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {viewingUser && (
+            <div className="grid gap-6 py-4">
+              {/* User Information Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Role */}
+                <div className="space-y-2 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Role</Label>
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    {getRoleBadge(viewingUser.role)}
+                  </div>
+                </div>
+
+                {/* Department */}
+                <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Department</Label>
+                  <div>
+                    {getDepartmentById(viewingUser.department) ? (
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-2 ${getDepartmentById(viewingUser.department).color}`}></div>
+                          <span className="font-semibold">{getDepartmentById(viewingUser.department).name}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">Not assigned</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Full Information */}
+              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/30 rounded-lg border">
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-sm font-medium text-muted-foreground">User ID</span>
+                    <span className="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{viewingUser._id}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-sm font-medium text-muted-foreground">Email Address</span>
+                    <span className="text-sm font-medium">{viewingUser.email}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-sm font-medium text-muted-foreground">Full Name</span>
+                    <span className="text-sm font-medium">{viewingUser.name}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-sm font-medium text-muted-foreground">Role</span>
+                    <span className="text-sm font-medium">{viewingUser.role}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-sm font-medium text-muted-foreground">Department</span>
+                    <span className="text-sm font-medium">
+                      {getDepartmentById(viewingUser.department)?.name || "Not assigned"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={() => {
+                    setShowViewUserDialog(false)
+                    setEditingUser(viewingUser)
+                    setShowUserDialog(true)
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit User
+                </Button>
+                {isAdminOrManager && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowViewUserDialog(false)
+                      setSelectedUserForPassword(viewingUser)
+                      setShowPasswordDialog(true)
+                    }}
+                    className="flex-1 border-amber-500 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                  >
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Change Password
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowViewUserDialog(false)
+                setViewingUser(null)
+              }}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
