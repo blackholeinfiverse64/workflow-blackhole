@@ -53,12 +53,13 @@ const upload = multer({
 // Get all tasks - SHOW ALL EXISTING ASSIGNEES
 router.get("/", auth, async (req, res) => {
   try {
-    const { department, status, dueDate } = req.query
+    const { department, status, dueDate, priority } = req.query
 
     // Build filter object
     const filter = {}
     if (department) filter.department = department
     if (status) filter.status = status
+    if (priority) filter.priority = priority
     if (dueDate) {
       const date = new Date(dueDate)
       filter.dueDate = {
