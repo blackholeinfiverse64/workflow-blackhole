@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { api } from "../../lib/api"
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
-import { User, Lock } from "lucide-react"
+import { User } from "lucide-react"
 
 export function ProfileSettings() {
   const { toast } = useToast()
@@ -21,13 +21,7 @@ export function ProfileSettings() {
     bio: "",
     avatar: "",
   })
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
-  const [isLoadingPassword, setIsLoadingPassword] = useState(false)
   const [userId, setUserId] = useState(null)
 
   // Set initial form data when user is available
@@ -45,10 +39,6 @@ export function ProfileSettings() {
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handlePasswordChange = (field, value) => {
-    setPasswordData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleSubmitProfile = async (e) => {
@@ -75,52 +65,6 @@ export function ProfileSettings() {
       })
     } finally {
       setIsLoadingProfile(false)
-    }
-  }
-
-  const handleSubmitPassword = async (e) => {
-    e.preventDefault()
-    setIsLoadingPassword(true)
-
-    try {
-      // Validate password fields
-      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-        throw new Error("All password fields are required")
-      }
-
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        throw new Error("New passwords don't match")
-      }
-
-      if (passwordData.newPassword.length < 6) {
-        throw new Error("New password must be at least 6 characters")
-      }
-
-      // Update password
-      await api.users.changePassword(userId, {
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      })
-
-      toast({
-        title: "Success",
-        description: "Password updated successfully!",
-      })
-
-      // Reset password fields
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update password",
-      })
-    } finally {
-      setIsLoadingPassword(false)
     }
   }
 
@@ -248,82 +192,6 @@ export function ProfileSettings() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Card 3: Update Password (Full Width) */}
-      <Card className="border-l-4 border-l-amber-500">
-        <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <Lock className="h-4 w-4 text-amber-500" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Update Password</CardTitle>
-              <CardDescription className="text-xs">Change your password to keep your account secure</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmitPassword} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) =>
-                    handlePasswordChange("currentPassword", e.target.value)
-                  }
-                  placeholder="Enter your current password"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) =>
-                    handlePasswordChange("newPassword", e.target.value)
-                  }
-                  placeholder="Enter new password"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) =>
-                    handlePasswordChange("confirmPassword", e.target.value)
-                  }
-                  placeholder="Re-enter new password"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Must match new password
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button 
-                type="submit" 
-                disabled={isLoadingPassword}
-                className="min-w-[120px]"
-                variant="default"
-              >
-                {isLoadingPassword ? "Updating..." : "Update Password"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   )
 }
