@@ -1,5 +1,4 @@
 import { DependencyGraph } from "../components/dependencies/dependency-graph"
-import { DependencyControls } from "../components/dependencies/dependency-controls"
 import { Network } from "lucide-react"
 
 function Dependencies() {
@@ -17,9 +16,6 @@ function Dependencies() {
           </div>
         </div>
       </div>
-
-      {/* Controls Section */}
-      <DependencyControls />
 
       {/* Graph Container */}
       <div className="border-2 rounded-xl p-4 md:p-6 bg-card shadow-xl min-h-[600px] flex flex-col">
