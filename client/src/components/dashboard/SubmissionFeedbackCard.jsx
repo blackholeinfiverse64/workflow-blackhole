@@ -84,8 +84,8 @@ export function SubmissionFeedbackCard({
             {getStatusIcon()}
             <div>
               <CardTitle className="text-base font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {submission.task?.title || "Task Submission"}
-              </CardTitle>
+              {submission.task?.title || "Task Submission"}
+            </CardTitle>
               <div className="flex items-center gap-1.5 mt-1">
                 <Calendar className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                 <CardDescription className="text-xs text-gray-600 dark:text-gray-400 font-medium">
