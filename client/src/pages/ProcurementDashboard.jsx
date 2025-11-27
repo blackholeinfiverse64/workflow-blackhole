@@ -259,8 +259,8 @@ export default function ProcurementDashboard() {
               className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border-2 border-muted data-[state=active]:bg-green-500 data-[state=active]:border-green-500 data-[state=active]:text-white transition-all duration-200 hover:border-green-500/50"
             >
               <UserCheck className="h-4 w-4" />
-              <span className="font-semibold">Available Employees</span>
-              <span className="ml-1 text-xs opacity-70">({analysis?.availableEmployees?.length || 0})</span>
+              <span className="font-semibold">All Employees</span>
+              <span className="ml-1 text-xs opacity-70">({analysis?.allEmployees?.length || 0})</span>
             </TabsTrigger>
           </TabsList>
           
@@ -329,49 +329,121 @@ export default function ProcurementDashboard() {
         </TabsContent>
 
         <TabsContent value="available" className="mt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {analysis?.availableEmployees?.length > 0 ? (
-              analysis.availableEmployees.map((employee) => (
-                <Card 
-                  key={employee.employeeId}
-                  className="border-l-4 border-l-green-500 transition-all hover:shadow-md"
-                >
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-sm truncate">{employee.name}</h3>
-                        <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs">
-                          Available
-                        </Badge>
-                      </div>
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Active Tasks:</span>
-                          <span className="font-medium">{employee.activeTasks}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Completion:</span>
-                          <span className="font-medium">{employee.completionRate}%</span>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-muted-foreground">Score</span>
-                          <span className="text-sm font-bold text-green-600">{employee.availabilityScore}</span>
-                        </div>
-                        <Progress value={employee.availabilityScore} className="h-1.5 mt-2" />
-                      </div>
+          {/* Task Distribution Summary */}
+          {analysis?.allEmployees?.length > 0 && (
+            <Card className="mb-6 border-l-4 border-l-primary">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Task Distribution Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      {analysis.allEmployees.filter(e => e.activeTasks === 0).length}
                     </div>
-                  </CardContent>
-                </Card>
-              ))
+                    <div className="text-xs text-muted-foreground mt-1">No Tasks</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {analysis.allEmployees.filter(e => e.activeTasks === 1).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">1 Task</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {analysis.allEmployees.filter(e => e.activeTasks === 2).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">2 Tasks</div>
+                  </div>
+                  <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                      {analysis.allEmployees.filter(e => e.activeTasks === 3).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">3 Tasks</div>
+                  </div>
+                  <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {analysis.allEmployees.filter(e => e.activeTasks > 3).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">4+ Tasks</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {analysis?.allEmployees?.length > 0 ? (
+              // Sort employees by task count (ascending - least busy first)
+              [...analysis.allEmployees]
+                .sort((a, b) => a.activeTasks - b.activeTasks)
+                .map((employee) => {
+                  // Determine badge color based on task load
+                  const getBadgeStyle = (tasks) => {
+                    if (tasks === 0) return { bg: "bg-red-500/10", text: "text-red-700 dark:text-red-400", label: "No Tasks", border: "border-l-red-500" };
+                    if (tasks === 1) return { bg: "bg-green-500/10", text: "text-green-700 dark:text-green-400", label: "Available", border: "border-l-green-500" };
+                    if (tasks === 2) return { bg: "bg-blue-500/10", text: "text-blue-700 dark:text-blue-400", label: "Moderate", border: "border-l-blue-500" };
+                    if (tasks === 3) return { bg: "bg-yellow-500/10", text: "text-yellow-700 dark:text-yellow-400", label: "Busy", border: "border-l-yellow-500" };
+                    return { bg: "bg-orange-500/10", text: "text-orange-700 dark:text-orange-400", label: "Overloaded", border: "border-l-orange-500" };
+                  };
+
+                  const badgeStyle = getBadgeStyle(employee.activeTasks);
+
+                  return (
+                    <Card 
+                      key={employee.employeeId}
+                      className={`border-l-4 ${badgeStyle.border} transition-all hover:shadow-md`}
+                    >
+                      <CardContent className="pt-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-sm truncate">{employee.name}</h3>
+                            <Badge variant="outline" className={`${badgeStyle.bg} ${badgeStyle.text} text-xs`}>
+                              {badgeStyle.label}
+                            </Badge>
+                          </div>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Active Tasks:</span>
+                              <span className="font-bold text-base">{employee.activeTasks}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Completed:</span>
+                              <span className="font-medium">{employee.completedTasks || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Completion Rate:</span>
+                              <span className="font-medium">{employee.completionRate}%</span>
+                            </div>
+                            {employee.overdueTasks > 0 && (
+                              <div className="flex justify-between text-red-600 dark:text-red-400">
+                                <span>Overdue:</span>
+                                <span className="font-medium">{employee.overdueTasks}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="pt-2 border-t">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-muted-foreground">Availability Score</span>
+                              <span className="text-sm font-bold text-primary">{employee.availabilityScore}</span>
+                            </div>
+                            <Progress value={employee.availabilityScore} className="h-1.5 mt-2" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No Available Employees</h3>
+                  <h3 className="font-semibold text-lg mb-2">No Employees Found</h3>
                   <p className="text-sm text-muted-foreground text-center max-w-sm">
-                    All employees are currently at capacity. Try refreshing the analysis or check back later.
+                    No employee data available. Try refreshing the analysis.
                   </p>
                 </CardContent>
               </Card>
