@@ -440,17 +440,29 @@ export function UserManagement() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => {
-                              setViewingUser(user)
-                              setShowViewDialog(true)
-                            }}>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                console.log('View Details clicked for:', user.name)
+                                setViewingUser(user)
+                                setShowViewDialog(true)
+                              }}
+                              className="cursor-pointer"
+                            >
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              setEditingUser(user)
-                              setShowEditDialog(true)
-                            }}>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                console.log('Edit User clicked for:', user.name)
+                                setEditingUser(user)
+                                setShowEditDialog(true)
+                              }}
+                              className="cursor-pointer"
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit User
                             </DropdownMenuItem>
@@ -532,65 +544,115 @@ export function UserManagement() {
 
       {/* View Details Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-purple-600" />
-              User Details
-            </DialogTitle>
-            <DialogDescription>View complete information about this user</DialogDescription>
+        <DialogContent className="sm:max-w-[650px] border-l-4 border-l-purple-500 dark:border-l-purple-400">
+          <DialogHeader className="pb-6 border-b border-purple-100 dark:border-purple-900/50">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <Eye className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  User Details
+                </DialogTitle>
+                <DialogDescription className="text-base mt-1">
+                  Complete information about this user
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+          
           {viewingUser && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Full Name</Label>
-                  <div className="flex items-center gap-2">
-                    <UserCog className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{viewingUser.name}</span>
+            <div className="space-y-6 py-4">
+              {/* User Header Card */}
+              <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full bg-purple-200 dark:bg-purple-800 flex items-center justify-center text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    {viewingUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Email</Label>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{viewingUser.email}</span>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{viewingUser.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      {viewingUser.email}
+                    </p>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Role</Label>
-                  <Badge variant="outline">{viewingUser.role}</Badge>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Department</Label>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{viewingUser.department?.name || "No Department"}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Status</Label>
                   {getStatusBadge(viewingUser.stillExist)}
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase">Joined Date</Label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{format(new Date(viewingUser.createdAt), "MMM d, yyyy")}</span>
+              </div>
+
+              {/* Information Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Role Card */}
+                <div className="p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 transition-all hover:shadow-md">
+                  <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
+                    <UserCog className="h-3 w-3" />
+                    Role
+                  </Label>
+                  <div className="mt-2">
+                    <Badge variant="outline" className="text-sm font-semibold border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300">
+                      {viewingUser.role}
+                    </Badge>
                   </div>
+                </div>
+
+                {/* Department Card */}
+                <div className="p-4 rounded-lg border-2 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20 transition-all hover:shadow-md">
+                  <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider flex items-center gap-1">
+                    <Building2 className="h-3 w-3" />
+                    Department
+                  </Label>
+                  <div className="mt-2">
+                    <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                      {viewingUser.department?.name || "No Department"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Joined Date Card */}
+                <div className="p-4 rounded-lg border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 transition-all hover:shadow-md col-span-2">
+                  <Label className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    Joined Date
+                  </Label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                      {format(new Date(viewingUser.createdAt), "MMMM d, yyyy")}
+                    </span>
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                      ({format(new Date(viewingUser.createdAt), "EEEE")})
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">User ID</span>
+                  <code className="text-xs font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    {viewingUser._id}
+                  </code>
                 </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+          
+          <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-700 gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowViewDialog(false)}
+              className="border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
               Close
             </Button>
-            <Button onClick={() => {
-              setShowViewDialog(false)
-              setEditingUser(viewingUser)
-              setShowEditDialog(true)
-            }}>
+            <Button 
+              onClick={() => {
+                setShowViewDialog(false)
+                setEditingUser(viewingUser)
+                setShowEditDialog(true)
+              }}
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
               <Edit className="mr-2 h-4 w-4" />
               Edit User
             </Button>
@@ -600,62 +662,122 @@ export function UserManagement() {
 
       {/* Edit User Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5 text-blue-600" />
-              Edit User
-            </DialogTitle>
-            <DialogDescription>Make changes to the user details</DialogDescription>
+        <DialogContent className="sm:max-w-[550px] border-l-4 border-l-blue-500 dark:border-l-blue-400">
+          <DialogHeader className="pb-6 border-b border-blue-100 dark:border-blue-900/50">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Edit className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Edit User
+                </DialogTitle>
+                <DialogDescription className="text-base mt-1">
+                  Make changes to the user details
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+          
           {editingUser && (
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-5 py-4">
+              {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
+                <Label htmlFor="edit-name" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <UserCog className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  Full Name
+                </Label>
                 <Input
                   id="edit-name"
                   value={editingUser.name}
                   onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
+                  placeholder="Enter full name"
                 />
               </div>
+
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
+                <Label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  Email Address
+                </Label>
                 <Input
                   id="edit-email"
                   type="email"
                   value={editingUser.email}
                   onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
+                  placeholder="Enter email address"
                 />
               </div>
+
+              {/* Password */}
               <div className="space-y-2">
-                <Label htmlFor="edit-password">Password (leave blank to keep current)</Label>
+                <Label htmlFor="edit-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <svg className="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Password
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">(leave blank to keep current)</span>
+                </Label>
                 <Input
                   id="edit-password"
                   type="password"
                   placeholder="Enter new password"
                   value={editingUser.password || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                  className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800"
                 />
               </div>
+
+              {/* Role */}
               <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
+                <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <UserCog className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  Role
+                </Label>
                 <Select
                   value={editingUser.role}
                   onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
                 >
-                  <SelectTrigger id="edit-role">
+                  <SelectTrigger id="edit-role" className="border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-800">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Manager">Manager</SelectItem>
-                    <SelectItem value="User">User</SelectItem>
+                    <SelectItem value="Admin">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                        Admin
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Manager">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                        Manager
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="User">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                        User
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Info Alert */}
+              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <AlertTriangle className="h-3 w-3" />
+                  Changes will be saved immediately and the user will be notified.
+                </p>
+              </div>
             </div>
           )}
-          <DialogFooter>
+          
+          <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-700 gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -663,16 +785,26 @@ export function UserManagement() {
                 setEditingUser(null)
               }}
               disabled={isUpdating}
+              className="border-2 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdateUser} disabled={isUpdating}>
+            <Button 
+              onClick={handleUpdateUser} 
+              disabled={isUpdating}
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 min-w-[140px]"
+            >
               {isUpdating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
               ) : (
-                <CheckCircle className="mr-2 h-4 w-4" />
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
               )}
-              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
