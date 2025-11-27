@@ -189,14 +189,41 @@ export function PasswordSettings() {
         </CardHeader>
         <CardContent className="pt-6">
           {/* Search Bar */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search employees by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-full"
-            />
+          <div className="space-y-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Search employees by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 text-base border-2 focus:border-amber-500 dark:focus:border-amber-500"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2 h-8 w-8 p-0 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                  onClick={() => setSearchTerm("")}
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+            {users.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <p className="text-muted-foreground">
+                  {filteredUsers.length === users.length 
+                    ? `Showing all ${users.length} employees`
+                    : `Found ${filteredUsers.length} of ${users.length} employees`
+                  }
+                </p>
+                {searchTerm && (
+                  <p className="text-amber-600 dark:text-amber-400 font-medium">
+                    Searching for: "{searchTerm}"
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Employee List */}
@@ -205,38 +232,41 @@ export function PasswordSettings() {
               filteredUsers.map((user) => (
                 <Card
                   key={user._id}
-                  className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-md transition-all duration-200"
+                  className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
+                  onClick={() => {
+                    setSelectedUser(user)
+                    setShowPasswordDialog(true)
+                  }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <Avatar className="h-12 w-12 flex-shrink-0">
+                        <Avatar className="h-14 w-14 flex-shrink-0 ring-2 ring-amber-200 group-hover:ring-amber-500 transition-all duration-200">
                           {user.avatar ? (
                             <AvatarImage src={user.avatar} alt={user.name} />
                           ) : (
-                            <AvatarFallback className="bg-amber-100 text-amber-700 font-semibold">
+                            <AvatarFallback className="bg-amber-100 text-amber-700 font-semibold text-lg group-hover:bg-amber-200 transition-colors">
                               {getInitials(user.name)}
                             </AvatarFallback>
                           )}
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-lg truncate">{user.name}</p>
+                          <p className="font-bold text-lg truncate text-gray-900 dark:text-gray-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                            {user.name}
+                          </p>
                           <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {getRoleBadge(user.role)}
                           </div>
                         </div>
                       </div>
-                      <Button
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setShowPasswordDialog(true)
-                        }}
-                        className="bg-amber-500 hover:bg-amber-600 text-white flex-shrink-0"
-                      >
-                        <KeyRound className="mr-2 h-4 w-4" />
-                        Change Password
-                      </Button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="hidden sm:flex flex-col items-end">
+                          <span className="text-xs text-muted-foreground">Click to</span>
+                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Change Password</span>
+                        </div>
+                        <KeyRound className="h-6 w-6 text-amber-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:scale-110 transition-all duration-200" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

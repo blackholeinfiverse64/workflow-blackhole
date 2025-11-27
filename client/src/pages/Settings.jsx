@@ -12,11 +12,6 @@ function Settings() {
   // Check if user is Admin or Manager
   const isAdminOrManager = user && (user.role === "Admin" || user.role === "Manager")
   
-  // Debug logging
-  console.log("Settings - Current User:", user)
-  console.log("Settings - User Role:", user?.role)
-  console.log("Settings - Is Admin or Manager:", isAdminOrManager)
-  
   return (
     <div className="space-y-6 pb-8">
       {/* Header Section */}
