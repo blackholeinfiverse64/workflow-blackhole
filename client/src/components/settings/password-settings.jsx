@@ -45,7 +45,7 @@ export function PasswordSettings() {
       setIsLoadingUsers(true)
       const token = localStorage.getItem("WorkflowToken")
       
-      const response = await fetch(`${API_URL}/admin/users`, {
+      const response = await fetch(`${API_URL}/admin/users/all`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
