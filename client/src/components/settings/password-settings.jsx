@@ -22,7 +22,7 @@ import { API_URL } from "@/lib/api"
 
 export function PasswordSettings() {
   const { toast } = useToast()
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, getToken } = useAuth()
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -43,27 +43,49 @@ export function PasswordSettings() {
   const fetchUsers = async () => {
     try {
       setIsLoadingUsers(true)
-      const token = localStorage.getItem("WorkflowToken")
+      const token = getToken()
+      
+      console.log("🔑 Token exists:", !!token)
+      console.log("🌐 API URL:", API_URL)
+      console.log("👤 Current user role:", currentUser?.role)
+      console.log("📍 Full URL:", `${API_URL}/admin/users`)
+      
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.")
+      }
       
       const response = await fetch(`${API_URL}/admin/users`, {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           "x-auth-token": token,
         },
       })
 
+      console.log("📡 Response status:", response.status)
+
+      if (response.status === 401) {
+        throw new Error("Unauthorized. Your session may have expired. Please log out and log in again.")
+      }
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch users: ${response.statusText}`)
       }
 
       const data = await response.json()
-      console.log("Fetched users:", data.length)
+      console.log("✅ Fetched users successfully:", data.length, "employees")
       setUsers(data)
+      
+      toast({
+        title: "Success",
+        description: `Loaded ${data.length} employees`,
+      })
     } catch (err) {
-      console.error("Error fetching users:", err)
+      console.error("❌ Error fetching users:", err)
       toast({
         title: "Error",
-        description: "Failed to load employees. Please check your permissions.",
+        description: err.message || "Failed to load employees. Please check your permissions.",
         variant: "destructive",
       })
     } finally {
@@ -110,7 +132,11 @@ export function PasswordSettings() {
 
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("WorkflowToken")
+      const token = getToken()
+      
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.")
+      }
       
       const response = await fetch(`${API_URL}/admin/users/${selectedUser._id}`, {
         method: "PUT",
@@ -122,6 +148,10 @@ export function PasswordSettings() {
           password: newPassword
         })
       })
+
+      if (response.status === 401) {
+        throw new Error("Unauthorized. Your session may have expired. Please log out and log in again.")
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))

@@ -154,8 +154,10 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const getToken = () => localStorage.getItem("WorkflowToken");
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
