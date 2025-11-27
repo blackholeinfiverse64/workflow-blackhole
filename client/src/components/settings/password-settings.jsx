@@ -199,8 +199,34 @@ export function PasswordSettings() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Debug logs
+  console.log("📊 Password Settings Debug:")
+  console.log("- Current User:", currentUser)
+  console.log("- Total Users:", users.length)
+  console.log("- Search Term:", searchTerm)
+  console.log("- Filtered Users:", filteredUsers.length)
+  console.log("- Is Loading:", isLoadingUsers)
+  console.log("- Show Dialog:", showPasswordDialog)
+  console.log("- Selected User:", selectedUser?.name)
+
   return (
     <div className="space-y-6">
+      {/* Debug Info Card */}
+      <Card className="border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+            <span className="font-semibold">Debug Info:</span>
+            <span>Total Employees: {users.length}</span>
+            <span>•</span>
+            <span>Filtered: {filteredUsers.length}</span>
+            <span>•</span>
+            <span>Search: {searchTerm || "(none)"}</span>
+            <span>•</span>
+            <span>Dialog: {showPasswordDialog ? "OPEN" : "closed"}</span>
+          </div>
+        </CardContent>
+      </Card>
       {/* Employee Password Management */}
       <Card className="border-l-4 border-l-amber-500">
         <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
@@ -234,7 +260,11 @@ export function PasswordSettings() {
               <Input
                 placeholder="Search employees by name or email..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  console.log("🔍 Search input changed:", value)
+                  setSearchTerm(value)
+                }}
                 className="pl-10 h-12 text-base border-2 focus:border-amber-500 dark:focus:border-amber-500"
               />
               {searchTerm && (
@@ -277,10 +307,14 @@ export function PasswordSettings() {
                 <Card
                   key={user._id}
                   className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
-                  onClick={() => {
-                    console.log("👤 Selected user:", user.name)
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    console.log("🖱️ Card clicked!")
+                    console.log("👤 Selected user:", user.name, user.email)
+                    console.log("📧 User ID:", user._id)
                     setSelectedUser(user)
                     setShowPasswordDialog(true)
+                    console.log("✅ Dialog should now open")
                   }}
                 >
                   <CardContent className="p-4">
@@ -351,7 +385,20 @@ export function PasswordSettings() {
       </Card>
 
       {/* Change Password Dialog with Show/Hide Password */}
-      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+      <Dialog 
+        open={showPasswordDialog} 
+        onOpenChange={(open) => {
+          console.log("🔔 Dialog state changing to:", open)
+          setShowPasswordDialog(open)
+          if (!open) {
+            setSelectedUser(null)
+            setNewPassword("")
+            setConfirmPassword("")
+            setShowNewPassword(false)
+            setShowConfirmPassword(false)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[500px] border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white dark:from-gray-800 dark:to-gray-900">
           <DialogHeader className="pb-4 border-b border-amber-100 dark:border-amber-900">
             <div className="flex items-center gap-3">
