@@ -26,6 +26,9 @@ export function PasswordSettings() {
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all") // "all", "existing", "exited"
+  
+  console.log("🔑 PasswordSettings Component Loaded")
+  console.log("- Current User:", currentUser)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
   const [newPassword, setNewPassword] = useState("")
@@ -220,6 +223,13 @@ export function PasswordSettings() {
     
     return matchesSearch && matchesStatus
   })
+
+  console.log("📊 Password Settings Debug:")
+  console.log("- Total Users:", users.length)
+  console.log("- Status Filter:", statusFilter)
+  console.log("- Filtered Users:", filteredUsers.length)
+  console.log("- Existing Count:", users.filter(u => u.stillExist === 1).length)
+  console.log("- Exited Count:", users.filter(u => u.stillExist === 0).length)
 
   return (
     <div className="space-y-6">

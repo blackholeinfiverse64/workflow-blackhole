@@ -922,9 +922,9 @@ const AdminDashboard = () => {
                           <TableHead className="w-[50px]">User</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Department</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead className="w-[100px]">Role</TableHead>
+                          <TableHead className="w-[150px]">Department</TableHead>
+                          <TableHead className="text-right w-[200px]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -956,29 +956,36 @@ const AdminDashboard = () => {
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setEditingUser(user)
-                                        setShowUserDialog(true)
-                                      }}
-                                    >
-                                      <Edit className="mr-2 h-4 w-4" /> Edit User
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="text-red-600 dark:text-red-400"
-                                      onClick={() => handleDeleteUser(user._id)}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" /> Delete User
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex items-center justify-end gap-2">
+                                  {/* Edit Button */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingUser(user)
+                                      setShowUserDialog(true)
+                                    }}
+                                    className="border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200"
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                  
+                                  {/* Delete Button */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
+                                        handleDeleteUser(user._id)
+                                      }
+                                    }}
+                                    className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30 transition-all duration-200"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           )
