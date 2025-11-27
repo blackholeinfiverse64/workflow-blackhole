@@ -17,18 +17,12 @@ import {
 } from "../ui/dialog"
 import { useToast } from "../../hooks/use-toast"
 import { useAuth } from "@/context/auth-context"
-import { KeyRound, Search, Users, Eye, EyeOff } from "lucide-react"
-import axios from "axios"
+import { KeyRound, Search, Users, Eye, EyeOff, RefreshCw } from "lucide-react"
 import { API_URL } from "@/lib/api"
-
-// Configure axios with base URL
-const api = axios.create({
-  baseURL: `${API_URL}`,
-})
 
 export function PasswordSettings() {
   const { toast } = useToast()
-  const { user: currentUser, token } = useAuth()
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -36,29 +30,52 @@ export function PasswordSettings() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // Set auth header for all requests
+  // Fetch users on component mount
   useEffect(() => {
-    if (token) {
-      api.defaults.headers.common["x-auth-token"] = token
-    }
-  }, [token])
-
-  // Fetch users if admin or manager
-  useEffect(() => {
-    if (currentUser && (currentUser.role === "Admin" || currentUser.role === "Manager")) {
-      fetchUsers()
-    }
-  }, [currentUser])
+    fetchUsers()
+  }, [])
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get("/admin/users")
-      setUsers(response.data)
+      setIsLoadingUsers(true)
+      const token = localStorage.getItem("WorkflowToken")
+      
+      console.log("🔍 Fetching users...")
+      console.log("Token exists:", !!token)
+      
+      const response = await fetch(`${API_URL}/admin/users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("✅ Users loaded:", data.length)
+      setUsers(data)
+      
+      toast({
+        title: "Employees Loaded",
+        description: `${data.length} employees found`,
+      })
     } catch (err) {
-      console.error("Error fetching users:", err)
+      console.error("❌ Error fetching users:", err)
+      toast({
+        title: "Error",
+        description: "Failed to load employees. Please refresh the page.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingUsers(false)
     }
   }
 
@@ -101,9 +118,23 @@ export function PasswordSettings() {
 
     try {
       setIsLoading(true)
-      await api.put(`/admin/users/${selectedUser._id}`, {
-        password: newPassword
+      const token = localStorage.getItem("WorkflowToken")
+      
+      const response = await fetch(`${API_URL}/admin/users/${selectedUser._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token,
+        },
+        body: JSON.stringify({
+          password: newPassword
+        })
       })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to update password")
+      }
 
       setShowPasswordDialog(false)
       setSelectedUser(null)
@@ -120,7 +151,7 @@ export function PasswordSettings() {
       console.error("Error changing password:", err)
       toast({
         title: "Error",
-        description: err.response?.data?.error || "Failed to change password",
+        description: err.message || "Failed to change password",
         variant: "destructive",
       })
     } finally {
@@ -173,18 +204,26 @@ export function PasswordSettings() {
       {/* Employee Password Management */}
       <Card className="border-l-4 border-l-amber-500">
         <CardHeader className="bg-gradient-to-r from-amber-500/5 to-transparent">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <KeyRound className="h-4 w-4 text-amber-500" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold">Employee Password Management</CardTitle>
-                  <CardDescription className="mt-1">Search and change employee passwords</CardDescription>
-                </div>
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <KeyRound className="h-4 w-4 text-amber-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold">Employee Password Management</CardTitle>
+                <CardDescription className="mt-1">Search and select employee to change password</CardDescription>
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchUsers}
+              disabled={isLoadingUsers}
+              className="flex-shrink-0"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingUsers ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -228,12 +267,18 @@ export function PasswordSettings() {
 
           {/* Employee List */}
           <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-            {filteredUsers.length > 0 ? (
+            {isLoadingUsers ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading employees...</p>
+              </div>
+            ) : filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <Card
                   key={user._id}
                   className="border-l-4 border-l-amber-200 hover:border-l-amber-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer group"
                   onClick={() => {
+                    console.log("👤 Selected user:", user.name)
                     setSelectedUser(user)
                     setShowPasswordDialog(true)
                   }}
@@ -271,12 +316,34 @@ export function PasswordSettings() {
                   </CardContent>
                 </Card>
               ))
+            ) : users.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-semibold mb-2">No Employees Found</p>
+                <p className="text-sm">There are no employees in the system yet.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchUsers}
+                  className="mt-4"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh List
+                </Button>
+              </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>
-                  {searchTerm ? `No employees found matching "${searchTerm}"` : "No employees found"}
-                </p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Search className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-semibold mb-2">No Match Found</p>
+                <p className="text-sm mb-4">No employees match "{searchTerm}"</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchTerm("")}
+                  className="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40"
+                >
+                  Clear Search
+                </Button>
               </div>
             )}
           </div>
