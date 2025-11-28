@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { Plus, Loader2, Mail, FileText ,Target} from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip"
+import { Plus, Loader2, Mail, FileText, Target, Bell } from 'lucide-react'
 import { useNavigate } from "react-router-dom"
 import { CreateTaskDialog } from "../components/tasks/create-task-dialog"
 import { DepartmentStats } from "../components/dashboard/department-stats"
@@ -76,16 +77,22 @@ function Dashboard() {
     try {
       setIsSendingReminders(true)
       const result = await api.notifications.broadcastReminders()
+      
+      // Show detailed success message
+      const alertCount = result.alertsCreated || 0
+      const userCount = result.usersNotified || 0
+      
       toast({
-        title: "Success",
-        description: `Sent ${result.emails.length} reminder emails to users`,
+        title: "✅ Broadcast Alerts Sent Successfully!",
+        description: `Sent ${alertCount} alert${alertCount !== 1 ? 's' : ''} to ${userCount} user${userCount !== 1 ? 's' : ''}. Users will see alerts in their header notification bell (🔺).`,
         variant: "success",
+        duration: 5000,
       })
     } catch (error) {
       console.error("Error sending reminders:", error)
       toast({
         title: "Error",
-        description: "Failed to send reminder emails",
+        description: error.response?.data?.message || "Failed to send reminder alerts",
         variant: "destructive",
       })
     } finally {
@@ -180,19 +187,29 @@ function Dashboard() {
           
           {isAdmin && (
             <>
-              <Button
-                variant="outline"
-                onClick={handleBroadcastReminders}
-                disabled={isSendingReminders}
-                className="neo-button hover:glow-accent transition-cyber"
-              >
-                {isSendingReminders ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="mr-2 h-4 w-4" />
-                )}
-                Broadcast Reminders
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={handleBroadcastReminders}
+                      disabled={isSendingReminders}
+                      className="neo-button hover:glow-accent transition-cyber"
+                    >
+                      {isSendingReminders ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Bell className="mr-2 h-4 w-4" />
+                      )}
+                      Broadcast Reminders
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="font-semibold">Send Task Completion Alerts</p>
+                    <p className="text-xs mt-1">Sends alerts to all users with incomplete tasks. Alerts appear in the header notification bell (🔺).</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
               <Button
                 variant="outline"

@@ -234,9 +234,9 @@ const AdminChatbot = () => {
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-800 animate-pulse"></div>
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-white">AI Assistant</CardTitle>
+              <CardTitle className="text-base font-bold text-white">Workflow Assistant</CardTitle>
               <p className="text-xs text-gray-400 font-medium mt-0.5">
-                Powered by Grok AI
+                Infiverse AI Solution
               </p>
             </div>
           </div>

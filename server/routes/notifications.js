@@ -195,6 +195,7 @@ const nodemailer = require("nodemailer")
 const Task = require("../models/Task")
 const User = require("../models/User")
 const Aim = require("../models/Aim")
+const MonitoringAlert = require("../models/MonitoringAlert")
 const { sendPushNotificationToUsers, broadcastPushNotification } = require("../utils/pushNotificationService")
 
 // Nodemailer transporter setup (replace with your email service details)
@@ -206,7 +207,7 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-// Route to broadcast task reminders
+// Route to broadcast task reminders with monitoring alerts
 router.post("/broadcast-reminders", async (req, res) => {
   try {
     // Find tasks due today or overdue
@@ -215,39 +216,86 @@ router.post("/broadcast-reminders", async (req, res) => {
     const tasks = await Task.find({
       dueDate: { $lte: today },
       status: { $ne: "completed" },
-    }).populate("assignee", "email")
+    }).populate("assignee", "email name _id")
 
     if (!tasks || tasks.length === 0) {
-      return res.status(200).send({ message: "No tasks due today or overdue." })
+      return res.status(200).send({ message: "No tasks due today or overdue.", emails: [] })
     }
 
-    // Send email reminders
-    for (const task of tasks) {
-      if (task.assignee && task.assignee.email) {
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: task.assignee.email,
-          subject: "Task Progress Reminder",
-          text: `Hi ${task.assignee.email},\n\nThis is a reminder to update the progress of your task: ${task.title}.\nDue Date: ${task.dueDate}\n\nPlease update it in the WorkflowAI system.\n\nBest regards,\nThe WorkflowAI Team`,
-        }
+    // Get io instance from request
+    const io = req.io
 
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error)
-          } else {
-            console.log("Email sent:", info.response)
-          }
+    // Create monitoring alerts for each user with incomplete tasks
+    const alertPromises = []
+    const userAlerts = new Map() // Track alerts per user
+
+    for (const task of tasks) {
+      if (task.assignee && task.assignee._id) {
+        const userId = task.assignee._id.toString()
+        
+        // Group tasks by user
+        if (!userAlerts.has(userId)) {
+          userAlerts.set(userId, {
+            user: task.assignee,
+            tasks: []
+          })
+        }
+        userAlerts.get(userId).tasks.push(task)
+      }
+    }
+
+    // Create one alert per user with all their incomplete tasks
+    for (const [userId, data] of userAlerts) {
+      const taskCount = data.tasks.length
+      const taskTitles = data.tasks.map(t => t.title).join(", ")
+      
+      // Create monitoring alert
+      const alertPromise = MonitoringAlert.createAlert({
+        employee: userId,
+        alert_type: 'productivity_drop',
+        severity: taskCount > 3 ? 'high' : taskCount > 1 ? 'medium' : 'low',
+        title: '⚠️ Task Completion Reminder',
+        description: `You have ${taskCount} incomplete task${taskCount > 1 ? 's' : ''} that need${taskCount === 1 ? 's' : ''} your attention. Please complete: ${taskTitles.substring(0, 100)}${taskTitles.length > 100 ? '...' : ''}`,
+        data: {
+          task_count: taskCount,
+          task_ids: data.tasks.map(t => t._id)
+        },
+        status: 'active',
+        auto_generated: true,
+        notification_sent: true,
+        notification_channels: ['dashboard']
+      })
+      
+      alertPromises.push(alertPromise)
+
+      // Emit socket event for real-time alert in header
+      if (io) {
+        alertPromise.then((alert) => {
+          io.to(`user_${userId}`).emit('monitoring-alert', {
+            _id: alert._id,
+            title: alert.title,
+            description: alert.description,
+            severity: alert.severity,
+            alert_type: alert.alert_type,
+            timestamp: alert.timestamp,
+            status: alert.status
+          })
+          console.log(`📢 Alert emitted to user ${userId}`)
+        }).catch(err => {
+          console.error(`Failed to emit alert to user ${userId}:`, err)
         })
       }
     }
 
+    // Wait for all alerts to be created
+    const createdAlerts = await Promise.all(alertPromises)
+
     // Send push notifications
     try {
-      const userIds = tasks.map((task) => task.assignee._id).filter(Boolean)
       const pushResult = await broadcastPushNotification(
-        "Task Progress Reminder",
-        "Please update your task progress in the WorkflowAI system.",
-        "/progress",
+        "⚠️ Task Completion Reminder",
+        "You have incomplete tasks that need your attention. Check your alerts!",
+        "/tasks",
         "task-reminder",
       )
 
@@ -256,10 +304,15 @@ router.post("/broadcast-reminders", async (req, res) => {
       console.error("Error sending push notifications:", pushError)
     }
 
-    res.status(200).send({ message: "Task reminders broadcasted successfully." })
+    res.status(200).send({ 
+      message: `Task reminder alerts sent successfully to ${userAlerts.size} users.`,
+      alertsCreated: createdAlerts.length,
+      usersNotified: userAlerts.size,
+      emails: [] // No emails sent, only alerts
+    })
   } catch (error) {
     console.error("Error broadcasting task reminders:", error)
-    res.status(500).send({ message: "Error broadcasting task reminders." })
+    res.status(500).send({ message: "Error broadcasting task reminders.", error: error.message })
   }
 })
 
