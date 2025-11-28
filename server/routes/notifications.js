@@ -271,19 +271,24 @@ router.post("/broadcast-reminders", async (req, res) => {
       // Emit socket event for real-time alert in header
       if (io) {
         alertPromise.then((alert) => {
-          io.to(`user_${userId}`).emit('monitoring-alert', {
+          const alertData = {
             _id: alert._id,
             title: alert.title,
             description: alert.description,
             severity: alert.severity,
             alert_type: alert.alert_type,
             timestamp: alert.timestamp,
-            status: alert.status
-          })
-          console.log(`📢 Alert emitted to user ${userId}`)
+            status: alert.status,
+            employee: alert.employee
+          }
+          
+          io.to(`user_${userId}`).emit('monitoring-alert', alertData)
+          console.log(`📢 Alert emitted to user ${userId}:`, alertData)
         }).catch(err => {
           console.error(`Failed to emit alert to user ${userId}:`, err)
         })
+      } else {
+        console.warn('⚠️ Socket.io instance not available')
       }
     }
 

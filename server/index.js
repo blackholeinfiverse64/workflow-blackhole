@@ -190,16 +190,19 @@ mongoose
 
 // Socket.IO connection
 io.on("connection", (socket) => {
-  console.log("New client connected");
+  console.log("✅ New client connected:", socket.id);
 
   socket.on("join", (rooms) => {
     if (Array.isArray(rooms)) {
-      rooms.forEach((room) => socket.join(room));
+      rooms.forEach((room) => {
+        socket.join(room);
+        console.log(`👤 Socket ${socket.id} joined room: ${room}`);
+      });
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected");
+    console.log("❌ Client disconnected:", socket.id);
   });
 });
 
