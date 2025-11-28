@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Building2, Users, Plus, Trash2, RefreshCw, Search, Edit, UserPlus, UserCog, KeyRound, Eye, EyeOff } from "lucide-react"
+import AdminChatbot from "@/components/admin/admin-chatbot"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -467,9 +468,13 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Premium Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <>
+      {/* Admin Chatbot */}
+      <AdminChatbot />
+      
+      <div className="space-y-6">
+        {/* Premium Page Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">Manage departments and users</p>
@@ -1559,7 +1564,8 @@ const AdminDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </>
   )
 }
 

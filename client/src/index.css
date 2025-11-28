@@ -710,3 +710,36 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+/* Chatbot Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+/* Chatbot Glow Animation */
+@keyframes pulse-glow-primary {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow-primary {
+  animation: pulse-glow-primary 3s ease-in-out infinite;
+}

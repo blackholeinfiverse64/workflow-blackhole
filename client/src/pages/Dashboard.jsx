@@ -16,6 +16,7 @@ import { api, API_URL } from "../lib/api"
 import { useToast } from "../hooks/use-toast"
 import { useAuth } from "../context/auth-context"
 import axios from "axios"
+import AdminChatbot from "../components/admin/admin-chatbot"
 
 
 
@@ -369,6 +370,9 @@ function Dashboard() {
       </div>
 
       <CreateTaskDialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen} />
+      
+      {/* Admin Chatbot - Available for all users */}
+      {isAdmin && <AdminChatbot />}
     </div>
   )
 }

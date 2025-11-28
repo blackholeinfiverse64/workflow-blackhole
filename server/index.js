@@ -153,6 +153,7 @@ const consentRoutes = require('./routes/consent'); // Consent routes
 const alertRoutes = require('./routes/alerts'); // Alert routes
 const emsRoutes = require('./routes/ems'); // EMS automation routes
 const procurementRoutes = require('./routes/procurement'); // Procurement routes
+const chatbotRoutes = require('./routes/chatbot'); // Admin chatbot routes
 // const aiRoutePy = require('./routes/aiRoutePy')
 // Create Express app
 const app = express();
@@ -320,6 +321,7 @@ app.use('/api/consent', consentRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/ems', emsRoutes); // EMS automation routes
 app.use('/api/procurement', procurementRoutes); // Procurement routes
+app.use('/api/chatbot', chatbotRoutes); // Admin chatbot routes
 
 // app.use('/api/new/ai',aiRoutePy)
 
