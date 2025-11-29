@@ -207,7 +207,7 @@ function Dashboard() {
                 ) : (
                         <Bell className="mr-2 h-4 w-4" />
                 )}
-                Broadcast Reminders
+                Broadcast Task Reminders
               </Button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
