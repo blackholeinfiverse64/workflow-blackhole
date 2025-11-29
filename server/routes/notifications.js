@@ -335,39 +335,82 @@ router.post("/broadcast-reminders", async (req, res) => {
   }
 })
 
-// Route to broadcast daily aims reminders
+// Route to broadcast daily aims reminders with monitoring alerts
 router.post("/broadcast-aim-reminders", async (req, res) => {
   try {
-    // Fetch all users
-    const users = await User.find({})
+    // Fetch all users (excluding admins)
+    const users = await User.find({
+      role: { $ne: "Admin" }
+    })
 
     if (!users || users.length === 0) {
-      return res.status(200).send({ message: "No users found." })
-    }
-
-    // Send email reminders to each user
-    for (const user of users) {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: user.email,
-        subject: "Daily Aims Reminder",
-        text: `Hi ${user.email},\n\nThis is a reminder to set your aims for today!\n\nPlease set them in the WorkflowAI system.\n\nBest regards,\nThe WorkflowAI Team`,
-      }
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error)
-        } else {
-          console.log("Email sent:", info.response)
-        }
+      return res.status(200).send({ 
+        message: "No users found.",
+        alertsCreated: 0,
+        usersNotified: 0,
+        emails: []
       })
     }
 
+    // Get io instance from request
+    const io = req.io
+
+    // Create monitoring alerts for each user
+    const alertPromises = []
+
+    for (const user of users) {
+      const userId = user._id.toString()
+      
+      // Create monitoring alert for aim reminder
+      const alertPromise = MonitoringAlert.createAlert({
+        employee: userId,
+        alert_type: 'productivity_drop',
+        severity: 'medium',
+        title: '🎯 Set Your Daily Aims',
+        description: 'Please set your daily aims for today to track your progress and goals.',
+        data: {
+          reminder_type: 'daily_aims',
+          action_url: '/aims'
+        },
+        status: 'active',
+        auto_generated: true,
+        notification_sent: true,
+        notification_channels: ['dashboard']
+      })
+      
+      alertPromises.push(alertPromise)
+
+      // Emit socket event for real-time alert in header
+      if (io) {
+        alertPromise.then((alert) => {
+          const alertData = {
+            _id: alert._id,
+            title: alert.title,
+            description: alert.description,
+            severity: alert.severity,
+            alert_type: alert.alert_type,
+            timestamp: alert.timestamp,
+            status: alert.status,
+            employee: alert.employee
+          }
+          
+          io.to(`user_${userId}`).emit('monitoring-alert', alertData)
+          console.log(`📢 Aim reminder alert emitted to user ${userId}:`, alertData)
+        }).catch(err => {
+          console.error(`Failed to emit aim reminder alert to user ${userId}:`, err)
+        })
+      } else {
+        console.warn('⚠️ Socket.io instance not available for aim reminders')
+      }
+    }
+
+    // Wait for all alerts to be created
+    const createdAlerts = await Promise.all(alertPromises)
+
     // Send push notifications
     try {
-      const userIds = users.map((user) => user._id)
       const pushResult = await broadcastPushNotification(
-        "Daily Aims Reminder",
+        "🎯 Set Your Daily Aims",
         "Don't forget to set your aims for today!",
         "/aims",
         "aim-reminder",
@@ -380,10 +423,15 @@ router.post("/broadcast-aim-reminders", async (req, res) => {
       console.error("Error sending aim reminder push notifications:", pushError)
     }
 
-    res.status(200).send({ message: "Daily aims reminders broadcasted successfully." })
+    res.status(200).send({ 
+      message: `Aim reminder alerts sent successfully to ${users.length} users.`,
+      alertsCreated: createdAlerts.length,
+      usersNotified: users.length,
+      emails: [] // No emails sent, only alerts
+    })
   } catch (error) {
     console.error("Error broadcasting daily aims reminders:", error)
-    res.status(500).send({ message: "Error broadcasting daily aims reminders." })
+    res.status(500).send({ message: "Error broadcasting daily aims reminders.", error: error.message })
   }
 })
 

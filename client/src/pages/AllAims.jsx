@@ -103,16 +103,22 @@ function AllAims() {
     try {
       setIsSendingReminders(true)
       const result = await api.notifications.broadcastAimReminders()
+      
+      // Show detailed success message
+      const alertCount = result.alertsCreated || 0
+      const userCount = result.usersNotified || 0
+      
       toast({
-        title: "Success",
-        description: `Sent ${result.emails.length} aim reminder emails to users`,
+        title: "✅ Aim Reminder Alerts Sent Successfully!",
+        description: `Sent ${alertCount} alert${alertCount !== 1 ? 's' : ''} to ${userCount} user${userCount !== 1 ? 's' : ''}. Users will see alerts in their header notification bell (🔺) to set their daily aims.`,
         variant: "success",
+        duration: 5000,
       })
     } catch (error) {
       console.error("Error sending reminders:", error)
       toast({
         title: "Error",
-        description: "Failed to send reminder emails",
+        description: error.response?.data?.message || "Failed to send aim reminder alerts",
         variant: "destructive",
       })
     } finally {

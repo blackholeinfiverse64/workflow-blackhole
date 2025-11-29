@@ -125,16 +125,22 @@ function Dashboard() {
     try {
       setIsSendingAimReminders(true)
       const result = await api.notifications.broadcastAimReminders()
+      
+      // Show detailed success message
+      const alertCount = result.alertsCreated || 0
+      const userCount = result.usersNotified || 0
+      
       toast({
-        title: "Success",
-        description: `Sent ${result.emails.length} aim reminder emails to users`,
+        title: "✅ Aim Reminder Alerts Sent Successfully!",
+        description: `Sent ${alertCount} alert${alertCount !== 1 ? 's' : ''} to ${userCount} user${userCount !== 1 ? 's' : ''}. Users will see alerts in their header notification bell (🔺) to set their daily aims.`,
         variant: "success",
+        duration: 5000,
       })
     } catch (error) {
       console.error("Error sending aim reminders:", error)
       toast({
         title: "Error",
-        description: "Failed to send aim reminder emails",
+        description: error.response?.data?.message || "Failed to send aim reminder alerts",
         variant: "destructive",
       })
     } finally {
@@ -227,19 +233,29 @@ function Dashboard() {
             </>
           )}
 
-          <Button
-            variant="outline"
-            onClick={handleBroadcastAimReminders}
-            disabled={isSendingAimReminders}
-            className="neo-button hover:glow-accent transition-cyber"
-          >
-            {isSendingAimReminders ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Target className="mr-2 h-4 w-4" />
-            )}
-            Broadcast Aim Reminders
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={handleBroadcastAimReminders}
+                  disabled={isSendingAimReminders}
+                  className="neo-button hover:glow-accent transition-cyber"
+                >
+                  {isSendingAimReminders ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bell className="mr-2 h-4 w-4" />
+                  )}
+                  Broadcast Aim Reminders
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="font-semibold">Send Daily Aims Reminder Alerts</p>
+                <p className="text-xs mt-1">Sends alerts to all users to set their daily aims. Alerts appear in the header notification bell (🔺).</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
