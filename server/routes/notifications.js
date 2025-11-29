@@ -225,17 +225,29 @@ router.post("/broadcast-reminders", async (req, res) => {
     })
 
     if (!pendingTasks || pendingTasks.length === 0) {
-      return res.status(200).send({ message: "No pending tasks found.", emails: [] })
+      return res.status(200).send({ 
+        message: "No pending tasks found.", 
+        alertsCreated: 0,
+        usersNotified: 0,
+        emails: [] 
+      })
     }
 
     // Get io instance from request
     const io = req.io
 
+    if (!io) {
+      console.warn('⚠️ Socket.io instance not available in request')
+    }
+
     // Create monitoring alerts for each user with pending tasks
     const alertPromises = []
     const userAlerts = new Map() // Track alerts per user
 
+    console.log(`📊 Found ${pendingTasks.length} pending tasks`)
+
     for (const task of pendingTasks) {
+      // Ensure task has assignee and assignee has _id
       if (task.assignee && task.assignee._id) {
         const userId = task.assignee._id.toString()
         
@@ -247,8 +259,22 @@ router.post("/broadcast-reminders", async (req, res) => {
           })
         }
         userAlerts.get(userId).tasks.push(task)
+      } else {
+        console.warn(`⚠️ Task ${task._id} (${task.title}) has no assignee, skipping`)
       }
     }
+
+    // Check if we have any users with tasks
+    if (userAlerts.size === 0) {
+      return res.status(200).send({ 
+        message: "No pending tasks found with valid assignees.", 
+        alertsCreated: 0,
+        usersNotified: 0,
+        emails: [] 
+      })
+    }
+
+    console.log(`👥 Grouped tasks for ${userAlerts.size} users`)
 
     // Create one alert per user with all their incomplete tasks
     for (const [userId, data] of userAlerts) {
@@ -297,12 +323,12 @@ router.post("/broadcast-reminders", async (req, res) => {
           }
           
           io.to(`user_${userId}`).emit('monitoring-alert', alertData)
-          console.log(`📢 Alert emitted to user ${userId}:`, alertData)
+          console.log(`📢 Task reminder alert emitted to user ${userId}:`, alertData)
         }).catch(err => {
-          console.error(`Failed to emit alert to user ${userId}:`, err)
+          console.error(`Failed to emit task reminder alert to user ${userId}:`, err)
         })
-          } else {
-        console.warn('⚠️ Socket.io instance not available')
+      } else {
+        console.warn('⚠️ Socket.io instance not available for task reminders')
       }
     }
 
@@ -436,3 +462,4 @@ router.post("/broadcast-aim-reminders", async (req, res) => {
 })
 
 module.exports = router
+
