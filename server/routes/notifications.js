@@ -210,26 +210,32 @@ const transporter = nodemailer.createTransport({
 // Route to broadcast task reminders with monitoring alerts
 router.post("/broadcast-reminders", async (req, res) => {
   try {
-    // Find tasks due today or overdue
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tasks = await Task.find({
-      dueDate: { $lte: today },
-      status: { $ne: "completed" },
+    // Find only pending tasks - explicitly exclude "Completed" and "In Progress"
+    // Query with exact enum value first, then filter to ensure only pending tasks
+    const allTasks = await Task.find({
+      status: { $ne: "Completed" }  // Exclude completed tasks
     }).populate("assignee", "email name _id")
 
-    if (!tasks || tasks.length === 0) {
-      return res.status(200).send({ message: "No tasks due today or overdue.", emails: [] })
+    // Filter to get ONLY pending tasks (exclude "In Progress" and any other statuses)
+    const pendingTasks = allTasks.filter(task => {
+      if (!task.status) return false
+      const status = task.status.trim()
+      // Only include tasks with status exactly "Pending" (case-sensitive as per enum)
+      return status === "Pending"
+    })
+
+    if (!pendingTasks || pendingTasks.length === 0) {
+      return res.status(200).send({ message: "No pending tasks found.", emails: [] })
     }
 
     // Get io instance from request
     const io = req.io
 
-    // Create monitoring alerts for each user with incomplete tasks
+    // Create monitoring alerts for each user with pending tasks
     const alertPromises = []
     const userAlerts = new Map() // Track alerts per user
 
-    for (const task of tasks) {
+    for (const task of pendingTasks) {
       if (task.assignee && task.assignee._id) {
         const userId = task.assignee._id.toString()
         
@@ -247,7 +253,15 @@ router.post("/broadcast-reminders", async (req, res) => {
     // Create one alert per user with all their incomplete tasks
     for (const [userId, data] of userAlerts) {
       const taskCount = data.tasks.length
-      const taskTitles = data.tasks.map(t => t.title).join(", ")
+      
+      // Show first 5 task titles, then indicate if there are more
+      const maxTasksToShow = 5
+      const tasksToShow = data.tasks.slice(0, maxTasksToShow)
+      const remainingCount = taskCount - maxTasksToShow
+      const taskTitles = tasksToShow.map(t => t.title).join(", ")
+      const taskListText = remainingCount > 0 
+        ? `${taskTitles}, and ${remainingCount} more task${remainingCount > 1 ? 's' : ''}`
+        : taskTitles
       
       // Create monitoring alert
       const alertPromise = MonitoringAlert.createAlert({
@@ -255,7 +269,7 @@ router.post("/broadcast-reminders", async (req, res) => {
         alert_type: 'productivity_drop',
         severity: taskCount > 3 ? 'high' : taskCount > 1 ? 'medium' : 'low',
         title: '⚠️ Task Completion Reminder',
-        description: `You have ${taskCount} incomplete task${taskCount > 1 ? 's' : ''} that need${taskCount === 1 ? 's' : ''} your attention. Please complete: ${taskTitles.substring(0, 100)}${taskTitles.length > 100 ? '...' : ''}`,
+        description: `You have ${taskCount} pending task${taskCount > 1 ? 's' : ''} that need${taskCount === 1 ? 's' : ''} your attention. Please complete: ${taskListText}`,
         data: {
           task_count: taskCount,
           task_ids: data.tasks.map(t => t._id)
@@ -287,7 +301,7 @@ router.post("/broadcast-reminders", async (req, res) => {
         }).catch(err => {
           console.error(`Failed to emit alert to user ${userId}:`, err)
         })
-      } else {
+          } else {
         console.warn('⚠️ Socket.io instance not available')
       }
     }
@@ -310,7 +324,7 @@ router.post("/broadcast-reminders", async (req, res) => {
     }
 
     res.status(200).send({ 
-      message: `Task reminder alerts sent successfully to ${userAlerts.size} users.`,
+      message: `Pending task reminder alerts sent successfully to ${userAlerts.size} users.`,
       alertsCreated: createdAlerts.length,
       usersNotified: userAlerts.size,
       emails: [] // No emails sent, only alerts

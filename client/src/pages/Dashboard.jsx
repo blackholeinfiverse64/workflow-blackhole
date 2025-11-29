@@ -190,19 +190,19 @@ function Dashboard() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      onClick={handleBroadcastReminders}
-                      disabled={isSendingReminders}
-                      className="neo-button hover:glow-accent transition-cyber"
-                    >
-                      {isSendingReminders ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
+              <Button
+                variant="outline"
+                onClick={handleBroadcastReminders}
+                disabled={isSendingReminders}
+                className="neo-button hover:glow-accent transition-cyber"
+              >
+                {isSendingReminders ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
                         <Bell className="mr-2 h-4 w-4" />
-                      )}
-                      Broadcast Reminders
-                    </Button>
+                )}
+                Broadcast Reminders
+              </Button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="font-semibold">Send Task Completion Alerts</p>
