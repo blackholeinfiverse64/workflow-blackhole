@@ -59,6 +59,7 @@ export function UserManagement() {
   const [actionType, setActionType] = useState("") // "exit" or "reactivate"
   const [isUpdating, setIsUpdating] = useState(false)
   const [activeTab, setActiveTab] = useState("active")
+  const [singleUserAction, setSingleUserAction] = useState(null) // { userId, stillExist, userName }
   
   // View and Edit states
   const [viewingUser, setViewingUser] = useState(null)
@@ -165,6 +166,7 @@ export function UserManagement() {
 
       setSelectedUsers([])
       setShowConfirmDialog(false)
+      setSingleUserAction(null)
 
       toast({
         title: "Success",
@@ -182,18 +184,41 @@ export function UserManagement() {
     }
   }
 
-  const handleSingleUserAction = async (userId, stillExist) => {
+  const handleConfirmAction = () => {
+    if (singleUserAction) {
+      confirmSingleUserAction()
+    } else {
+      confirmBulkAction()
+    }
+  }
+
+  const handleSingleUserAction = (userId, stillExist, userName) => {
+    // Show confirmation dialog first
+    setSingleUserAction({ userId, stillExist, userName })
+    setActionType(stillExist === 1 ? "reactivate" : "exit")
+    setShowConfirmDialog(true)
+  }
+
+  const confirmSingleUserAction = async () => {
+    if (!singleUserAction) return
+
     try {
-      await api.admin.updateUserStatus(userId, stillExist)
+      setIsUpdating(true)
+      await api.admin.updateUserStatus(singleUserAction.userId, singleUserAction.stillExist)
       
       // Update local state
       setUsers(prev => prev.map(user => 
-        user._id === userId ? { ...user, stillExist } : user
+        user._id === singleUserAction.userId 
+          ? { ...user, stillExist: singleUserAction.stillExist } 
+          : user
       ))
+
+      setShowConfirmDialog(false)
+      setSingleUserAction(null)
 
       toast({
         title: "Success",
-        description: `User ${stillExist === 1 ? "reactivated" : "marked as exited"} successfully`,
+        description: `User ${singleUserAction.stillExist === 1 ? "reactivated" : "marked as exited"} successfully`,
       })
     } catch (error) {
       console.error("Error updating user:", error)
@@ -202,6 +227,8 @@ export function UserManagement() {
         description: "Failed to update user status",
         variant: "destructive",
       })
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -473,16 +500,24 @@ export function UserManagement() {
                             <DropdownMenuSeparator />
                             {user.stillExist === 1 ? (
                               <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => handleSingleUserAction(user._id, 0)}
+                                className="text-red-600 cursor-pointer"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleSingleUserAction(user._id, 0, user.name)
+                                }}
                               >
                                 <UserX className="mr-2 h-4 w-4" />
                                 Mark as Exited
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem
-                                className="text-green-600"
-                                onClick={() => handleSingleUserAction(user._id, 1)}
+                                className="text-green-600 cursor-pointer"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleSingleUserAction(user._id, 1, user.name)
+                                }}
                               >
                                 <UserCheck className="mr-2 h-4 w-4" />
                                 Reactivate User
@@ -501,7 +536,12 @@ export function UserManagement() {
       </Card>
 
       {/* Confirmation Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      <Dialog open={showConfirmDialog} onOpenChange={(open) => {
+        setShowConfirmDialog(open)
+        if (!open) {
+          setSingleUserAction(null)
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -509,27 +549,53 @@ export function UserManagement() {
               Confirm Action
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to {actionType === "reactivate" ? "reactivate" : "mark as exited"} {selectedUsers.length} user(s)?
-              {actionType === "exit" && (
-                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                  <p className="text-sm text-amber-800">
-                    <strong>Note:</strong> Exited users will no longer appear in most lists and won't be able to access the system.
-                    They can be reactivated later if needed.
-                  </p>
-                </div>
+              {singleUserAction ? (
+                <>
+                  Are you sure you want to {actionType === "reactivate" ? "reactivate" : "mark as exited"} <strong>{singleUserAction.userName}</strong>?
+                  {actionType === "reactivate" && (
+                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-sm text-green-800">
+                        <strong>Note:</strong> This user will regain access to the system and will appear in active user lists.
+                      </p>
+                    </div>
+                  )}
+                  {actionType === "exit" && (
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="text-sm text-amber-800">
+                        <strong>Note:</strong> This user will no longer appear in most lists and won't be able to access the system.
+                        They can be reactivated later if needed.
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  Are you sure you want to {actionType === "reactivate" ? "reactivate" : "mark as exited"} {selectedUsers.length} user(s)?
+                  {actionType === "exit" && (
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="text-sm text-amber-800">
+                        <strong>Note:</strong> Exited users will no longer appear in most lists and won't be able to access the system.
+                        They can be reactivated later if needed.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowConfirmDialog(false)}
+              onClick={() => {
+                setShowConfirmDialog(false)
+                setSingleUserAction(null)
+              }}
               disabled={isUpdating}
             >
               Cancel
             </Button>
             <Button
-              onClick={confirmBulkAction}
+              onClick={handleConfirmAction}
               disabled={isUpdating}
               className={actionType === "reactivate" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
             >
@@ -540,7 +606,10 @@ export function UserManagement() {
               ) : (
                 <XCircle className="mr-2 h-4 w-4" />
               )}
-              {actionType === "reactivate" ? "Reactivate Users" : "Mark as Exited"}
+              {singleUserAction 
+                ? (actionType === "reactivate" ? "Reactivate User" : "Mark as Exited")
+                : (actionType === "reactivate" ? "Reactivate Users" : "Mark as Exited")
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
