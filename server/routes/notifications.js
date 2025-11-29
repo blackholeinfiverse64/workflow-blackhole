@@ -289,16 +289,18 @@ router.post("/broadcast-reminders", async (req, res) => {
         ? `${taskTitles}, and ${remainingCount} more task${remainingCount > 1 ? 's' : ''}`
         : taskTitles
       
-      // Create monitoring alert
+      // Create monitoring alert for task reminder
       const alertPromise = MonitoringAlert.createAlert({
         employee: userId,
-        alert_type: 'productivity_drop',
+        alert_type: 'task_reminder',
         severity: taskCount > 3 ? 'high' : taskCount > 1 ? 'medium' : 'low',
         title: '⚠️ Task Completion Reminder',
         description: `You have ${taskCount} pending task${taskCount > 1 ? 's' : ''} that need${taskCount === 1 ? 's' : ''} your attention. Please complete: ${taskListText}`,
         data: {
+          reminder_type: 'task_reminder',
           task_count: taskCount,
-          task_ids: data.tasks.map(t => t._id)
+          task_ids: data.tasks.map(t => t._id),
+          action_url: '/tasks'
         },
         status: 'active',
         auto_generated: true,
@@ -390,7 +392,7 @@ router.post("/broadcast-aim-reminders", async (req, res) => {
       // Create monitoring alert for aim reminder
       const alertPromise = MonitoringAlert.createAlert({
         employee: userId,
-        alert_type: 'productivity_drop',
+        alert_type: 'aim_reminder',
         severity: 'medium',
         title: '🎯 Set Your Daily Aims',
         description: 'Please set your daily aims for today to track your progress and goals.',

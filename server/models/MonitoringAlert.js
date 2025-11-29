@@ -16,7 +16,9 @@ const monitoringAlertSchema = new mongoose.Schema({
       'productivity_drop',
       'extended_break',
       'after_hours_activity',
-      'application_misuse'
+      'application_misuse',
+      'task_reminder',
+      'aim_reminder'
     ],
     required: true,
     index: true
