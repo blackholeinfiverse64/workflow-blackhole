@@ -29,7 +29,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/context/auth-context";
 import { getUserTasks } from "@/lib/user-api";
 
-export function CreateTaskDialog({ open, onOpenChange }) {
+export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null }) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [departments, setDepartments] = useState([]); // ✅ Initialize as empty array
@@ -59,7 +59,7 @@ export function CreateTaskDialog({ open, onOpenChange }) {
         title: "",
         description: "",
         department: "",
-        assignee: "",
+        assignee: defaultAssignee || "",
         priority: "Medium",
         status: "Pending",
         dependencies: [],
@@ -123,7 +123,18 @@ export function CreateTaskDialog({ open, onOpenChange }) {
 
       fetchData();
     }
-  }, [open]);
+  }, [open, defaultAssignee]);
+
+  // Set default assignee after users are loaded
+  useEffect(() => {
+    if (open && defaultAssignee && allUsers.length > 0) {
+      const user = allUsers.find(u => u._id === defaultAssignee);
+      if (user) {
+        setFormData((prev) => ({ ...prev, assignee: defaultAssignee }));
+        setAssigneeSearch(user.name || user.email || "");
+      }
+    }
+  }, [open, defaultAssignee, allUsers]);
 
   const handleDepartmentChange = (departmentId) => {
     setFormData((prev) => ({ ...prev, department: departmentId, assignee: "" }));

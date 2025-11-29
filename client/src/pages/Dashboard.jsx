@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip"
 import { Plus, Loader2, Mail, FileText, Target, Bell } from 'lucide-react'
-import { useNavigate } from "react-router-dom"
 import { CreateTaskDialog } from "../components/tasks/create-task-dialog"
 import { DepartmentStats } from "../components/dashboard/department-stats"
 import { DepartmentDetails } from "../components/departments/DepartmentDetails"
@@ -13,16 +12,15 @@ import { TasksOverview } from "../components/dashboard/tasks-overview"
 import { AIInsights } from "../components/dashboard/ai-insights"
 import { RecentActivity } from "../components/dashboard/recent-activity"
 import { ProcurementAlerts } from "../components/dashboard/procurement-alerts"
-import { api, API_URL } from "../lib/api"
+import { api } from "../lib/api"
 import { useToast } from "../hooks/use-toast"
 import { useAuth } from "../context/auth-context"
-import axios from "axios"
 import AdminChatbot from "../components/admin/admin-chatbot"
+import { AdminReportDialog } from "../components/admin/AdminReportDialog"
 
 
 
 function Dashboard() {
-  const navigate = useNavigate()
   const { toast } = useToast()
   const { user } = useAuth()
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
@@ -38,9 +36,9 @@ function Dashboard() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSendingReminders, setIsSendingReminders] = useState(false)
-  const [isGeneratingReports, setIsGeneratingReports] = useState(false)
   const [isSendingAimReminders, setIsSendingAimReminders] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState(null)
+  const [showReportDialog, setShowReportDialog] = useState(false)
 
   const isAdmin = user && (user.role === "Admin" || user.role === "Manager")
 
@@ -100,26 +98,8 @@ function Dashboard() {
     }
   }
 
-  const handleGenerateReports = async () => {
-    try {
-      setIsGeneratingReports(true)
-      const result = await axios.post(`${API_URL}/notifications/generate-reports/${user.id}`)
-      
-      toast({
-        title: "Success",
-        description: `Generated ${result.data.reports.length} department reports and sent to your email`,
-        variant: "success",
-      })
-    } catch (error) {
-      console.error("Error generating reports:", error)
-      toast({
-        title: "Error",
-        description: "Failed to generate department reports",
-        variant: "destructive",
-      })
-    } finally {
-      setIsGeneratingReports(false)
-    }
+  const handleGenerateReports = () => {
+    setShowReportDialog(true)
   }
   const handleBroadcastAimReminders = async () => {
     try {
@@ -220,14 +200,9 @@ function Dashboard() {
               <Button
                 variant="outline"
                 onClick={handleGenerateReports}
-                disabled={isGeneratingReports}
                 className="neo-button hover:glow-accent transition-cyber"
               >
-                {isGeneratingReports ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
                   <FileText className="mr-2 h-4 w-4" />
-                )}
                 Generate Reports
               </Button>
             </>
@@ -403,6 +378,14 @@ function Dashboard() {
       </div>
 
       <CreateTaskDialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen} />
+      
+      {/* Admin Report Dialog */}
+      {isAdmin && (
+        <AdminReportDialog 
+          open={showReportDialog} 
+          onOpenChange={setShowReportDialog} 
+        />
+      )}
       
       {/* Admin Chatbot - Available for all users */}
       {isAdmin && <AdminChatbot />}

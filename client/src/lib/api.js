@@ -336,6 +336,13 @@ const dashboard = {
   getDepartmentStats: () => fetchAPI("/dashboard/departments"),
   getTasksOverview: () => fetchAPI("/dashboard/tasks-overview"),
   getUserStats: (userId) => fetchAPI(`/dashboard/user-stats/${userId}`),
+  getAdminReport: (date, filter) => {
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+    if (filter) params.append('filter', filter);
+    const queryString = params.toString();
+    return fetchAPI(`/dashboard/admin-report${queryString ? `?${queryString}` : ''}`);
+  },
   getAIInsights: () => fetchAPI("/new/ai/insights"),
 };
 

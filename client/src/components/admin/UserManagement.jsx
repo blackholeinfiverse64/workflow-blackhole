@@ -570,14 +570,14 @@ export function UserManagement() {
                 </>
               ) : (
                 <>
-                  Are you sure you want to {actionType === "reactivate" ? "reactivate" : "mark as exited"} {selectedUsers.length} user(s)?
-                  {actionType === "exit" && (
-                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                      <p className="text-sm text-amber-800">
-                        <strong>Note:</strong> Exited users will no longer appear in most lists and won't be able to access the system.
-                        They can be reactivated later if needed.
-                      </p>
-                    </div>
+              Are you sure you want to {actionType === "reactivate" ? "reactivate" : "mark as exited"} {selectedUsers.length} user(s)?
+              {actionType === "exit" && (
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800">
+                    <strong>Note:</strong> Exited users will no longer appear in most lists and won't be able to access the system.
+                    They can be reactivated later if needed.
+                  </p>
+                </div>
                   )}
                 </>
               )}

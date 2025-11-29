@@ -3,6 +3,9 @@ const router = express.Router()
 const Task = require("../models/Task")
 const User = require("../models/User")
 const Department = require("../models/Department")
+const Aim = require("../models/Aim")
+const Progress = require("../models/Progress")
+const DailyAttendance = require("../models/DailyAttendance")
 const auth = require("../middleware/auth")
 
 // Get dashboard stats
@@ -260,6 +263,290 @@ router.get("/progress-stats", auth, async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
+  }
+});
+
+// @route   GET api/dashboard/admin-report
+// @desc    Get comprehensive admin report with date filtering
+// @access  Admin or Manager
+router.get("/admin-report", auth, async (req, res) => {
+  try {
+    // Check if user is Admin or Manager
+    if (req.user.role !== "Admin" && req.user.role !== "Manager") {
+      return res.status(403).json({ error: "Access denied. Admin or Manager only." });
+    }
+
+    const { date, filter } = req.query;
+    
+    // Determine filter type (today, yesterday, weekly, lifetime)
+    const filterType = filter || (date ? 'today' : 'lifetime');
+    
+    // Parse date or use today
+    let targetDate = new Date();
+    let dateRangeStart = null;
+    let dateRangeEnd = null;
+    
+    if (filterType === 'today') {
+      targetDate = new Date();
+      targetDate.setHours(0, 0, 0, 0);
+      dateRangeStart = targetDate;
+      dateRangeEnd = new Date(targetDate);
+      dateRangeEnd.setDate(dateRangeEnd.getDate() + 1);
+    } else if (filterType === 'yesterday') {
+      targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - 1);
+      targetDate.setHours(0, 0, 0, 0);
+      dateRangeStart = targetDate;
+      dateRangeEnd = new Date(targetDate);
+      dateRangeEnd.setDate(dateRangeEnd.getDate() + 1);
+    } else if (filterType === 'weekly') {
+      targetDate = new Date();
+      targetDate.setHours(0, 0, 0, 0);
+      dateRangeStart = new Date(targetDate);
+      dateRangeStart.setDate(targetDate.getDate() - targetDate.getDay());
+      dateRangeEnd = new Date(dateRangeStart);
+      dateRangeEnd.setDate(dateRangeEnd.getDate() + 7);
+    } else if (filterType === 'monthly') {
+      targetDate = new Date();
+      targetDate.setHours(0, 0, 0, 0);
+      dateRangeStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+      dateRangeStart.setHours(0, 0, 0, 0);
+      dateRangeEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1);
+      dateRangeEnd.setHours(0, 0, 0, 0);
+      // Set targetDate to start of month for consistency with other queries
+      targetDate = dateRangeStart;
+    } else if (filterType === 'lifetime') {
+      // No date filter for lifetime
+      dateRangeStart = null;
+      dateRangeEnd = null;
+    } else if (date) {
+      targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+      dateRangeStart = targetDate;
+      dateRangeEnd = new Date(targetDate);
+      dateRangeEnd.setDate(dateRangeEnd.getDate() + 1);
+    }
+    
+    const nextDay = dateRangeEnd || new Date();
+
+    // 1. Main Admin Dashboard Stats
+    const totalTasks = await Task.countDocuments();
+    const completedTasks = await Task.countDocuments({ status: "Completed" });
+    const inProgressTasks = await Task.countDocuments({ status: "In Progress" });
+    const pendingTasks = await Task.countDocuments({ status: "Pending" });
+    const totalUsers = await User.countDocuments({ stillExist: 1 });
+    const totalDepartments = await Department.countDocuments();
+
+    // 2. Department-wise Task Count
+    const departments = await Department.find().sort({ name: 1 });
+    const departmentTaskCounts = await Promise.all(
+      departments.map(async (dept) => {
+        const totalTasks = await Task.countDocuments({ department: dept._id });
+        const completedTasks = await Task.countDocuments({
+          department: dept._id,
+          status: "Completed",
+        });
+        const inProgressTasks = await Task.countDocuments({
+          department: dept._id,
+          status: "In Progress",
+        });
+        const pendingTasks = await Task.countDocuments({
+          department: dept._id,
+          status: "Pending",
+        });
+
+        return {
+          id: dept._id,
+          name: dept.name,
+          color: dept.color || "bg-blue-500",
+          totalTasks,
+          completedTasks,
+          inProgressTasks,
+          pendingTasks,
+        };
+      })
+    );
+
+    // 3. All Users with Aims and Time
+    const users = await User.find({ stillExist: 1 })
+      .populate("department", "name")
+      .select("name email role department");
+    
+    const usersWithAims = await Promise.all(
+      users.map(async (user) => {
+        const aim = await Aim.findOne({
+          user: user._id,
+          date: {
+            $gte: targetDate,
+            $lt: nextDay,
+          },
+        });
+
+        return {
+          userId: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          department: user.department?.name || "No Department",
+          aim: aim ? {
+            aims: aim.aims,
+            completionStatus: aim.completionStatus,
+            progressPercentage: aim.progressPercentage || 0,
+            workSessionInfo: aim.workSessionInfo || null,
+            createdAt: aim.createdAt,
+          } : null,
+        };
+      })
+    );
+
+    // 4. User Count
+    const userCount = users.length;
+
+    // 5. Zero Task Employees (with ability to assign tasks)
+    const usersWithTaskCounts = await Promise.all(
+      users.map(async (user) => {
+        const taskCount = await Task.countDocuments({
+          assignee: user._id,
+          status: { $ne: "Completed" },
+        });
+        return {
+          userId: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          department: user.department?.name || "No Department",
+          taskCount,
+        };
+      })
+    );
+
+    const zeroTaskEmployees = usersWithTaskCounts
+      .filter((u) => u.taskCount === 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // 6. Each User Progress Update (for the selected date)
+    const progressUpdates = await Progress.find({
+      date: {
+        $gte: targetDate,
+        $lt: nextDay,
+      },
+    })
+      .populate("user", "name email role")
+      .populate("task", "title status")
+      .sort({ createdAt: -1 });
+
+    const userProgressUpdates = progressUpdates.map((progress) => ({
+      id: progress._id,
+      userId: progress.user._id,
+      userName: progress.user.name,
+      userEmail: progress.user.email,
+      taskId: progress.task?._id || null,
+      taskTitle: progress.task?.title || "General Progress",
+      progressPercentage: progress.progressPercentage,
+      notes: progress.notes,
+      blockers: progress.blockers,
+      achievements: progress.achievements,
+      date: progress.date,
+      createdAt: progress.createdAt,
+    }));
+
+    // 7. Users who Started Day with Work Hours
+    let dailyAttendances;
+    if (dateRangeStart && dateRangeEnd) {
+      dailyAttendances = await DailyAttendance.find({
+        date: {
+          $gte: dateRangeStart,
+          $lt: dateRangeEnd,
+        },
+        startDayTime: { $exists: true },
+      })
+        .populate("user", "name email role department")
+        .sort({ startDayTime: 1 });
+    } else {
+      // Lifetime: get all attendances
+      dailyAttendances = await DailyAttendance.find({
+        startDayTime: { $exists: true },
+      })
+        .populate("user", "name email role department")
+        .sort({ startDayTime: 1 });
+    }
+
+    let usersWithStartDay;
+    
+    // For weekly, monthly, and lifetime, aggregate hours by user and include all users
+    if (filterType === 'weekly' || filterType === 'monthly' || filterType === 'lifetime') {
+      // Get all active users first
+      const allUsers = await User.find({ stillExist: 1 })
+        .populate("department", "name")
+        .select("name email role department");
+      
+      const userHoursMap = new Map();
+      
+      // Initialize all users with 0 hours
+      allUsers.forEach((user) => {
+        const userId = user._id.toString();
+        userHoursMap.set(userId, {
+          userId: user._id,
+          userName: user.name,
+          userEmail: user.email,
+          userRole: user.role,
+          department: user.department?.name || "No Department",
+          totalHoursWorked: 0,
+        });
+      });
+      
+      // Add hours from attendances
+      dailyAttendances.forEach((attendance) => {
+        const userId = attendance.user._id.toString();
+        
+        if (userHoursMap.has(userId)) {
+          const userData = userHoursMap.get(userId);
+          userData.totalHoursWorked += attendance.totalHoursWorked || 0;
+        }
+      });
+
+      usersWithStartDay = Array.from(userHoursMap.values());
+    } else {
+      // Today or Yesterday: individual records
+      usersWithStartDay = dailyAttendances.map((attendance) => ({
+        userId: attendance.user._id,
+        userName: attendance.user.name,
+        userEmail: attendance.user.email,
+        userRole: attendance.user.role,
+        department: attendance.user.department?.name || "No Department",
+        startDayTime: attendance.startDayTime,
+        endDayTime: attendance.endDayTime || null,
+        totalHoursWorked: attendance.totalHoursWorked || 0,
+        regularHours: attendance.regularHours || 0,
+        overtimeHours: attendance.overtimeHours || 0,
+        status: attendance.status,
+        workLocationType: attendance.workLocationType || "Office",
+      }));
+    }
+
+    const usersWithStartDayCount = usersWithStartDay.length;
+
+    res.json({
+      date: targetDate.toISOString().split("T")[0],
+      dashboardStats: {
+        totalTasks,
+        completedTasks,
+        inProgressTasks,
+        pendingTasks,
+        totalUsers,
+        totalDepartments,
+      },
+      departmentTaskCounts,
+      usersWithAims,
+      userCount,
+      zeroTaskEmployees,
+      userProgressUpdates,
+      usersWithStartDay,
+      usersWithStartDayCount,
+    });
+  } catch (error) {
+    console.error("Error generating admin report:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
