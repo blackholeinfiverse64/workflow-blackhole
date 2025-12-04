@@ -160,9 +160,23 @@ const AttendanceDashboard = () => {
             presentPercentage: 0,
             absentPercentage: 0,
             avgHoursToday: 0,
-            totalHoursToday: 0
+            totalHoursToday: 0,
+            withAims: 0
           });
         }
+      } else {
+        console.warn('No data in response');
+        setLiveAttendance([]);
+        setAttendanceStats({
+          totalEmployees: 0,
+          presentToday: 0,
+          absentToday: 0,
+          presentPercentage: 0,
+          absentPercentage: 0,
+          avgHoursToday: 0,
+          totalHoursToday: 0,
+          withAims: 0
+        });
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -260,14 +274,6 @@ const AttendanceDashboard = () => {
     
     return matchesSearch && matchesStatus && matchesDepartment;
   }) || [];
-
-  console.log('🎯 Filtering:', {
-    liveAttendanceCount: liveAttendance?.length || 0,
-    filteredCount: filteredAttendance.length,
-    statusFilter,
-    searchTerm,
-    departmentFilter
-  });
 
   const fetchUserAverage = async (userId) => {
     try {
