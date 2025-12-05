@@ -154,6 +154,7 @@ const alertRoutes = require('./routes/alerts'); // Alert routes
 const emsRoutes = require('./routes/ems'); // EMS automation routes
 const procurementRoutes = require('./routes/procurement'); // Procurement routes
 const chatbotRoutes = require('./routes/chatbot'); // Admin chatbot routes
+const { startAttendancePersistenceCron, syncExistingAttendance } = require('./services/attendanceCronJobs'); // Attendance persistence cron
 // const aiRoutePy = require('./routes/aiRoutePy')
 // Create Express app
 const app = express();
@@ -369,6 +370,7 @@ app.use('/api/chatbot', chatbotRoutes); // Admin chatbot routes
 
 // Auto-end day background job
 const Attendance = require('./models/Attendance');
+const DailyAttendance = require('./models/DailyAttendance');
 
 const autoEndDayJob = async () => {
   try {
@@ -398,27 +400,52 @@ const autoEndDayJob = async () => {
         record.employeeNotes = `Auto-ended after ${MAX_WORKING_HOURS} hours of work`;
         record.autoEnded = true;
 
+        // Calculate hours worked
+        const startTime = new Date(record.startDayTime);
+        const endTime = currentTime;
+        const timeDiff = endTime - startTime;
+        const calculatedHours = Math.round((timeDiff / (1000 * 60 * 60)) * 100) / 100;
+        record.hoursWorked = calculatedHours;
+
         await record.save();
 
-        console.log(`Auto-ended day for user: ${record.user.name} after ${Math.round(hoursWorked * 100) / 100} hours`);
+        // Also update DailyAttendance for permanent storage
+        await DailyAttendance.findOneAndUpdate(
+          { user: record.user._id, date: today },
+          {
+            $set: {
+              endDayTime: currentTime,
+              hoursWorked: calculatedHours,
+              status: 'present',
+              autoEnded: true,
+              employeeNotes: `Auto-ended after ${MAX_WORKING_HOURS} hours of work`
+            }
+          },
+          { upsert: true, new: true }
+        );
+
+        console.log(`✅ Auto-ended day for user: ${record.user.name} after ${calculatedHours} hours`);
 
         // Emit socket event
         io.emit('attendance:auto-day-ended', {
           userId: record.user._id,
           userName: record.user.name,
           endTime: currentTime,
-          hoursWorked: record.hoursWorked,
+          hoursWorked: calculatedHours,
           reason: 'Exceeded maximum working hours'
         });
       }
     }
   } catch (error) {
-    console.error('Auto end day job error:', error);
+    console.error('❌ Auto end day job error:', error);
   }
 };
 
 // Run auto-end day job every 30 minutes
 setInterval(autoEndDayJob, 30 * 60 * 1000);
+
+// Run on server start to catch any that should have already ended
+autoEndDayJob();
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -428,8 +455,17 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Auto-end day job: ${process.env.AUTO_END_DAY_ENABLED === 'true' ? 'Enabled' : 'Disabled'}`);
   console.log(`Max working hours: ${process.env.MAX_WORKING_HOURS || 8} hours`);
+  
+  // Start attendance persistence cron job
+  console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');
+  startAttendancePersistenceCron();
+  
+  // Sync existing attendance data for the last 30 days
+  console.log('📊 Syncing historical attendance data for the last 30 days...');
+  await syncExistingAttendance();
+  console.log('✅ Server initialization complete');
 });
