@@ -24,7 +24,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { isValid, parse, format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, X, Search } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/context/auth-context";
 import { getUserTasks } from "@/lib/user-api";
@@ -42,6 +42,9 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
   const [assigneeSearch, setAssigneeSearch] = useState("");
   const [selectedUserTasks, setSelectedUserTasks] = useState([]);
   const [loadingUserTasks, setLoadingUserTasks] = useState(false);
+  const [dependencySearch, setDependencySearch] = useState("");
+  const [filteredDependencies, setFilteredDependencies] = useState([]);
+  const [showDependencyDropdown, setShowDependencyDropdown] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -71,6 +74,9 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
       setAssigneeSearch("");
       setSelectedUserTasks([]);
       setLoadingUserTasks(false);
+      setDependencySearch("");
+      setFilteredDependencies([]);
+      setShowDependencyDropdown(false);
 
       const fetchData = async () => {
   try {
@@ -136,6 +142,29 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
     }
   }, [open, defaultAssignee, allUsers]);
 
+  // Initialize filtered dependencies when tasks are loaded
+  useEffect(() => {
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      setFilteredDependencies(tasks);
+    }
+  }, [tasks]);
+
+  // Close dependency dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const dependencyInput = document.getElementById("dependencies");
+      const dependencyDropdown = event.target.closest(".dependency-dropdown-container");
+      if (dependencyInput && !dependencyInput.contains(event.target) && !dependencyDropdown) {
+        setShowDependencyDropdown(false);
+      }
+    };
+
+    if (showDependencyDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDependencyDropdown]);
+
   const handleDepartmentChange = (departmentId) => {
     setFormData((prev) => ({ ...prev, department: departmentId, assignee: "" }));
     setAssigneeSearch("");
@@ -150,26 +179,74 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
   };
 
   const handleAssigneeSearch = (e) => {
-  const searchValue = e.target.value;
-  setAssigneeSearch(searchValue);
-  
-  // Filter users by department and email starting with "blackhole"
-  const usersInDepartment = allUsers.filter(
-    (user) =>
-      user.department?._id === formData.department &&
-      user.stillExist === 1 &&
-      user.email.toLowerCase().startsWith("blackhole")
-  );
-  
-  if (searchValue.trim() === "") {
-    setFilteredUsers(usersInDepartment);
-  } else {
-    const filtered = usersInDepartment.filter((user) =>
-      user.name.toLowerCase().includes(searchValue.toLowerCase())
+    const searchValue = e.target.value;
+    setAssigneeSearch(searchValue);
+    
+    // Filter users by department and email starting with "blackhole"
+    const usersInDepartment = allUsers.filter(
+      (user) =>
+        user.department?._id === formData.department &&
+        user.stillExist === 1 &&
+        user.email.toLowerCase().startsWith("blackhole")
     );
-    setFilteredUsers(filtered);
-  }
-};
+    
+    if (searchValue.trim() === "") {
+      setFilteredUsers(usersInDepartment);
+    } else {
+      const filtered = usersInDepartment.filter((user) =>
+        user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
+
+  const handleDependencySearch = (e) => {
+    const searchValue = e.target.value;
+    setDependencySearch(searchValue);
+    setShowDependencyDropdown(true);
+    
+    if (searchValue.trim() === "") {
+      setFilteredDependencies(Array.isArray(tasks) ? tasks : []);
+    } else {
+      const filtered = (Array.isArray(tasks) ? tasks : []).filter((task) =>
+        task.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(searchValue.toLowerCase()))
+      );
+      setFilteredDependencies(filtered);
+    }
+  };
+
+  const handleDependencySelect = (taskId) => {
+    const selectedTask = tasks.find(t => t._id === taskId);
+    if (selectedTask) {
+      const isAlreadySelected = formData.dependencies.includes(taskId);
+      setFormData((prev) => ({ 
+        ...prev, 
+        dependencies: isAlreadySelected
+          ? prev.dependencies.filter(id => id !== taskId)
+          : [...prev.dependencies, taskId]
+      }));
+      // Keep search open for multiple selections, but clear if deselecting
+      if (isAlreadySelected) {
+        // Keep dropdown open for further selections
+      } else {
+        // Clear search to allow selecting more
+        setDependencySearch("");
+        setFilteredDependencies(Array.isArray(tasks) ? tasks : []);
+      }
+    }
+  };
+
+  const handleRemoveDependency = (taskId) => {
+    setFormData((prev) => ({ 
+      ...prev, 
+      dependencies: prev.dependencies.filter(id => id !== taskId)
+    }));
+    if (formData.dependencies.length === 1) {
+      setDependencySearch("");
+    }
+  };
   const handleAssigneeSelect = async (user) => {
     setFormData((prev) => ({ ...prev, assignee: user._id }));
     setAssigneeSearch(user.name);
@@ -425,14 +502,33 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
                   <div className="h-1.5 w-1.5 rounded-full bg-success shadow-lg shadow-success/50"></div>
                   Assignee <span className="text-red-400 ml-0.5">*</span>
                 </Label>
-                <Input
-                  id="assignee-search"
-                  placeholder="Search assignees..."
-                  value={assigneeSearch}
-                  onChange={handleAssigneeSearch}
-                  disabled={!formData.department}
-                  className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-success focus-visible:ring-4 focus-visible:ring-success/30 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
-                />
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 z-10" />
+                  <Input
+                    id="assignee-search"
+                    placeholder="Search assignees by name or email..."
+                    value={assigneeSearch}
+                    onChange={handleAssigneeSearch}
+                    disabled={!formData.department}
+                    className="h-12 pl-12 pr-10 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-success focus-visible:ring-4 focus-visible:ring-success/30 rounded-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
+                  />
+                  {assigneeSearch && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAssigneeSearch("");
+                        setFormData((prev) => ({ ...prev, assignee: "" }));
+                        setFilteredUsers([]);
+                        setSelectedUserTasks([]);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 {filteredUsers.length > 0 && formData.department && (
                   <div className="mt-1 bg-white/10 dark:bg-slate-900/95 backdrop-blur-xl border border-white/30 dark:border-slate-700 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent" style={{backdropFilter: 'blur(20px)'}}>
                   {filteredUsers.map((user) => (
@@ -612,38 +708,114 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssignee = null })
               <div className="h-1.5 w-1.5 rounded-full bg-secondary shadow-lg shadow-secondary/50"></div>
               Dependencies
             </Label>
-            <Select
-              value={formData.dependencies[0] || ""}
-              onValueChange={(value) => handleChange("dependencies", value ? [value] : [])}
-            >
-              <SelectTrigger id="dependencies" className="h-12 px-4 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-secondary focus:ring-4 focus:ring-secondary/30 rounded-xl transition-all duration-300 text-base font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 backdrop-blur-xl">
-                <SelectValue placeholder={
-                  Array.isArray(tasks) && tasks.length > 0 
-                    ? "Select dependent tasks..." 
-                    : "No dependencies available"
-                } />
-              </SelectTrigger>
-              <SelectContent className="bg-white/10 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/30 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto" style={{backdropFilter: 'blur(20px)'}}>
-                {Array.isArray(tasks) && tasks.length > 0 && 
-                  tasks.map((task) => (
-                    <SelectItem 
-                      key={task._id} 
-                      value={task._id}
-                      className="my-1 mx-2 px-3 py-2.5 rounded-lg hover:bg-secondary/30 dark:hover:bg-secondary/40 cursor-pointer transition-all duration-200 font-medium text-gray-900 dark:text-slate-100"
-                    >
-                      <div className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        {task.title}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500 z-10" />
+              <Input
+                id="dependencies"
+                placeholder="Search tasks to add as dependencies..."
+                value={dependencySearch}
+                onChange={handleDependencySearch}
+                onFocus={() => {
+                  if (Array.isArray(tasks) && tasks.length > 0) {
+                    setFilteredDependencies(tasks);
+                    setShowDependencyDropdown(true);
+                  }
+                }}
+                className="h-12 pl-12 pr-10 bg-white/10 dark:bg-slate-800/50 border-2 border-white/30 dark:border-slate-700 hover:border-white/50 dark:hover:border-slate-600 focus:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/30 rounded-xl transition-all duration-300 text-base placeholder:text-gray-500 dark:placeholder:text-slate-500 text-gray-900 dark:text-slate-100 backdrop-blur-xl"
+              />
+              {dependencySearch && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setDependencySearch("");
+                    setFilteredDependencies([]);
+                    setShowDependencyDropdown(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+              {showDependencyDropdown && filteredDependencies.length > 0 && (
+                <div className="dependency-dropdown-container absolute z-50 w-full mt-1 bg-white/10 dark:bg-slate-900/95 backdrop-blur-xl border border-white/30 dark:border-slate-700 rounded-xl max-h-60 overflow-y-auto shadow-xl scrollbar-thin scrollbar-thumb-white/20 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent" style={{backdropFilter: 'blur(20px)'}}>
+                  {filteredDependencies.map((task) => {
+                    const isSelected = formData.dependencies.includes(task._id);
+                    return (
+                      <div
+                        key={task._id}
+                        className={`m-2 px-4 py-3 cursor-pointer text-sm flex items-center justify-between rounded-lg transition-all duration-200 group ${
+                          isSelected
+                            ? "bg-secondary/40 dark:bg-secondary/50 border border-secondary/50"
+                            : "hover:bg-secondary/30 dark:hover:bg-secondary/40"
+                        }`}
+                        onClick={() => handleDependencySelect(task._id)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <svg className="h-4 w-4 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <span className={`font-semibold block truncate ${isSelected ? "text-secondary" : "text-gray-900 dark:text-slate-100 group-hover:text-secondary transition-colors"}`}>
+                              {task.title}
+                            </span>
+                            {task.description && (
+                              <span className="text-xs text-gray-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                                {task.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span className="text-xs bg-secondary/30 dark:bg-secondary/20 text-secondary px-2 py-1 rounded-full font-bold flex items-center gap-1.5 ml-2 flex-shrink-0">
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Selected
+                          </span>
+                        )}
                       </div>
-                    </SelectItem>
-                  ))
-                }
-              </SelectContent>
-            </Select>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {formData.dependencies.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.dependencies.map((taskId) => {
+                  const task = tasks.find(t => t._id === taskId);
+                  if (!task) return null;
+                  return (
+                    <div
+                      key={taskId}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary/20 dark:bg-secondary/10 border border-secondary/40 dark:border-secondary/30 rounded-lg text-sm"
+                    >
+                      <svg className="h-3.5 w-3.5 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span className="font-medium text-gray-900 dark:text-slate-100 truncate max-w-[200px]">
+                        {task.title}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveDependency(taskId)}
+                        className="h-5 w-5 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-all flex-shrink-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {Array.isArray(tasks) && tasks.length === 0 && (
               <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">No tasks available for dependencies</p>
+            )}
+            {showDependencyDropdown && filteredDependencies.length === 0 && dependencySearch && (
+              <p className="text-xs text-gray-500 dark:text-slate-400 font-medium mt-1">No tasks found matching "{dependencySearch}"</p>
             )}
           </div>
 
