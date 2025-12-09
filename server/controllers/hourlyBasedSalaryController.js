@@ -1,4 +1,5 @@
 const DailyAttendance = require('../models/DailyAttendance');
+const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const Salary = require('../models/Salary');
 const SalaryAttendance = require('../models/SalaryAttendance');
@@ -7,10 +8,12 @@ const mongoose = require('mongoose');
 /**
  * Calculate salary based on hourly worked hours from daily attendance
  * Supports both hourly rate and monthly salary calculations
+ * Includes real-time data from active attendance sessions
  */
 
 /**
  * Calculate salary for a specific employee for a given month
+ * Includes real-time calculation for ongoing sessions
  */
 exports.calculateEmployeeMonthlySalary = async (req, res) => {
   try {
@@ -41,10 +44,60 @@ exports.calculateEmployeeMonthlySalary = async (req, res) => {
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
     
     // Get all attendance records for the month
-    const attendanceRecords = await DailyAttendance.find({
+    let attendanceRecords = await DailyAttendance.find({
       user: userId,
       date: { $gte: startDate, $lte: endDate }
     }).sort({ date: 1 });
+    
+    // REAL-TIME: Check for active Attendance records not yet synced to DailyAttendance
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const activeAttendance = await Attendance.findOne({
+      user: userId,
+      date: { $gte: today }
+    });
+    
+    // If there's an active session on today that's not in DailyAttendance, include it
+    if (activeAttendance && activeAttendance.startDayTime) {
+      const todayDailyRecord = attendanceRecords.find(r => {
+        const recordDate = new Date(r.date);
+        recordDate.setHours(0, 0, 0, 0);
+        return recordDate.getTime() === today.getTime();
+      });
+      
+      // If today's record is missing or outdated, calculate from live attendance
+      if (!todayDailyRecord || !activeAttendance.endDayTime) {
+        const now = new Date();
+        const hoursWorked = (now - activeAttendance.startDayTime) / (1000 * 60 * 60);
+        
+        const liveRecord = {
+          _id: activeAttendance._id,
+          date: today,
+          status: 'Present',
+          isPresent: true,
+          totalHoursWorked: Math.max(0, Math.round(hoursWorked * 100) / 100),
+          regularHours: Math.min(hoursWorked, 8),
+          overtimeHours: Math.max(0, hoursWorked - 8),
+          officeHours: activeAttendance.workLocationType === 'Office' ? Math.max(0, Math.round(hoursWorked * 100) / 100) : 0,
+          remoteHours: activeAttendance.workLocationType !== 'Office' ? Math.max(0, Math.round(hoursWorked * 100) / 100) : 0,
+          workLocationType: activeAttendance.workLocationType || 'Office',
+          biometricTimeIn: activeAttendance.biometricTimeIn,
+          biometricTimeOut: activeAttendance.biometricTimeOut,
+          startDayTime: activeAttendance.startDayTime,
+          endDayTime: activeAttendance.endDayTime || now,
+          isRealTime: true // Flag to indicate this is real-time data
+        };
+        
+        // Replace or add today's record
+        if (todayDailyRecord) {
+          const index = attendanceRecords.indexOf(todayDailyRecord);
+          attendanceRecords[index] = liveRecord;
+        } else {
+          attendanceRecords.push(liveRecord);
+        }
+      }
+    }
     
     // Calculate totals
     const totalDays = attendanceRecords.length;
@@ -85,7 +138,8 @@ exports.calculateEmployeeMonthlySalary = async (req, res) => {
       workLocationType: record.workLocationType,
       checkIn: record.biometricTimeIn || record.startDayTime,
       checkOut: record.biometricTimeOut || record.endDayTime,
-      dailyEarning: (record.regularHours * hourlyRate) + (record.overtimeHours * hourlyRate * 1.5)
+      dailyEarning: (record.regularHours * hourlyRate) + (record.overtimeHours * hourlyRate * 1.5),
+      isRealTime: record.isRealTime ? '(Live)' : ''
     }));
     
     // Calculate work location breakdown
@@ -220,7 +274,7 @@ exports.getEmployeeActivityLog = async (req, res) => {
     }
     
     // Get all attendance records for the period
-    const activityLog = await DailyAttendance.aggregate([
+    let activityLogData = await DailyAttendance.aggregate([
       { $match: dateFilter },
       {
         $lookup: {
@@ -279,6 +333,79 @@ exports.getEmployeeActivityLog = async (req, res) => {
       },
       { $sort: { date: -1, userName: 1 } }
     ]);
+    
+    // REAL-TIME: Add active Attendance records that haven't been synced yet
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Check if today is in the requested date range
+    let queryStart = startDate ? new Date(startDate) : null;
+    let queryEnd = endDate ? new Date(endDate) : null;
+    
+    if (!queryStart && !queryEnd && year && month) {
+      queryStart = new Date(year, month - 1, 1);
+      queryEnd = new Date(year, month, 0);
+    }
+    
+    const isTodayInRange = !queryStart || !queryEnd || 
+                          (today >= new Date(queryStart).setHours(0,0,0,0) && 
+                           today <= new Date(queryEnd).setHours(23,59,59,999));
+    
+    if (isTodayInRange) {
+      // Get active attendance sessions for today
+      const activeRecords = await Attendance.find({
+        date: { $gte: today, $lt: tomorrow },
+        startDayTime: { $exists: true, $ne: null }
+      }).populate('user', 'name email employeeId department hourlyRate');
+      
+      for (const record of activeRecords) {
+        if (!record.user) continue;
+        
+        // Check if this record is already in the activity log (already synced)
+        const existsInLog = activityLogData.some(log => 
+          log.userId.toString() === record.user._id.toString()
+        );
+        
+        if (!existsInLog && record.startDayTime) {
+          // Calculate real-time hours
+          const now = new Date();
+          const hoursWorked = (now - record.startDayTime) / (1000 * 60 * 60);
+          const regularHours = Math.min(hoursWorked, 8);
+          const overtimeHours = Math.max(0, hoursWorked - 8);
+          const officeHours = record.workLocationType === 'Office' ? hoursWorked : 0;
+          const remoteHours = record.workLocationType !== 'Office' ? hoursWorked : 0;
+          
+          // Add to activity log with real-time flag
+          activityLogData.push({
+            userId: record.user._id,
+            userName: record.user.name,
+            userEmail: record.user.email,
+            employeeId: record.user.employeeId,
+            department: record.user.department,
+            date: today,
+            status: 'Present (Active)',
+            isPresent: true,
+            totalHoursWorked: Math.round(hoursWorked * 100) / 100,
+            regularHours: Math.round(regularHours * 100) / 100,
+            overtimeHours: Math.round(overtimeHours * 100) / 100,
+            officeHours: Math.round(officeHours * 100) / 100,
+            remoteHours: Math.round(remoteHours * 100) / 100,
+            workLocationType: record.workLocationType || 'Office',
+            checkIn: record.biometricTimeIn || record.startDayTime,
+            checkOut: now,
+            isRealTime: true
+          });
+        }
+      }
+    }
+    
+    const activityLog = activityLogData.sort((a, b) => {
+      const dateA = new Date(b.date);
+      const dateB = new Date(a.date);
+      return dateA - dateB;
+    });
     
     // Calculate summary statistics
     const summary = {

@@ -189,23 +189,45 @@ async function syncExistingAttendance() {
         date: { $gte: dateStart, $lt: dateEnd }
       });
       
-      if (!existing && attendance.startDayTime) {
-        // Create DailyAttendance record
-        const hoursWorked = attendance.endDayTime 
-          ? (attendance.endDayTime - attendance.startDayTime) / (1000 * 60 * 60)
-          : 0;
+      if (!existing) {
+        // Calculate hours even if day is not ended (current time if not ended)
+        let hoursWorked = 0;
+        let endTime = attendance.endDayTime;
         
+        if (attendance.startDayTime) {
+          // If no end-day, use current time for ongoing sessions
+          if (!endTime) {
+            const now = new Date();
+            const dayStart = new Date(attendance.date);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayEnd.getDate() + 1);
+            
+            // Only count hours if still on same day
+            if (now < dayEnd) {
+              endTime = now;
+            } else {
+              // Use end of day if session spans multiple days
+              endTime = dayEnd;
+            }
+          }
+          
+          hoursWorked = (endTime - attendance.startDayTime) / (1000 * 60 * 60);
+          hoursWorked = Math.max(0, hoursWorked); // Ensure non-negative
+        }
+        
+        // Create DailyAttendance record
         const dailyRecord = new DailyAttendance({
           user: attendance.user._id,
           date: attendance.date,
           startDayTime: attendance.startDayTime,
-          endDayTime: attendance.endDayTime,
-          totalHoursWorked: hoursWorked,
+          endDayTime: endTime,
+          totalHoursWorked: Math.round(hoursWorked * 100) / 100,
           workLocationType: attendance.workLocationType || 'Office',
           startDayLocation: attendance.startDayLocation,
           endDayLocation: attendance.endDayLocation,
-          isPresent: true,
-          status: 'Present',
+          isPresent: !!attendance.startDayTime,
+          status: attendance.startDayTime ? 'Present' : 'Absent',
           verificationMethod: attendance.verificationMethod || 'manual'
         });
         
