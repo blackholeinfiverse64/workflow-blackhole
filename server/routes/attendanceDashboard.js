@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const DailyAttendance = require('../models/DailyAttendance');
+const Attendance = require('../models/Attendance');
 const Aim = require('../models/Aim');
 const User = require('../models/User');
 const Department = require('../models/Department');
@@ -61,7 +62,7 @@ router.get('/locations', auth, adminAuth, async (req, res) => {
       .populate('department', 'name color')
       .lean();
 
-    // Fetch today's AIMS (exclude default aims)
+    // Fetch AIMS for the date (exclude default aims)
     const aimsRecords = await Aim.find({
       date: { $gte: startOfDay, $lte: endOfDay },
       user: { $in: allUsers.map(u => u._id) },
@@ -70,8 +71,17 @@ router.get('/locations', auth, adminAuth, async (req, res) => {
       .populate('user', 'name email')
       .lean();
 
-    // Fetch today's attendance with location data
-    const attendanceRecords = await DailyAttendance.find({
+    // Fetch attendance data from BOTH DailyAttendance (synced) AND Attendance (live)
+    // This ensures we get historical data even if sync hasn't happened yet
+    const dailyAttendanceRecords = await DailyAttendance.find({
+      date: { $gte: startOfDay, $lte: endOfDay },
+      user: { $in: allUsers.map(u => u._id) }
+    })
+      .populate('user', 'name email avatar department employeeId role')
+      .lean();
+
+    // Also fetch from Attendance collection for real-time or unsync'd data
+    const attendanceRecords = await Attendance.find({
       date: { $gte: startOfDay, $lte: endOfDay },
       user: { $in: allUsers.map(u => u._id) }
     })
@@ -81,17 +91,30 @@ router.get('/locations', auth, adminAuth, async (req, res) => {
     console.log('📊 Database Query Results:', {
       usersFound: allUsers.length,
       aimsRecords: aimsRecords.length,
+      dailyAttendanceRecords: dailyAttendanceRecords.length,
       attendanceRecords: attendanceRecords.length,
       dateRange: { startOfDay, endOfDay }
     });
 
     // Create maps for quick lookup
+    // Prioritize DailyAttendance, but fall back to Attendance if DailyAttendance is missing
     const attendanceMap = new Map();
     const aimsMap = new Map();
     
-    attendanceRecords.forEach(record => {
+    // First, add DailyAttendance records
+    dailyAttendanceRecords.forEach(record => {
       if (record.user && record.user._id) {
         attendanceMap.set(record.user._id.toString(), record);
+      }
+    });
+
+    // Then, check Attendance records and add if not already in DailyAttendance
+    attendanceRecords.forEach(record => {
+      if (record.user && record.user._id) {
+        const userId = record.user._id.toString();
+        if (!attendanceMap.has(userId)) {
+          attendanceMap.set(userId, record);
+        }
       }
     });
 

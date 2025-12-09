@@ -132,7 +132,8 @@ const AttendanceGrid = ({ attendance, loading, onRefresh, onHistoryClick }) => {
         {attendance.map((record, index) => {
           if (!record || !record._id) return null;
           
-          const workingHours = calculateWorkingHours(record.startDayTime, record.endDayTime);
+          // Prefer hoursWorked from API if available, otherwise calculate from timestamps
+          const workingHours = record.hoursWorked || calculateWorkingHours(record.startDayTime || record.startTime, record.endDayTime || record.endTime);
           const isOnline = record.status?.toLowerCase() === 'present' && !record.endDayTime;
           
           return (
@@ -209,18 +210,18 @@ const AttendanceGrid = ({ attendance, loading, onRefresh, onHistoryClick }) => {
                         Check In
                       </span>
                       <span className="font-medium">
-                        {formatTime(record.startDayTime)}
+                        {formatTime(record.startDayTime || record.startTime)}
                       </span>
                     </div>
 
-                    {record.endDayTime && (
+                    {(record.endDayTime || record.endTime) && (
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           Check Out
                         </span>
                         <span className="font-medium">
-                          {formatTime(record.endDayTime)}
+                          {formatTime(record.endDayTime || record.endTime)}
                         </span>
                       </div>
                     )}
