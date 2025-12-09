@@ -11,8 +11,14 @@ if (import.meta.env.VITE_API_URL) {
   console.log('🌐 Current hostname:', host);
 
   if (host === 'blackhole-workflow.vercel.app' || host.endsWith('.vercel.app')) {
+    // IMPORTANT: This is a fallback. Set VITE_API_URL in Vercel environment variables
+    // or in client/.env.production for proper backend connection
     API_URL = 'https://blackholeworkflow.onrender.com/api';
-    console.log('🎯 Using Render backend:', API_URL);
+    console.log('🎯 Using Render backend fallback:', API_URL);
+    console.warn('⚠️ WARNING: Using fallback backend. Set VITE_API_URL for proper deployment.');
+  } else if (host === 'localhost' || host === '127.0.0.1') {
+    API_URL = 'http://localhost:5001/api';
+    console.log('🏠 Using localhost API:', API_URL);
   } else {
     API_URL = `${window.location.origin}/api`;
     console.log('🏠 Using same-origin API:', API_URL);

@@ -76,8 +76,10 @@ const BiometricAttendanceDashboard = () => {
   const [uploadHistory, setUploadHistory] = useState([]);
   const [uploadFile, setUploadFile] = useState(null);
 
-  // API base URL
-  const API_BASE = 'http://localhost:5001/api/biometric-attendance';
+  // API base URL - use environment variable or fallback to localhost
+  const API_BASE = import.meta.env.VITE_API_URL 
+    ? `${import.meta.env.VITE_API_URL}/biometric-attendance`
+    : 'http://localhost:5001/api/biometric-attendance';
   const token = localStorage.getItem('WorkflowToken');
 
   const axiosConfig = {
