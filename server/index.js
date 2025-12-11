@@ -137,6 +137,7 @@ const authRoutes = require("./routes/auth");
 const aiRoutes = require("./routes/ai");
 const adminRoutes = require('./routes/admin');
 const dashboardRoutes = require('./routes/dashboard');
+const dashboardFixedRoutes = require('./routes/dashboardFixed');
 const submissionRoutes = require('./routes/submission');
 const aiNewRoutes = require('./routes/aiRoutes');
 const progressRoutes = require('./routes/progress'); // Add this line
@@ -166,6 +167,8 @@ const io = socketIo(server, {
     origin: (origin, callback) => {
       const allowed = [
         'https://blackhole-workflow.vercel.app',
+        'https://main-workflow.vercel.app',
+        'https://blackholeworkflow.onrender.com',
         process.env.FRONTEND_URL,
       ].filter(Boolean);
       const isLocalhost = origin && /^http:\/\/localhost:\d+$/.test(origin);
@@ -185,6 +188,8 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowed = [
       'https://blackhole-workflow.vercel.app',
+      'https://main-workflow.vercel.app',
+      'https://blackholeworkflow.onrender.com',
       process.env.FRONTEND_URL,
     ].filter(Boolean);
     const isLocalhost = origin && /^http:\/\/localhost:\d+$/.test(origin);
@@ -200,11 +205,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://blackhole-workflow.vercel.app',
+    'https://main-workflow.vercel.app',
+    'https://blackholeworkflow.onrender.com',
+    process.env.FRONTEND_URL
+  ].filter(Boolean);
+  
   if (origin && /^http:\/\/localhost:\d+$/.test(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Vary', 'Origin');
-  } else if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+  } else if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
   }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-auth-token');
@@ -345,6 +358,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/dashboard", dashboardFixedRoutes); // Enhanced dashboard APIs (attendance-summary, merge-analysis, etc.)
 app.use("/api/submissions", submissionRoutes);
 app.use('/api/new/ai', aiNewRoutes);
 app.use('/api/progress', progressRoutes); // Add this line
