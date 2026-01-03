@@ -1088,10 +1088,21 @@ router.get('/spam-users', auth, adminAuth, async (req, res) => {
     }
 
     // Build query for auto-ended records
+    // Exclude records already marked as 'Spam' (they're permanently excluded)
+    // Show: Pending Review, Suspicious, Valid (validated but still auto-ended)
     const query = {
       autoEnded: true,
       isPresent: true,
-      isLeave: false
+      isLeave: false,
+      // Exclude records marked as Spam
+      $and: [
+        {
+          $or: [
+            { spamStatus: { $exists: false } }, // Old records without spamStatus (treat as pending)
+            { spamStatus: { $ne: 'Spam' } } // Any status except Spam
+          ]
+        }
+      ]
     };
 
     // Add date filter if provided
@@ -1237,23 +1248,58 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
 
     // Update record based on action
     if (action === 'validate') {
+      // Mark as Valid - this will include it in hours management
       record.spamStatus = 'Valid';
       record.validatedBy = req.user.id;
       record.validatedAt = new Date();
       record.spamReason = reason || 'Validated by admin';
+      // Also ensure autoEnded is still true (for tracking)
+      record.autoEnded = true;
     } else if (action === 'spam') {
+      // Mark as Spam - this will exclude it from hours management and spam list
       record.spamStatus = 'Spam';
       record.markedAsSpamBy = req.user.id;
       record.markedAsSpamAt = new Date();
       record.spamReason = reason || 'Marked as spam by admin';
     }
 
-    // Save the record
+    // Save the record using updateOne to avoid validation issues
     try {
-      await record.save();
-      console.log(`Successfully updated record ${recordId} with spamStatus: ${record.spamStatus}`);
+      const updateData = {};
+
+      if (action === 'validate') {
+        updateData.spamStatus = 'Valid';
+        updateData.validatedBy = req.user.id;
+        updateData.validatedAt = new Date();
+        updateData.spamReason = reason || 'Validated by admin';
+      } else if (action === 'spam') {
+        updateData.spamStatus = 'Spam';
+        updateData.markedAsSpamBy = req.user.id;
+        updateData.markedAsSpamAt = new Date();
+        updateData.spamReason = reason || 'Marked as spam by admin';
+      }
+
+      const updateResult = await DailyAttendance.updateOne(
+        { _id: recordId },
+        { $set: updateData }
+      );
+
+      if (updateResult.matchedCount === 0) {
+        throw new Error('Record not found for update');
+      }
+
+      console.log(`Successfully updated record ${recordId} with spamStatus: ${updateData.spamStatus}`);
+      
+      // Update the record object for response
+      record.spamStatus = updateData.spamStatus;
+      record.spamReason = updateData.spamReason;
     } catch (saveError) {
       console.error('Error saving record:', saveError);
+      console.error('Save error details:', {
+        message: saveError.message,
+        name: saveError.name,
+        stack: saveError.stack
+      });
       throw new Error(`Failed to save record: ${saveError.message}`);
     }
 
@@ -1284,17 +1330,22 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
       }
     }
 
+    // Get user info from the populated record
+    const userId = record.user?._id || record.user;
+    const userName = record.user?.name || 'Unknown';
+
     res.json({
       success: true,
-      message: `Attendance record ${action === 'validate' ? 'validated' : 'marked as spam'} successfully`,
+      message: `Attendance record ${action === 'validate' ? 'validated' : 'marked as spam'} successfully. ${action === 'validate' ? 'Hours will now be included in salary calculation.' : 'Record removed from spam list.'}`,
       data: {
         record: {
           _id: record._id,
-          userId: record.user._id,
-          userName: record.user.name,
+          userId: userId,
+          userName: userName,
           date: record.date,
           spamStatus: record.spamStatus,
-          spamReason: record.spamReason
+          spamReason: record.spamReason,
+          totalHoursWorked: record.totalHoursWorked || 0
         }
       }
     });

@@ -104,8 +104,11 @@ const SpamUsers = () => {
           variant: 'success'
         });
         
-        // Refresh data
-        fetchSpamUsers();
+        // Refresh data after a short delay to ensure backend has processed
+        setTimeout(() => {
+          fetchSpamUsers();
+        }, 500);
+        
         setActionDialogOpen(false);
         setReason('');
         setSelectedRecord(null);
@@ -146,8 +149,11 @@ const SpamUsers = () => {
           variant: 'success'
         });
         
-        // Refresh data
-        fetchSpamUsers();
+        // Refresh data after a short delay to ensure backend has processed
+        setTimeout(() => {
+          fetchSpamUsers();
+        }, 500);
+        
         setReason('');
       } else {
         throw new Error(response.error || 'Failed to perform bulk action');
@@ -341,7 +347,7 @@ const SpamUsers = () => {
                                 {getStatusBadge(record.spamStatus)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {record.spamStatus === 'Pending Review' && (
+                                {(!record.spamStatus || record.spamStatus === 'Pending Review' || record.spamStatus === 'Suspicious') && (
                                   <div className="flex gap-2 justify-end">
                                     <Button
                                       size="sm"
@@ -371,15 +377,22 @@ const SpamUsers = () => {
                                     </Button>
                                   </div>
                                 )}
-                                {record.spamStatus === 'Valid' && record.validatedBy && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Validated
-                                  </p>
+                                {record.spamStatus === 'Valid' && (
+                                  <div className="flex items-center gap-2 justify-end">
+                                    <Badge className="bg-green-100 text-green-800">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Validated
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">
+                                      (Hours included)
+                                    </p>
+                                  </div>
                                 )}
-                                {record.spamStatus === 'Spam' && record.markedAsSpamBy && (
-                                  <p className="text-xs text-red-600">
+                                {record.spamStatus === 'Spam' && (
+                                  <Badge className="bg-red-100 text-red-800">
+                                    <XCircle className="h-3 w-3 mr-1" />
                                     Marked as Spam
-                                  </p>
+                                  </Badge>
                                 )}
                               </TableCell>
                             </TableRow>
@@ -389,7 +402,7 @@ const SpamUsers = () => {
                     </div>
 
                     {/* Bulk Actions */}
-                    {spamUser.records.filter(r => r.spamStatus === 'Pending Review').length > 0 && (
+                    {spamUser.records.filter(r => !r.spamStatus || r.spamStatus === 'Pending Review' || r.spamStatus === 'Suspicious').length > 0 && (
                       <div className="flex gap-2 pt-2 border-t">
                         <Button
                           size="sm"
@@ -397,7 +410,7 @@ const SpamUsers = () => {
                           className="text-green-600 border-green-600 hover:bg-green-50"
                           onClick={() => {
                             const pendingIds = spamUser.records
-                              .filter(r => r.spamStatus === 'Pending Review')
+                              .filter(r => !r.spamStatus || r.spamStatus === 'Pending Review' || r.spamStatus === 'Suspicious')
                               .map(r => r._id);
                             setActionType('validate');
                             setActionDialogOpen(true);
@@ -413,7 +426,7 @@ const SpamUsers = () => {
                           className="text-red-600 border-red-600 hover:bg-red-50"
                           onClick={() => {
                             const pendingIds = spamUser.records
-                              .filter(r => r.spamStatus === 'Pending Review')
+                              .filter(r => !r.spamStatus || r.spamStatus === 'Pending Review' || r.spamStatus === 'Suspicious')
                               .map(r => r._id);
                             setActionType('spam');
                             setActionDialogOpen(true);
