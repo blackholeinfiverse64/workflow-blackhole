@@ -578,15 +578,10 @@ export function WorkHoursManager({ employee }) {
         {workSession && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Work Progress</span>
-              <span className="text-sm text-muted-foreground">
-                {progress.hours}h {progress.minutes}m / {workSession.targetHours || 8}h
+              <span className="text-sm font-medium">Total Hours Worked</span>
+              <span className="text-sm font-semibold text-foreground">
+                {progress.hours}h {progress.minutes}m
               </span>
-            </div>
-            <Progress value={progress.percentage} className="h-3" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{progress.percentage.toFixed(1)}% complete</span>
-              <span>{progress.remaining.toFixed(1)}h remaining</span>
             </div>
           </div>
         )}
