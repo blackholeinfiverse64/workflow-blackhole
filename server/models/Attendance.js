@@ -188,8 +188,30 @@ const attendanceSchema = new mongoose.Schema({
   // Auto-end day tracking
   autoEnded: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true
   },
+  // Spam detection and validation
+  spamStatus: {
+    type: String,
+    enum: ['Valid', 'Suspicious', 'Spam', 'Pending Review'],
+    default: 'Valid',
+    index: true
+  },
+  spamReason: {
+    type: String,
+    maxlength: 500
+  },
+  markedAsSpamBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  markedAsSpamAt: Date,
+  validatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  validatedAt: Date,
   systemNotes: {
     type: String,
     maxlength: 300

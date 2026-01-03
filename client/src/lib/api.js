@@ -43,15 +43,32 @@ async function fetchAPI(endpoint, options = {}) {
     ...options.headers,
   };
 
+  // Handle query parameters
+  let finalEndpoint = endpoint;
+  if (options.params && Object.keys(options.params).length > 0) {
+    const queryParams = new URLSearchParams();
+    Object.entries(options.params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
+    const queryString = queryParams.toString();
+    if (queryString) {
+      finalEndpoint = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
+    }
+  }
+
   try {
     console.log('🔍 API Debug:', {
-      fullURL: `${API_URL}${endpoint}`,
+      fullURL: `${API_URL}${finalEndpoint}`,
       API_URL,
       endpoint,
+      finalEndpoint,
+      params: options.params,
       method: options.method || 'GET'
     });
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(`${API_URL}${finalEndpoint}`, {
       ...options,
       headers,
     });

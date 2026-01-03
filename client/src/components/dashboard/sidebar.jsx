@@ -88,7 +88,7 @@ export function DashboardSidebar() {
           title: "Attendance & Time",
           routes: [
             { title: "Live Attendance", href: "/attendance-dashboard", icon: UserCheck },
-            { title: "Salary Management", href: "/biometric-salary-management", icon: DollarSign },
+            { title: "Salary Management", href: "/new-salary-management", icon: DollarSign },
           ]
         },
         {

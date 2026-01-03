@@ -43,6 +43,7 @@ import EMSDashboard from "./pages/EMSDashboard";
 import ProcurementDashboard from "./pages/ProcurementDashboard";
 import EnhancedSalaryDashboard from "./pages/EnhancedSalaryDashboard";
 import BiometricAttendanceDashboard from "./pages/BiometricAttendanceDashboard";
+import NewSalaryManagement from "./pages/NewSalaryManagement";
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -362,6 +363,14 @@ function AppContent() {
                         element={
                           <ProtectedRoute>
                             <BiometricAttendanceDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/new-salary-management/:userId?"
+                        element={
+                          <ProtectedRoute>
+                            <NewSalaryManagement />
                           </ProtectedRoute>
                         }
                       />

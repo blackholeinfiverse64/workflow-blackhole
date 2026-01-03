@@ -155,6 +155,7 @@ const procurementRoutes = require('./routes/procurement'); // Procurement routes
 const chatbotRoutes = require('./routes/chatbot'); // Admin chatbot routes
 const biometricAttendanceRoutes = require('./routes/biometricAttendance'); // Biometric attendance and salary routes
 const hourlyBasedSalaryRoutes = require('./routes/hourlyBasedSalary'); // Hourly-based salary management
+const newSalaryRoutes = require('./routes/newSalaryManagement'); // New salary management system
 const { startAttendancePersistenceCron, syncExistingAttendance } = require('./services/attendanceCronJobs'); // Attendance persistence cron
 // const aiRoutePy = require('./routes/aiRoutePy')
 // Create Express app
@@ -379,6 +380,7 @@ app.use('/api/procurement', procurementRoutes); // Procurement routes
 app.use('/api/chatbot', chatbotRoutes); // Admin chatbot routes
 app.use('/api/biometric', biometricAttendanceRoutes); // Biometric attendance and salary management routes
 app.use('/api/hourly-salary', hourlyBasedSalaryRoutes); // Hourly-based salary management routes
+app.use('/api/new-salary', newSalaryRoutes); // New salary management system
 
 // app.use('/api/new/ai',aiRoutePy)
 

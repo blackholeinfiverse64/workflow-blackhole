@@ -173,12 +173,34 @@ const dailyAttendanceSchema = new mongoose.Schema({
   // Auto-end day tracking
   autoEnded: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true
   },
   maxWorkingHours: {
     type: Number,
     default: 8
   },
+  // Spam detection and validation
+  spamStatus: {
+    type: String,
+    enum: ['Valid', 'Suspicious', 'Spam', 'Pending Review'],
+    default: 'Valid',
+    index: true
+  },
+  spamReason: {
+    type: String,
+    maxlength: 500
+  },
+  markedAsSpamBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  markedAsSpamAt: Date,
+  validatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  validatedAt: Date,
   
   // Aim Completion Tracking
   dailyAimCompleted: {
