@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 export function InsightCard({ insight, onApplyAction }) {
+  const [loadingActions, setLoadingActions] = useState({});
   const getImpactColor = (impact) => {
     switch (impact) {
       case "High":
@@ -51,18 +53,44 @@ export function InsightCard({ insight, onApplyAction }) {
         </p>
         {insight.actions && insight.actions.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {insight.actions.map((action, actionIndex) => (
-              <Button
-                key={actionIndex}
-                variant="outline"
-                size="sm"
-                className="transition-all hover:shadow-sm"
-                onClick={() => onApplyAction(action, insight)}
-              >
-                {action}
-                <ArrowRight className="ml-2 h-3 w-3" />
-              </Button>
-            ))}
+            {insight.actions.map((action, actionIndex) => {
+              const isLoading = loadingActions[actionIndex];
+              return (
+                <Button
+                  key={actionIndex}
+                  variant="outline"
+                  size="sm"
+                  className="transition-all hover:shadow-sm"
+                  disabled={isLoading || !onApplyAction}
+                  onClick={async () => {
+                    if (!onApplyAction) {
+                      console.error("onApplyAction is not defined");
+                      return;
+                    }
+                    setLoadingActions(prev => ({ ...prev, [actionIndex]: true }));
+                    try {
+                      await onApplyAction(action, insight);
+                    } catch (error) {
+                      console.error("Error in onApplyAction:", error);
+                    } finally {
+                      setLoadingActions(prev => ({ ...prev, [actionIndex]: false }));
+                    }
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {action}
+                      <ArrowRight className="ml-2 h-3 w-3" />
+                    </>
+                  )}
+                </Button>
+              );
+            })}
           </div>
         )}
       </CardContent>

@@ -25,41 +25,85 @@ export function OptimizationInsights({ insights }) {
 
   const handleApplyAction = async (action, insight) => {
     try {
-      // Extract task title from description
-      const taskTitle = insight.description.match(/Task '([^']+)'/)?.[1];
+      // Extract task title from description - try multiple patterns
+      let taskTitle = insight.description.match(/Task '([^']+)'/)?.[1] ||
+                      insight.description.match(/task "([^"]+)"/)?.[1] ||
+                      insight.description.match(/task ([A-Za-z0-9\s]+)/i)?.[1] ||
+                      insight.title?.match(/Task '([^']+)'/)?.[1];
+      
       if (!taskTitle) {
+        // If we can't extract from description, try to get task ID from insight
+        if (insight.taskId) {
+          const allTasks = await api.tasks.getTasks();
+          const task = allTasks.find((t) => t._id === insight.taskId);
+          if (task) {
+            await applyActionToTask(action, task);
+            return;
+          }
+        }
         throw new Error("Task not found in insight description");
       }
 
-      const tasks = await api.tasks.getTasks();
-      const task = tasks.find((t) => t.title === taskTitle);
+      const allTasks = await api.tasks.getTasks();
+      const task = allTasks.find((t) => t.title === taskTitle || t._id === taskTitle);
       if (!task) {
-        throw new Error("Task not found");
+        throw new Error(`Task "${taskTitle}" not found`);
       }
 
-      let updates = {};
-      if (action.includes("Reassign")) {
-        updates.assignee = null; // Mock reassignment
-      } else if (action.includes("Adjust deadlines") || action.includes("Extend deadlines")) {
-        const newDueDate = new Date(task.dueDate);
-        newDueDate.setDate(newDueDate.getDate() + 7);
-        updates.dueDate = newDueDate.toISOString();
-      } else if (action.includes("Prioritize")) {
-        updates.priority = "High";
-      }
-
-      await api.tasks.updateTask(task._id, updates);
-      toast({
-        title: "Success",
-        description: `Action "${action}" applied to task "${taskTitle}"`,
-      });
+      await applyActionToTask(action, task);
     } catch (err) {
+      console.error("Error applying action:", err);
       toast({
         title: "Error",
         description: err.message || `Failed to apply action "${action}"`,
         variant: "destructive",
       });
     }
+  };
+
+  const applyActionToTask = async (action, task) => {
+    let updates = {};
+    const actionLower = action.toLowerCase();
+    
+    // Handle "Reschedule due date" action
+    if (actionLower.includes("reschedule") || actionLower.includes("due date")) {
+      if (!task.dueDate) {
+        throw new Error("Task does not have a due date to reschedule");
+      }
+      const newDueDate = new Date(task.dueDate);
+      newDueDate.setDate(newDueDate.getDate() + 7); // Extend by 7 days
+      updates.dueDate = newDueDate.toISOString();
+    }
+    // Handle "Prioritize task completion" or "Prioritize" action
+    else if (actionLower.includes("prioritize") || actionLower.includes("priority")) {
+      updates.priority = "High";
+    }
+    // Handle "Investigate reason for delay" action
+    else if (actionLower.includes("investigate") || actionLower.includes("delay")) {
+      // Add a note or comment about investigation
+      updates.status = task.status || "In Progress";
+      updates.notes = task.notes 
+        ? `${task.notes}\n\n[AI Action] Investigation requested: ${new Date().toLocaleString()}`
+        : `[AI Action] Investigation requested: ${new Date().toLocaleString()}`;
+    }
+    // Legacy handlers for backward compatibility
+    else if (actionLower.includes("reassign")) {
+      updates.assignee = null;
+    } else if (actionLower.includes("adjust deadlines") || actionLower.includes("extend deadlines")) {
+      const newDueDate = new Date(task.dueDate);
+      newDueDate.setDate(newDueDate.getDate() + 7);
+      updates.dueDate = newDueDate.toISOString();
+    } else {
+      throw new Error(`Unknown action: "${action}"`);
+    }
+
+    // Update the task
+    await api.tasks.updateTask(task._id, updates);
+
+    toast({
+      title: "Success",
+      description: `Action "${action}" applied to task "${task.title || task._id}"`,
+    });
   };
 
   // Empty state

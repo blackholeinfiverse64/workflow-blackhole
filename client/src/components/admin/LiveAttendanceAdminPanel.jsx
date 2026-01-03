@@ -345,311 +345,414 @@ const LiveAttendanceAdminPanel = () => {
 
   if (loading && liveUsers.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
         >
-          <RefreshCw className="w-8 h-8 text-blue-500" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="mx-auto"
+          >
+            <Shield className="w-12 h-12 text-blue-600" />
+          </motion.div>
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-gray-900">Loading Admin Panel</p>
+            <p className="text-sm text-gray-500">Initializing live tracking system...</p>
+          </div>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-            <Shield className="w-8 h-8 text-blue-400" />
-            Live Attendance Admin Panel
-          </h1>
-          <p className="text-gray-400 mt-1">
-            Real-time monitoring and control • Last updated: {lastUpdated.toLocaleTimeString()}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={fetchLiveAttendanceData}
-            variant="outline"
-            size="sm"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-
-          <Button
-            onClick={handleExportData}
-            variant="outline"
-            size="sm"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-
-          <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-lg border border-green-500/20">
-            <Radio className="w-4 h-4 animate-pulse" />
-            Live System Active
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-        {[
-          { label: 'Total Employees', value: stats.totalEmployees, icon: Users, color: 'from-blue-500 to-blue-600', textColor: 'text-blue-400' },
-          { label: 'Present Today', value: stats.presentToday, icon: CheckCircle, color: 'from-green-500 to-green-600', textColor: 'text-green-400' },
-          { label: 'Absent Today', value: stats.absentToday, icon: XCircle, color: 'from-red-500 to-red-600', textColor: 'text-red-400' },
-          { label: 'On Leave', value: stats.onLeaveToday, icon: AlertCircle, color: 'from-orange-500 to-orange-600', textColor: 'text-orange-400' },
-          { label: 'Late Arrivals', value: stats.lateToday, icon: Clock, color: 'from-yellow-500 to-yellow-600', textColor: 'text-yellow-400' },
-          { label: 'Avg Hours', value: stats.avgHoursToday ? `${stats.avgHoursToday}h` : '0h', icon: TrendingUp, color: 'from-purple-500 to-purple-600', textColor: 'text-purple-400' },
-          { label: 'Attendance %', value: `${stats.presentPercentage}%`, icon: BarChart3, color: 'from-cyan-500 to-cyan-600', textColor: 'text-cyan-400' }
-        ].map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Professional SaaS Header */}
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-4"
             >
-              <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/20 shadow-lg backdrop-blur-sm hover:border-white/40 transition-all">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-400 uppercase">{stat.label}</p>
-                      <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
-                    </div>
-                    <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-lg`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="p-2.5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                  Live Attendance Admin Panel
+                </h1>
+                <p className="text-sm text-gray-600 mt-0.5 flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Radio className="w-3 h-3 text-green-500" />
+                  </motion.div>
+                  Real-time monitoring and control • Updated {lastUpdated.toLocaleTimeString()}
+                </p>
+              </div>
             </motion.div>
-          );
-        })}
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3 flex-wrap"
+            >
+              <Button
+                onClick={fetchLiveAttendanceData}
+                variant="outline"
+                size="sm"
+                className="border-gray-300 hover:bg-gray-50 shadow-sm"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </Button>
+
+              <Button
+                onClick={handleExportData}
+                variant="outline"
+                size="sm"
+                className="border-gray-300 hover:bg-gray-50 shadow-sm"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+
+              <div className="flex items-center gap-2 text-sm text-gray-700 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Radio className="w-4 h-4 text-green-600" />
+                </motion.div>
+                <span className="font-medium text-green-700">Live System Active</span>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters and Controls */}
-      <Card className="bg-white/10 border-white/20 backdrop-blur-sm shadow-lg">
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-500"
-                />
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+        {/* Professional Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+          {[
+            { label: 'Total Employees', value: stats.totalEmployees, icon: Users, color: 'blue', bgColor: 'bg-blue-50', iconBg: 'bg-blue-100', textColor: 'text-blue-700', iconColor: 'text-blue-600' },
+            { label: 'Present Today', value: stats.presentToday, icon: CheckCircle, color: 'green', bgColor: 'bg-green-50', iconBg: 'bg-green-100', textColor: 'text-green-700', iconColor: 'text-green-600' },
+            { label: 'Absent Today', value: stats.absentToday, icon: XCircle, color: 'red', bgColor: 'bg-red-50', iconBg: 'bg-red-100', textColor: 'text-red-700', iconColor: 'text-red-600' },
+            { label: 'On Leave', value: stats.onLeaveToday, icon: AlertCircle, color: 'orange', bgColor: 'bg-orange-50', iconBg: 'bg-orange-100', textColor: 'text-orange-700', iconColor: 'text-orange-600' },
+            { label: 'Late Arrivals', value: stats.lateToday, icon: Clock, color: 'yellow', bgColor: 'bg-yellow-50', iconBg: 'bg-yellow-100', textColor: 'text-yellow-700', iconColor: 'text-yellow-600' },
+            { label: 'Avg Hours', value: stats.avgHoursToday ? `${stats.avgHoursToday.toFixed(1)}h` : '0h', icon: TrendingUp, color: 'purple', bgColor: 'bg-purple-50', iconBg: 'bg-purple-100', textColor: 'text-purple-700', iconColor: 'text-purple-600' },
+            { label: 'Attendance %', value: `${stats.presentPercentage.toFixed(1)}%`, icon: BarChart3, color: 'cyan', bgColor: 'bg-cyan-50', iconBg: 'bg-cyan-100', textColor: 'text-cyan-700', iconColor: 'text-cyan-600' }
+          ].map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ y: -4 }}
+              >
+                <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 truncate">
+                          {stat.label}
+                        </p>
+                        <p className={`text-2xl font-bold ${stat.textColor} leading-none`}>
+                          {stat.value}
+                        </p>
+                      </div>
+                      <div className={`${stat.iconBg} p-3 rounded-lg flex-shrink-0 ml-3`}>
+                        <Icon className={`w-5 h-5 ${stat.iconColor}`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Professional Filters and Controls */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="bg-white border border-gray-200 shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-11 bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                  <SelectTrigger className="w-full lg:w-56 h-11 bg-white border-gray-300 hover:bg-gray-50">
+                    <Building className="w-4 h-4 mr-2 text-gray-500" />
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departments.map(dept => (
+                      <SelectItem key={dept._id} value={dept._id}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full lg:w-56 h-11 bg-white border-gray-300 hover:bg-gray-50">
+                    <Filter className="w-4 h-4 mr-2 text-gray-500" />
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="present">✅ Present</SelectItem>
+                    <SelectItem value="absent">❌ Absent</SelectItem>
+                    <SelectItem value="late">⏰ Late</SelectItem>
+                    <SelectItem value="on-leave">🏖️ On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  onClick={fetchLiveAttendanceData}
+                  className="h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all"
+                  disabled={loading}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  {loading ? 'Refreshing...' : 'Refresh'}
+                </Button>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-              <SelectTrigger className="w-full lg:w-48 bg-white/10 border-white/20 text-white">
-                <SelectValue placeholder="Department" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-white/20">
-                <SelectItem value="all">All Departments</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept._id} value={dept._id}>{dept.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full lg:w-48 bg-white/10 border-white/20 text-white">
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-white/20">
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="on-leave">On Leave</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={fetchLiveAttendanceData}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+        {/* Professional Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 bg-white border border-gray-200 shadow-sm p-1.5 rounded-lg h-auto">
+            <TabsTrigger 
+              value="live" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md py-2.5"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <Radio className="w-4 h-4" />
+              <span className="font-medium">Live Monitor</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="details" 
+              className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md py-2.5"
+            >
+              <Eye className="w-4 h-4" />
+              <span className="font-medium">Details</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="violations" 
+              className="flex items-center gap-2 data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md py-2.5"
+            >
+              <AlertTriangle className="w-4 h-4" />
+              <span className="font-medium">Violations</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all rounded-md py-2.5"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="font-medium">Analytics</span>
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white/10 border-white/20 p-1">
-          <TabsTrigger value="live" className="text-white">
-            <Radio className="w-4 h-4 mr-2" />
-            Live Monitor
-          </TabsTrigger>
-          <TabsTrigger value="details" className="text-white">
-            <Eye className="w-4 h-4 mr-2" />
-            Details
-          </TabsTrigger>
-          <TabsTrigger value="violations" className="text-white">
-            <AlertTriangle className="w-4 h-4 mr-2" />
-            Violations
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-white">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+          {/* Professional Live Monitor Tab */}
+          <TabsContent value="live" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Professional Live Users List */}
+              <div className="lg:col-span-2">
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-4 border-b border-gray-100">
+                    <CardTitle className="flex items-center gap-3 text-gray-900">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Radio className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <span className="text-lg font-semibold">Live Tracking Users</span>
+                    </CardTitle>
+                    <CardDescription className="mt-2 text-gray-600">
+                      {filteredUsers.length} user(s) matching filters
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+                      <AnimatePresence>
+                        {filteredUsers.length === 0 ? (
+                          <div className="text-center py-12">
+                            <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                            <p className="text-gray-700 font-medium mb-2">No users found</p>
+                            <p className="text-sm text-gray-500">Try adjusting your filters</p>
+                          </div>
+                        ) : (
+                          filteredUsers.map((record, idx) => {
+                            const lastLocation = record.locationHistory?.[record.locationHistory.length - 1];
+                            const isTracking = record.liveTracking?.enabled;
 
-        {/* Live Monitor Tab */}
-        <TabsContent value="live" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Live Users List */}
-            <div className="lg:col-span-2">
-              <Card className="bg-white/10 border-white/20 backdrop-blur-sm shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-white">Live Tracking Users</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    {filteredUsers.length} user(s) matching filters
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    <AnimatePresence>
-                      {filteredUsers.map((record, idx) => {
-                        const lastLocation = record.locationHistory?.[record.locationHistory.length - 1];
-                        const isTracking = record.liveTracking?.enabled;
-
-                        return (
-                          <motion.div
-                            key={record._id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:border-white/30 transition-all"
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div className="relative">
-                                <Avatar className="w-10 h-10">
-                                  <AvatarImage src={record.user?.avatar} />
-                                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                    {record.user?.name?.split(' ').map(n => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {isTracking && (
-                                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-white truncate">
-                                  {record.user?.name}
-                                </p>
-                                <p className="text-xs text-gray-400 truncate">
-                                  {record.user?.email}
-                                </p>
-                                {lastLocation && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {lastLocation.distanceFromOffice?.toFixed(0)}m from office
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(record)}
-
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleViewDetails(record)}
-                                className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+                            return (
+                              <motion.div
+                                key={record._id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ delay: idx * 0.03 }}
+                                whileHover={{ x: 4 }}
+                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer group"
                               >
-                                <Eye className="w-4 h-4" />
-                              </Button>
+                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                  <div className="relative flex-shrink-0">
+                                    <Avatar className="w-12 h-12 ring-2 ring-white shadow-sm group-hover:ring-blue-200 transition-all">
+                                      <AvatarImage src={record.user?.avatar} />
+                                      <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 text-white font-semibold">
+                                        {record.user?.name?.split(' ').map(n => n[0]).join('')}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {isTracking && (
+                                      <motion.div
+                                        animate={{ scale: [1, 1.3, 1] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                        className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"
+                                      />
+                                    )}
+                                  </div>
 
-                              {isTracking && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleStopTracking(record.user._id)}
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                                >
-                                  <StopCircle className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-gray-900 truncate text-base">
+                                      {record.user?.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                                      {record.user?.email}
+                                    </p>
+                                    {lastLocation && (
+                                      <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        {lastLocation.distanceFromOffice?.toFixed(0)}m from office
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {getStatusBadge(record)}
+
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleViewDetails(record)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+
+                                  {isTracking && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleStopTracking(record.user._id)}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                    >
+                                      <StopCircle className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </motion.div>
+                            );
+                          })
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Professional Summary Panel */}
+              <Card className="bg-white border border-gray-200 shadow-sm">
+                <CardHeader className="pb-4 border-b border-gray-100">
+                  <CardTitle className="flex items-center gap-3 text-gray-900">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <Zap className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <span className="text-lg font-semibold">Quick Actions</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-3">
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={handleExportData}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export Report
+                    </Button>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={() => setShowAlertDialog(true)}
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white shadow-sm hover:shadow-md transition-all"
+                      disabled={!selectedUser}
+                    >
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      Send Alert
+                    </Button>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={() => handleViewLocationHistory(selectedUser)}
+                      variant="outline"
+                      className="w-full border-gray-300 hover:bg-gray-50 transition-all"
+                      disabled={!selectedUser}
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Location History
+                    </Button>
+                  </motion.div>
+
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-4 tracking-wider">System Status</p>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center justify-between text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <span className="flex items-center gap-2 font-medium">
+                          <Radio className="w-3.5 h-3.5 text-green-600" />
+                          Socket Connection
+                        </span>
+                        <Badge className="bg-green-100 text-green-700 border-0 font-semibold">Active</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <span className="flex items-center gap-2 font-medium">
+                          <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                          Database Sync
+                        </span>
+                        <Badge className="bg-green-100 text-green-700 border-0 font-semibold">Synced</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <span className="flex items-center gap-2 font-medium">
+                          <Shield className="w-3.5 h-3.5 text-green-600" />
+                          Geofencing
+                        </span>
+                        <Badge className="bg-green-100 text-green-700 border-0 font-semibold">Enabled</Badge>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Summary Panel */}
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-white">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={handleExportData}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Report
-                </Button>
-
-                <Button
-                  onClick={() => setShowAlertDialog(true)}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                  disabled={!selectedUser}
-                >
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  Send Alert
-                </Button>
-
-                <Button
-                  onClick={() => handleViewLocationHistory(selectedUser)}
-                  variant="outline"
-                  className="w-full border-white/20 text-white hover:bg-white/10"
-                  disabled={!selectedUser}
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Location History
-                </Button>
-
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs font-semibold text-gray-400 uppercase mb-3">System Status</p>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-gray-300">
-                      <span>Socket Connection</span>
-                      <Badge className="bg-green-500 text-white">Active</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-300">
-                      <span>Database Sync</span>
-                      <Badge className="bg-green-500 text-white">Synced</Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-gray-300">
-                      <span>Geofencing</span>
-                      <Badge className="bg-green-500 text-white">Enabled</Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
         {/* Details Tab */}
         <TabsContent value="details" className="space-y-6">
@@ -734,50 +837,76 @@ const LiveAttendanceAdminPanel = () => {
           </Card>
         </TabsContent>
 
-        {/* Violations Tab */}
-        <TabsContent value="violations" className="space-y-6">
-          <Card className="bg-white/10 border-white/20 backdrop-blur-sm shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-white">Geofence Violations</CardTitle>
-              <CardDescription className="text-gray-400">
-                Total violations across all users
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {filteredUsers
-                  .filter(u => (u.geofenceViolations?.length || 0) > 0)
-                  .map((record, idx) => (
-                    <motion.div
-                      key={record._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="bg-white/5 p-4 rounded-lg border-l-4 border-red-500"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-white">{record.user?.name}</h4>
-                          <p className="text-sm text-gray-400 mb-2">{record.geofenceViolations?.length} violation(s)</p>
-                          <div className="space-y-1 text-xs text-gray-400">
-                            {record.geofenceViolations?.slice(0, 3).map((v, i) => (
-                              <div key={i}>
-                                {new Date(v.timestamp).toLocaleString()} - {v.distanceFromOffice?.toFixed(0)}m away
+          {/* Professional Violations Tab */}
+          <TabsContent value="violations" className="space-y-6 mt-6">
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader className="pb-4 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-3 text-gray-900">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <span className="text-lg font-semibold">Geofence Violations</span>
+                </CardTitle>
+                <CardDescription className="mt-2 text-gray-600">
+                  Total violations across all users
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  {filteredUsers
+                    .filter(u => (u.geofenceViolations?.length || 0) > 0)
+                    .map((record, idx) => (
+                      <motion.div
+                        key={record._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        whileHover={{ scale: 1.01, x: 4 }}
+                        className="bg-red-50 p-5 rounded-xl border-l-4 border-red-500 shadow-sm hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 flex-1">
+                            <Avatar className="w-12 h-12 ring-2 ring-red-200">
+                              <AvatarImage src={record.user?.avatar} />
+                              <AvatarFallback className="bg-gradient-to-br from-red-500 to-orange-600 text-white font-semibold">
+                                {record.user?.name?.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-gray-900 text-lg mb-1">{record.user?.name}</h4>
+                              <p className="text-sm text-gray-600 mb-3">
+                                <span className="font-semibold text-red-600">{record.geofenceViolations?.length}</span> violation(s) detected
+                              </p>
+                              <div className="space-y-2 text-xs text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
+                                {record.geofenceViolations?.slice(0, 3).map((v, i) => (
+                                  <div key={i} className="flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                      <Clock className="w-3 h-3" />
+                                      {new Date(v.timestamp).toLocaleString()}
+                                    </span>
+                                    <span className="font-mono text-red-600 font-semibold">
+                                      {v.distanceFromOffice?.toFixed(0)}m away
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            </div>
                           </div>
+                          <Badge variant="destructive" className="text-xs font-bold px-3 py-1 flex-shrink-0">Critical</Badge>
                         </div>
-                        <Badge variant="destructive">Critical</Badge>
-                      </div>
-                    </motion.div>
-                  ))}
-                {filteredUsers.filter(u => (u.geofenceViolations?.length || 0) > 0).length === 0 && (
-                  <p className="text-center text-gray-400 py-8">No violations found</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      </motion.div>
+                    ))}
+                  {filteredUsers.filter(u => (u.geofenceViolations?.length || 0) > 0).length === 0 && (
+                    <div className="text-center py-16">
+                      <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-400 opacity-50" />
+                      <p className="text-gray-700 font-medium text-lg mb-2">No violations found</p>
+                      <p className="text-sm text-gray-500">All employees are within geofence boundaries</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-6">
@@ -833,100 +962,183 @@ const LiveAttendanceAdminPanel = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Dialogs */}
-      <Dialog open={showUserDetailsDialog} onOpenChange={setShowUserDetailsDialog}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white">
-          <DialogHeader>
-            <DialogTitle>User Live Tracking Details</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-400">Name</Label>
-                  <p className="font-semibold">{selectedUser.user?.name}</p>
+        {/* Professional Dialogs */}
+        <Dialog open={showUserDetailsDialog} onOpenChange={setShowUserDetailsDialog}>
+          <DialogContent className="bg-white border border-gray-200 shadow-xl max-w-2xl">
+            <DialogHeader className="pb-4 border-b border-gray-200">
+              <DialogTitle className="text-xl flex items-center gap-3 text-gray-900">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Eye className="w-5 h-5 text-blue-600" />
                 </div>
-                <div>
-                  <Label className="text-gray-400">Email</Label>
-                  <p className="font-semibold text-sm truncate">{selectedUser.user?.email}</p>
+                User Live Tracking Details
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-6 pt-4">
+                <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+                  <Avatar className="w-16 h-16 ring-4 ring-blue-100">
+                    <AvatarImage src={selectedUser.user?.avatar} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
+                      {selectedUser.user?.name?.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{selectedUser.user?.name}</h3>
+                    <p className="text-sm text-gray-600">{selectedUser.user?.email}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                    <Label className="text-gray-600 text-xs uppercase tracking-wider font-semibold">Total Locations</Label>
+                    <p className="font-bold text-3xl text-blue-700 mt-2">{selectedUser.locationHistory?.length || 0}</p>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+                    <Label className="text-gray-600 text-xs uppercase tracking-wider font-semibold">Violations</Label>
+                    <p className="font-bold text-3xl text-red-700 mt-2">{selectedUser.geofenceViolations?.length || 0}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <Label className="text-gray-600 text-xs uppercase tracking-wider font-semibold mb-3 block">Tracking Status</Label>
+                  <Badge className={selectedUser.liveTracking?.enabled ? 'bg-green-100 text-green-700 text-sm px-4 py-2 font-semibold' : 'bg-gray-100 text-gray-700 text-sm px-4 py-2 font-semibold'}>
+                    {selectedUser.liveTracking?.enabled ? '🔴 Live Tracking Active' : 'Inactive'}
+                  </Badge>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-400">Total Locations Tracked</Label>
-                  <p className="font-semibold text-2xl">{selectedUser.locationHistory?.length || 0}</p>
+            )}
+            <DialogFooter className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={() => setShowUserDetailsDialog(false)} 
+                variant="outline"
+                className="border-gray-300 hover:bg-gray-50"
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+          <DialogContent className="bg-white border border-gray-200 shadow-xl">
+            <DialogHeader className="pb-4 border-b border-gray-200">
+              <DialogTitle className="text-xl flex items-center gap-3 text-gray-900">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
                 </div>
-                <div>
-                  <Label className="text-gray-400">Geofence Violations</Label>
-                  <p className="font-semibold text-2xl text-red-400">{selectedUser.geofenceViolations?.length || 0}</p>
-                </div>
-              </div>
-              <div>
-                <Label className="text-gray-400">Tracking Status</Label>
-                <Badge className={selectedUser.liveTracking?.enabled ? 'bg-green-500 mt-1' : 'bg-gray-500 mt-1'}>
-                  {selectedUser.liveTracking?.enabled ? '🔴 Live Tracking Active' : 'Inactive'}
-                </Badge>
-              </div>
+                Send Alert to {selectedUser?.user?.name}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-gray-600">
+                Send a real-time alert notification to this employee
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <Textarea
+                placeholder="Enter alert message..."
+                value={alertMessage}
+                onChange={(e) => setAlertMessage(e.target.value)}
+                className="bg-white border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 min-h-[120px]"
+              />
             </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setShowUserDetailsDialog(false)} variant="outline" className="border-white/20">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={() => setShowAlertDialog(false)} 
+                variant="outline"
+                className="border-gray-300 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSendAlert} 
+                className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm hover:shadow-md"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send Alert
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white">
-          <DialogHeader>
-            <DialogTitle>Send Alert to {selectedUser?.user?.name}</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Send a real-time alert to this employee
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Enter alert message..."
-              value={alertMessage}
-              onChange={(e) => setAlertMessage(e.target.value)}
-              className="bg-white/10 border-white/20 text-white"
-            />
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowAlertDialog(false)} variant="outline" className="border-white/20">
-              Cancel
-            </Button>
-            <Button onClick={handleSendAlert} className="bg-blue-600 hover:bg-blue-700">
-              <Send className="w-4 h-4 mr-2" />
-              Send Alert
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showLocationHistoryDialog} onOpenChange={setShowLocationHistoryDialog}>
-        <DialogContent className="bg-slate-900 border-white/20 text-white max-h-96 overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Location History - {selectedUser?.user?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {locationHistory.slice().reverse().map((loc, idx) => (
-              <div key={idx} className="bg-white/5 p-3 rounded-lg text-sm border-l-2 border-blue-500">
-                <p className="font-semibold text-white">#{locationHistory.length - idx}</p>
-                <p className="text-gray-400 text-xs">
-                  {new Date(loc.timestamp).toLocaleString()}
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-gray-300">
-                  <div>📍 Lat: {loc.latitude?.toFixed(6)}, Lng: {loc.longitude?.toFixed(6)}</div>
-                  <div>📏 {loc.distanceFromOffice?.toFixed(0)}m from office</div>
-                  <div>🎯 {loc.insideGeofence ? '✅ Inside' : '❌ Outside'} geofence</div>
+        <Dialog open={showLocationHistoryDialog} onOpenChange={setShowLocationHistoryDialog}>
+          <DialogContent className="bg-white border border-gray-200 shadow-xl max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader className="pb-4 border-b border-gray-200">
+              <DialogTitle className="text-xl flex items-center gap-3 text-gray-900">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MapPin className="w-5 h-5 text-blue-600" />
                 </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+                Location History - {selectedUser?.user?.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 py-4">
+              {locationHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-700 font-medium mb-2">No location history available</p>
+                  <p className="text-sm text-gray-500">Location data will appear here when tracking is active</p>
+                </div>
+              ) : (
+                locationHistory.slice().reverse().map((loc, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-gray-50 p-4 rounded-xl text-sm border-l-4 border-blue-500 hover:bg-blue-50 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-bold text-gray-900 text-base">#{locationHistory.length - idx}</p>
+                      <Badge className={loc.insideGeofence ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                        {loc.insideGeofence ? '✅ Inside' : '❌ Outside'}
+                      </Badge>
+                    </div>
+                    <p className="text-gray-600 text-xs mb-3 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {new Date(loc.timestamp).toLocaleString()}
+                    </p>
+                    <div className="space-y-2 text-xs text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
+                      <div className="flex justify-between">
+                        <span className="font-medium">📍 Coordinates:</span>
+                        <span className="font-mono text-blue-600">
+                          {loc.latitude?.toFixed(6)}, {loc.longitude?.toFixed(6)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">📏 Distance:</span>
+                        <span className="font-mono text-orange-600 font-semibold">
+                          {loc.distanceFromOffice?.toFixed(0)}m from office
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">🎯 Accuracy:</span>
+                        <span className="font-mono text-gray-600">
+                          ±{loc.accuracy?.toFixed(1)}m
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 };

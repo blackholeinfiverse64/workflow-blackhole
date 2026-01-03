@@ -57,22 +57,60 @@ export function OptimizationActions({ tasks, setTasks, insights }) {
       let appliedCount = 0;
 
       for (const insight of insightsData) {
-        for (const action of insight.actions) {
-          const taskTitle = insight.description.match(/Task '([^']+)'/)?.[1];
-          const task = tasks.find((t) => t.title === taskTitle);
+        for (const action of insight.actions || []) {
+          // Extract task title from description - try multiple patterns
+          let taskTitle = insight.description?.match(/Task '([^']+)'/)?.[1] ||
+                          insight.description?.match(/task "([^"]+)"/)?.[1] ||
+                          insight.description?.match(/task ([A-Za-z0-9\s]+)/i)?.[1] ||
+                          insight.title?.match(/Task '([^']+)'/)?.[1];
+          
+          let task = null;
+          if (taskTitle) {
+            task = tasks.find((t) => t.title === taskTitle || t._id === taskTitle);
+          } else if (insight.taskId) {
+            task = tasks.find((t) => t._id === insight.taskId);
+          }
           
           if (task) {
-            if (action.includes("Reassign")) {
+            const actionLower = action.toLowerCase();
+            let updates = {};
+            
+            // Handle "Reschedule due date" action
+            if (actionLower.includes("reschedule") || actionLower.includes("due date")) {
+              if (task.dueDate) {
+                const newDueDate = new Date(task.dueDate);
+                newDueDate.setDate(newDueDate.getDate() + 7);
+                updates.dueDate = newDueDate.toISOString();
+                await api.tasks.updateTask(task._id, updates);
+                appliedCount++;
+              }
+            }
+            // Handle "Prioritize task completion" or "Prioritize" action
+            else if (actionLower.includes("prioritize") || actionLower.includes("priority")) {
+              updates.priority = "High";
+              await api.tasks.updateTask(task._id, updates);
+              appliedCount++;
+            }
+            // Handle "Investigate reason for delay" action
+            else if (actionLower.includes("investigate") || actionLower.includes("delay")) {
+              updates.status = task.status || "In Progress";
+              updates.notes = task.notes 
+                ? `${task.notes}\n\n[AI Action] Investigation requested: ${new Date().toLocaleString()}`
+                : `[AI Action] Investigation requested: ${new Date().toLocaleString()}`;
+              await api.tasks.updateTask(task._id, updates);
+              appliedCount++;
+            }
+            // Legacy handlers
+            else if (actionLower.includes("reassign")) {
               await api.tasks.updateTask(task._id, { assignee: null });
               appliedCount++;
-            } else if (action.includes("Adjust deadlines") || action.includes("Extend deadlines")) {
-              const newDueDate = new Date(task.dueDate);
-              newDueDate.setDate(newDueDate.getDate() + 7);
-              await api.tasks.updateTask(task._id, { dueDate: newDueDate.toISOString() });
-              appliedCount++;
-            } else if (action.includes("Prioritize")) {
-              await api.tasks.updateTask(task._id, { priority: "High" });
-              appliedCount++;
+            } else if (actionLower.includes("adjust deadlines") || actionLower.includes("extend deadlines")) {
+              if (task.dueDate) {
+                const newDueDate = new Date(task.dueDate);
+                newDueDate.setDate(newDueDate.getDate() + 7);
+                await api.tasks.updateTask(task._id, { dueDate: newDueDate.toISOString() });
+                appliedCount++;
+              }
             }
           }
         }
@@ -86,6 +124,7 @@ export function OptimizationActions({ tasks, setTasks, insights }) {
         description: `Applied ${appliedCount} AI recommendations`,
       });
     } catch (err) {
+      console.error("Error applying recommendations:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to apply recommendations",

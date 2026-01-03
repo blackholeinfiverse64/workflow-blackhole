@@ -43,39 +43,141 @@ export default function Optimization() {
 
   const handleApplyAction = async (action, insight) => {
     try {
-      const taskTitle = insight.description.match(/Task '([^']+)'/)?.[1];
-      if (!taskTitle) {
-        throw new Error("Task not found in insight description");
+      console.log("🔵 Button clicked:", { action, insight });
+      
+      // Extract task title from description - try multiple patterns
+      let taskTitle = insight.description?.match(/Task '([^']+)'/)?.[1] ||
+                      insight.description?.match(/task "([^"]+)"/)?.[1] ||
+                      insight.description?.match(/task ([A-Za-z0-9\s]+)/i)?.[1] ||
+                      insight.title?.match(/Task '([^']+)'/)?.[1];
+      
+      console.log("🔍 Extracted task title:", taskTitle);
+      console.log("📋 Available tasks:", tasks.map(t => ({ id: t._id, title: t.title })));
+      
+      let task = null;
+      
+      // Try to find task by ID first (if insight has taskId)
+      if (insight.taskId) {
+        task = tasks.find((t) => t._id === insight.taskId || t._id.toString() === insight.taskId.toString());
+        console.log("🔎 Found task by ID:", task ? task.title : "Not found");
       }
-
-      const task = tasks.find((t) => t.title === taskTitle);
+      
+      // If not found by ID, try by title
+      if (!task && taskTitle) {
+        task = tasks.find((t) => 
+          t.title === taskTitle || 
+          t.title?.toLowerCase() === taskTitle?.toLowerCase() ||
+          t._id === taskTitle ||
+          t._id.toString() === taskTitle
+        );
+        console.log("🔎 Found task by title:", task ? task.title : "Not found");
+      }
+      
+      // If still not found, try to fetch fresh tasks
       if (!task) {
-        throw new Error("Task not found");
+        console.log("🔄 Task not found in local state, fetching fresh tasks...");
+        const freshTasks = await api.tasks.getTasks();
+        task = freshTasks.find((t) => 
+          (taskTitle && (t.title === taskTitle || t.title?.toLowerCase() === taskTitle?.toLowerCase())) ||
+          (insight.taskId && (t._id === insight.taskId || t._id.toString() === insight.taskId.toString()))
+        );
+        if (task) {
+          console.log("✅ Found task in fresh fetch:", task.title);
+        }
+      }
+      
+      if (!task) {
+        throw new Error(`Task not found. Searched for: "${taskTitle || insight.taskId || 'unknown'}"`);
       }
 
-      let updates = {};
-      if (action.includes("Reassign")) {
-        updates.assignee = null;
-      } else if (action.includes("Adjust deadlines") || action.includes("Extend deadlines")) {
-        const newDueDate = new Date(task.dueDate);
-        newDueDate.setDate(newDueDate.getDate() + 7);
-        updates.dueDate = newDueDate.toISOString();
-      } else if (action.includes("Prioritize")) {
-        updates.priority = "High";
-      }
-
-      await api.tasks.updateTask(task._id, updates);
-      toast({
-        title: "Success",
-        description: `Action "${action}" applied to task "${taskTitle}"`,
-      });
+      console.log("✅ Applying action to task:", task.title);
+      await applyActionToTask(action, task);
     } catch (err) {
+      console.error("❌ Error applying action:", err);
       toast({
         title: "Error",
         description: err.message || `Failed to apply action "${action}"`,
         variant: "destructive",
       });
     }
+  };
+
+  const applyActionToTask = async (action, task) => {
+    console.log("⚙️ Applying action to task:", { action, taskId: task._id, taskTitle: task.title });
+    
+    let updates = {};
+    const actionLower = action.toLowerCase();
+    
+    // Handle "Reschedule due date" action
+    if (actionLower.includes("reschedule") || (actionLower.includes("due") && actionLower.includes("date"))) {
+      if (!task.dueDate) {
+        // If no due date, set one 7 days from now
+        const newDueDate = new Date();
+        newDueDate.setDate(newDueDate.getDate() + 7);
+        updates.dueDate = newDueDate.toISOString();
+        console.log("📅 Setting new due date (7 days from now):", updates.dueDate);
+      } else {
+        const newDueDate = new Date(task.dueDate);
+        newDueDate.setDate(newDueDate.getDate() + 7); // Extend by 7 days
+        updates.dueDate = newDueDate.toISOString();
+        console.log("📅 Rescheduling due date (+7 days):", updates.dueDate);
+      }
+    }
+    // Handle "Prioritize task completion" or "Prioritize" action
+    else if (actionLower.includes("prioritize") || actionLower.includes("priority")) {
+      updates.priority = "High";
+      console.log("⭐ Setting priority to High");
+    }
+    // Handle "Investigate reason for delay" action
+    else if (actionLower.includes("investigate") || actionLower.includes("delay")) {
+      // Add a note or comment about investigation
+      updates.status = task.status || "In Progress";
+      const investigationNote = `[AI Action] Investigation requested: ${new Date().toLocaleString()}`;
+      updates.notes = task.notes 
+        ? `${task.notes}\n\n${investigationNote}`
+        : investigationNote;
+      console.log("🔍 Adding investigation note");
+    }
+    // Legacy handlers for backward compatibility
+    else if (actionLower.includes("reassign")) {
+      updates.assignee = null;
+      console.log("👤 Reassigning task");
+    } else if (actionLower.includes("adjust deadlines") || actionLower.includes("extend deadlines")) {
+      if (task.dueDate) {
+        const newDueDate = new Date(task.dueDate);
+        newDueDate.setDate(newDueDate.getDate() + 7);
+        updates.dueDate = newDueDate.toISOString();
+        console.log("📅 Extending deadline");
+      }
+    } else {
+      throw new Error(`Unknown action: "${action}"`);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new Error("No updates to apply");
+    }
+
+    console.log("📤 Sending update request:", { taskId: task._id, taskIdType: typeof task._id, updates });
+    
+    // Ensure task ID is a string
+    const taskId = task._id?.toString() || task._id;
+    
+    if (!taskId) {
+      throw new Error("Task ID is missing");
+    }
+    
+    // Update the task
+    const updatedTask = await api.tasks.updateTask(taskId, updates);
+    console.log("✅ Task updated successfully:", updatedTask);
+    
+    // Refresh tasks list
+    const updatedTasks = await api.tasks.getTasks();
+    setTasks(updatedTasks);
+
+    toast({
+      title: "Success",
+      description: `Action "${action}" applied to task "${task.title || task._id}"`,
+    });
   };
 
   const renderInsightsList = (insightsList) => {
