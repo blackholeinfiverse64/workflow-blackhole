@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calculator, CalendarIcon, X, DollarSign, Users } from 'lucide-react';
+import { Calculator, CalendarIcon, X, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -343,7 +343,7 @@ const SalaryCalculation = ({ userId }) => {
                             <div className="flex items-center gap-3">
                               <span className="font-medium min-w-[140px]">{userData.name}</span>
                               <div className="relative flex-1 max-w-[140px]">
-                                <DollarSign className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
+                                <span className="absolute left-2 top-2.5 text-muted-foreground font-medium">₹</span>
                                 <Input
                                   type="number"
                                   step="0.01"
