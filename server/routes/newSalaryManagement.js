@@ -152,20 +152,37 @@ router.get('/hours/all', auth, adminAuth, async (req, res) => {
     
     // Create date range query - ensure we're using Date objects
     // EXCLUDE auto-ended records (autoEnded === true) unless validated
+    // Include: (autoEnded === false) OR (autoEnded === true AND spamStatus === 'Valid')
+    // Exclude: spamStatus === 'Spam'
+    // Also include records with startDayTime/endDayTime even if totalHoursWorked is 0 (we'll calculate)
     const dailyAttendanceQuery = {
       date: {
         $gte: new Date(startDate),
         $lte: new Date(endDate)
       },
       user: { $in: userIds },
-      totalHoursWorked: { $gt: 0 },
-      // Only include valid records (not auto-ended OR auto-ended but validated)
+      // Include records with hours > 0 OR records with start/end times (we'll calculate hours)
       $or: [
-        { autoEnded: false }, // Normal records
-        { autoEnded: true, spamStatus: 'Valid' } // Auto-ended but validated as valid
+        { totalHoursWorked: { $gt: 0 } },
+        { startDayTime: { $exists: true }, endDayTime: { $exists: true } },
+        { biometricTimeIn: { $exists: true }, biometricTimeOut: { $exists: true } }
       ],
-      // Exclude spam records
-      spamStatus: { $ne: 'Spam' }
+      // Only include valid records (not auto-ended OR auto-ended but validated)
+      $and: [
+        {
+          $or: [
+            { autoEnded: { $exists: false } }, // Old records without autoEnded field
+            { autoEnded: false }, // Normal records (not auto-ended)
+            { autoEnded: true, spamStatus: 'Valid' } // Auto-ended but validated as valid
+          ]
+        },
+        {
+          $or: [
+            { spamStatus: { $exists: false } }, // Old records without spamStatus
+            { spamStatus: { $ne: 'Spam' } } // Not marked as spam
+          ]
+        }
+      ]
     };
     
     console.log(`   Query filter:`, {
@@ -178,7 +195,7 @@ router.get('/hours/all', auth, adminAuth, async (req, res) => {
     });
     
     const dailyAttendanceRecords = await DailyAttendance.find(dailyAttendanceQuery)
-    .select('user date totalHoursWorked')
+    .select('user date totalHoursWorked startDayTime endDayTime biometricTimeIn biometricTimeOut breakTime')
     .lean();
     
     console.log(`✅ Found ${dailyAttendanceRecords.length} DailyAttendance records with hours > 0`);
@@ -348,7 +365,32 @@ router.get('/hours/all', auth, adminAuth, async (req, res) => {
       }
       
       const userId = record.user.toString ? record.user.toString() : record.user;
-      const hours = record.totalHoursWorked || 0;
+      
+      // Calculate hours: use totalHoursWorked if available, otherwise calculate from times
+      let hours = record.totalHoursWorked || 0;
+      
+      // If hours is 0 but we have start/end times, calculate hours
+      if (hours === 0 || !hours) {
+        let startTime = null;
+        let endTime = null;
+        
+        // Prioritize biometric data if available
+        if (record.biometricTimeIn && record.biometricTimeOut) {
+          startTime = new Date(record.biometricTimeIn);
+          endTime = new Date(record.biometricTimeOut);
+        } else if (record.startDayTime && record.endDayTime) {
+          startTime = new Date(record.startDayTime);
+          endTime = new Date(record.endDayTime);
+        }
+        
+        if (startTime && endTime) {
+          const timeDiff = endTime.getTime() - startTime.getTime();
+          const breakMinutes = record.breakTime || 0;
+          hours = Math.max(0, (timeDiff / (1000 * 60 * 60)) - (breakMinutes / 60));
+          hours = Math.round(hours * 100) / 100; // Round to 2 decimal places
+        }
+      }
+      
       const dateStr = getDateString(record.date);
       
       // Double-check date is in range (even though query should have filtered it)
@@ -367,10 +409,14 @@ router.get('/hours/all', auth, adminAuth, async (req, res) => {
           userData.totalDays += 1;
           userDates.add(dateStr);
           recordsProcessed++;
+          console.log(`   ✅ Added ${hours} hrs for user ${userId} on ${dateStr}`);
         } else {
           recordsSkipped++;
         }
       } else {
+        if (hours === 0) {
+          console.log(`   ⚠️ Skipping record with 0 hours for user ${userId} on ${dateStr}`);
+        }
         recordsSkipped++;
       }
     });
@@ -1214,6 +1260,8 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
   try {
     const { recordId, action, reason } = req.body;
 
+    console.log('📝 Validate spam record request:', { recordId, action, reason, userId: req.user.id });
+
     if (!recordId || !action) {
       return res.status(400).json({
         success: false,
@@ -1228,9 +1276,30 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
       });
     }
 
+    // Validate and convert recordId format
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(recordId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid recordId format'
+      });
+    }
+
+    const recordObjectId = new mongoose.Types.ObjectId(recordId);
+
     // Find the attendance record
-    const record = await DailyAttendance.findById(recordId)
-      .populate('user', 'name email');
+    let record;
+    try {
+      record = await DailyAttendance.findById(recordObjectId)
+        .populate('user', 'name email');
+    } catch (findError) {
+      console.error('Error finding record:', findError);
+      return res.status(500).json({
+        success: false,
+        error: 'Error finding attendance record',
+        details: findError.message
+      });
+    }
 
     if (!record) {
       return res.status(404).json({
@@ -1238,6 +1307,13 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
         error: 'Attendance record not found'
       });
     }
+
+    console.log('Found record:', {
+      _id: record._id,
+      autoEnded: record.autoEnded,
+      spamStatus: record.spamStatus,
+      userId: record.user?._id || record.user
+    });
 
     if (!record.autoEnded) {
       return res.status(400).json({
@@ -1279,27 +1355,41 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
         updateData.spamReason = reason || 'Marked as spam by admin';
       }
 
+      console.log('Updating record with:', updateData);
+
       const updateResult = await DailyAttendance.updateOne(
-        { _id: recordId },
+        { _id: recordObjectId },
         { $set: updateData }
       );
+
+      console.log('Update result:', {
+        matchedCount: updateResult.matchedCount,
+        modifiedCount: updateResult.modifiedCount,
+        acknowledged: updateResult.acknowledged
+      });
 
       if (updateResult.matchedCount === 0) {
         throw new Error('Record not found for update');
       }
 
-      console.log(`Successfully updated record ${recordId} with spamStatus: ${updateData.spamStatus}`);
+      if (updateResult.modifiedCount === 0) {
+        console.warn('⚠️ Record matched but not modified. It may already have the same spamStatus.');
+      }
+
+      console.log(`✅ Successfully updated record ${recordId} with spamStatus: ${updateData.spamStatus}`);
       
       // Update the record object for response
       record.spamStatus = updateData.spamStatus;
       record.spamReason = updateData.spamReason;
     } catch (saveError) {
-      console.error('Error saving record:', saveError);
+      console.error('❌ Error saving record:', saveError);
       console.error('Save error details:', {
         message: saveError.message,
         name: saveError.name,
+        code: saveError.code,
         stack: saveError.stack
       });
+      // Re-throw to be caught by outer catch
       throw new Error(`Failed to save record: ${saveError.message}`);
     }
 
@@ -1330,17 +1420,38 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
       }
     }
 
-    // Get user info from the populated record
-    const userId = record.user?._id || record.user;
-    const userName = record.user?.name || 'Unknown';
+    // Get user info from the populated record (handle both populated and non-populated cases)
+    let userId, userName;
+    if (record.user) {
+      if (typeof record.user === 'object' && record.user._id) {
+        // User is populated
+        userId = record.user._id;
+        userName = record.user.name || 'Unknown';
+      } else {
+        // User is just an ObjectId
+        userId = record.user;
+        userName = 'Unknown';
+      }
+    } else {
+      // No user field - try to get from record directly
+      userId = record.user || null;
+      userName = 'Unknown';
+    }
+
+    console.log('Response data:', {
+      recordId: record._id,
+      userId: userId,
+      userName: userName,
+      spamStatus: record.spamStatus
+    });
 
     res.json({
       success: true,
       message: `Attendance record ${action === 'validate' ? 'validated' : 'marked as spam'} successfully. ${action === 'validate' ? 'Hours will now be included in salary calculation.' : 'Record removed from spam list.'}`,
       data: {
         record: {
-          _id: record._id,
-          userId: userId,
+          _id: record._id.toString(),
+          userId: userId ? userId.toString() : null,
           userName: userName,
           date: record.date,
           spamStatus: record.spamStatus,
@@ -1350,14 +1461,18 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error validating spam record:', error);
+    console.error('❌ Error validating spam record:', error);
     console.error('Error stack:', error.stack);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to validate spam record',
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    
+    // Only send response if not already sent
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to validate spam record',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
   }
 });
 
@@ -1370,6 +1485,8 @@ router.post('/spam-users/validate', auth, adminAuth, async (req, res) => {
 router.post('/spam-users/bulk-validate', auth, adminAuth, async (req, res) => {
   try {
     const { recordIds, action, reason } = req.body;
+
+    console.log('📝 Bulk validate spam records request:', { recordIdsCount: recordIds?.length, action, userId: req.user.id });
 
     if (!recordIds || !Array.isArray(recordIds) || recordIds.length === 0) {
       return res.status(400).json({
@@ -1385,6 +1502,24 @@ router.post('/spam-users/bulk-validate', auth, adminAuth, async (req, res) => {
       });
     }
 
+    // Validate all recordIds are valid ObjectIds
+    const mongoose = require('mongoose');
+    const validRecordIds = recordIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    
+    if (validRecordIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid recordIds found'
+      });
+    }
+
+    if (validRecordIds.length !== recordIds.length) {
+      console.warn(`⚠️ Some invalid recordIds filtered out: ${recordIds.length - validRecordIds.length} invalid`);
+    }
+
+    // Convert to ObjectIds
+    const recordObjectIds = validRecordIds.map(id => new mongoose.Types.ObjectId(id));
+
     // Update all records
     const updateData = action === 'validate' ? {
       spamStatus: 'Valid',
@@ -1398,13 +1533,21 @@ router.post('/spam-users/bulk-validate', auth, adminAuth, async (req, res) => {
       spamReason: reason || 'Bulk marked as spam by admin'
     };
 
+    console.log('Bulk updating records with:', { count: recordObjectIds.length, updateData });
+
     const result = await DailyAttendance.updateMany(
       {
-        _id: { $in: recordIds },
+        _id: { $in: recordObjectIds },
         autoEnded: true
       },
-      updateData
+      { $set: updateData }
     );
+
+    console.log('Bulk update result:', {
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+      acknowledged: result.acknowledged
+    });
 
     // Create notifications for spam records
     if (action === 'spam' && result.modifiedCount > 0) {
