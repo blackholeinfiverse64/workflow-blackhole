@@ -27,7 +27,8 @@ import {
   UserCheck,
   UserX,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Download
 } from "lucide-react"
 import { api } from "../../lib/api"
 import { useToast } from "../../hooks/use-toast"
@@ -197,6 +198,297 @@ export function AdminReportDialog({ open, onOpenChange }) {
       default:
         return format(selectedDate, "MMMM d, yyyy")
     }
+  }
+
+  // Download report as CSV
+  const downloadCSV = () => {
+    if (!reportData) return
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+    
+    // Dashboard Stats
+    csvContent += "ADMIN DASHBOARD REPORT\n"
+    csvContent += `Report Date,${getFilterLabel()}\n`
+    csvContent += `Generated At,${format(new Date(), "PPpp")}\n\n`
+    
+    csvContent += "DASHBOARD STATISTICS\n"
+    csvContent += "Metric,Value\n"
+    csvContent += `Total Tasks,${reportData.dashboardStats?.totalTasks || 0}\n`
+    csvContent += `Completed Tasks,${reportData.dashboardStats?.completedTasks || 0}\n`
+    csvContent += `In Progress Tasks,${reportData.dashboardStats?.inProgressTasks || 0}\n`
+    csvContent += `Pending Tasks,${reportData.dashboardStats?.pendingTasks || 0}\n`
+    csvContent += `Total Users,${reportData.dashboardStats?.totalUsers || 0}\n`
+    csvContent += `Total Departments,${reportData.dashboardStats?.totalDepartments || 0}\n\n`
+    
+    // Department Task Counts
+    csvContent += "DEPARTMENT-WISE TASK COUNT\n"
+    csvContent += "Department,Total Tasks,Completed,In Progress,Pending\n"
+    reportData.departmentTaskCounts?.forEach(dept => {
+      csvContent += `${dept.name},${dept.totalTasks},${dept.completedTasks},${dept.inProgressTasks},${dept.pendingTasks}\n`
+    })
+    csvContent += "\n"
+    
+    // Present Users (Users with Start Day)
+    csvContent += "PRESENT USERS\n"
+    csvContent += "Name,Email,Start Time,End Time,Hours Worked,Work Location\n"
+    reportData.usersWithStartDay?.forEach(user => {
+      const hours = formatHours(getTotalHours(user))
+      csvContent += `${user.userName},${user.userEmail},${user.startDayTime ? formatTime(user.startDayTime) : "N/A"},${user.endDayTime ? formatTime(user.endDayTime) : "Active"},${hours},${user.workLocationType || "N/A"}\n`
+    })
+    csvContent += "\n"
+    
+    // Absent Users
+    const presentUserIds = new Set(reportData.usersWithStartDay?.map(u => u.userId) || [])
+    const absentUsers = reportData.usersWithAims?.filter(u => !presentUserIds.has(u.userId)) || []
+    csvContent += "ABSENT USERS\n"
+    csvContent += "Name,Email,Role,Department\n"
+    absentUsers.forEach(user => {
+      csvContent += `${user.name},${user.email},${user.role},${user.department}\n`
+    })
+    csvContent += "\n"
+    
+    // Zero Task Employees
+    csvContent += "EMPLOYEES WITH ZERO TASKS\n"
+    csvContent += "Name,Email,Role,Department\n"
+    reportData.zeroTaskEmployees?.forEach(emp => {
+      csvContent += `${emp.name},${emp.email},${emp.role},${emp.department}\n`
+    })
+    csvContent += "\n"
+    
+    // Progress Updates
+    csvContent += "PROGRESS UPDATES\n"
+    csvContent += "User,Email,Task,Progress %,Notes,Time\n"
+    reportData.userProgressUpdates?.forEach(progress => {
+      const notes = progress.notes ? progress.notes.replace(/,/g, ";").replace(/\n/g, " ") : ""
+      csvContent += `${progress.userName},${progress.userEmail},${progress.taskTitle},${progress.progressPercentage}%,"${notes}",${format(new Date(progress.createdAt), "h:mm a")}\n`
+    })
+    
+    // Create download link
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `admin_report_${format(selectedDate, "yyyy-MM-dd")}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast({
+      title: "Report Downloaded",
+      description: "CSV report has been downloaded successfully",
+    })
+  }
+
+  // Download report as PDF (using print functionality)
+  const downloadPDF = () => {
+    if (!reportData) return
+
+    // Create a printable version of the report
+    const printWindow = window.open("", "_blank")
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Admin Report - ${getFilterLabel()}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          h1 { color: #1a1a1a; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+          h2 { color: #374151; margin-top: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+          th { background: #f3f4f6; font-weight: 600; }
+          tr:nth-child(even) { background: #f9fafb; }
+          .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+          .stat-card { background: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; }
+          .stat-value { font-size: 24px; font-weight: bold; color: #3b82f6; }
+          .stat-label { color: #6b7280; font-size: 14px; }
+          .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+          .badge-green { background: #dcfce7; color: #166534; }
+          .badge-red { background: #fee2e2; color: #991b1b; }
+          .badge-orange { background: #ffedd5; color: #9a3412; }
+          .badge-blue { background: #dbeafe; color: #1e40af; }
+          .meta { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+          @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        </style>
+      </head>
+      <body>
+        <h1>Admin Dashboard Report</h1>
+        <p class="meta">Report Date: ${getFilterLabel()} | Generated: ${format(new Date(), "PPpp")}</p>
+        
+        <h2>Dashboard Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">${reportData.dashboardStats?.totalTasks || 0}</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: #22c55e;">${reportData.dashboardStats?.completedTasks || 0}</div>
+            <div class="stat-label">Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: #f97316;">${reportData.dashboardStats?.inProgressTasks || 0}</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: #ef4444;">${reportData.dashboardStats?.pendingTasks || 0}</div>
+            <div class="stat-label">Pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: #8b5cf6;">${reportData.dashboardStats?.totalUsers || 0}</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color: #6366f1;">${reportData.dashboardStats?.totalDepartments || 0}</div>
+            <div class="stat-label">Departments</div>
+          </div>
+        </div>
+        
+        <h2>Department-wise Task Count</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Total Tasks</th>
+              <th>Completed</th>
+              <th>In Progress</th>
+              <th>Pending</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.departmentTaskCounts?.map(dept => `
+              <tr>
+                <td>${dept.name}</td>
+                <td>${dept.totalTasks}</td>
+                <td><span class="badge badge-green">${dept.completedTasks}</span></td>
+                <td><span class="badge badge-orange">${dept.inProgressTasks}</span></td>
+                <td><span class="badge badge-red">${dept.pendingTasks}</span></td>
+              </tr>
+            `).join("") || ""}
+          </tbody>
+        </table>
+        
+        <h2>Present Users (${reportData.usersWithStartDay?.length || 0})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Hours Worked</th>
+              <th>Work Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.usersWithStartDay?.map(user => `
+              <tr>
+                <td>${user.userName}</td>
+                <td>${user.userEmail}</td>
+                <td>${user.startDayTime ? formatTime(user.startDayTime) : "N/A"}</td>
+                <td>${user.endDayTime ? formatTime(user.endDayTime) : "Active"}</td>
+                <td>${formatHours(getTotalHours(user))}</td>
+                <td><span class="badge badge-blue">${user.workLocationType === "Home" || user.workLocationType === "Remote" ? "WFH" : "Office"}</span></td>
+              </tr>
+            `).join("") || "<tr><td colspan='6'>No users present</td></tr>"}
+          </tbody>
+        </table>
+        
+        <h2>Absent Users (${((reportData.dashboardStats?.totalUsers || 0) - (reportData.usersWithStartDay?.length || 0))})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Department</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(() => {
+              const presentIds = new Set(reportData.usersWithStartDay?.map(u => u.userId) || [])
+              const absent = reportData.usersWithAims?.filter(u => !presentIds.has(u.userId)) || []
+              return absent.length > 0 
+                ? absent.map(user => `
+                    <tr>
+                      <td>${user.name}</td>
+                      <td>${user.email}</td>
+                      <td>${user.role}</td>
+                      <td>${user.department}</td>
+                    </tr>
+                  `).join("")
+                : "<tr><td colspan='4'>All users present</td></tr>"
+            })()}
+          </tbody>
+        </table>
+        
+        <h2>Employees with Zero Tasks (${reportData.zeroTaskEmployees?.length || 0})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Department</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.zeroTaskEmployees?.length > 0 
+              ? reportData.zeroTaskEmployees.map(emp => `
+                  <tr>
+                    <td>${emp.name}</td>
+                    <td>${emp.email}</td>
+                    <td>${emp.role}</td>
+                    <td>${emp.department}</td>
+                  </tr>
+                `).join("")
+              : "<tr><td colspan='4'>All employees have tasks</td></tr>"
+            }
+          </tbody>
+        </table>
+        
+        <h2>Progress Updates (${reportData.userProgressUpdates?.length || 0})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Task</th>
+              <th>Progress</th>
+              <th>Notes</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.userProgressUpdates?.length > 0
+              ? reportData.userProgressUpdates.map(progress => `
+                  <tr>
+                    <td>${progress.userName}</td>
+                    <td>${progress.taskTitle}</td>
+                    <td>${progress.progressPercentage}%</td>
+                    <td>${progress.notes || "-"}</td>
+                    <td>${format(new Date(progress.createdAt), "h:mm a")}</td>
+                  </tr>
+                `).join("")
+              : "<tr><td colspan='5'>No progress updates</td></tr>"
+            }
+          </tbody>
+        </table>
+        
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `
+    
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+    
+    toast({
+      title: "PDF Report",
+      description: "Print dialog opened. Save as PDF to download.",
+    })
   }
 
   return (
@@ -1055,27 +1347,51 @@ export function AdminReportDialog({ open, onOpenChange }) {
               WebkitBackdropFilter: 'blur(20px)',
             }}
           >
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              className="bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
-            >
-              Close
-            </Button>
-            <Button 
-              onClick={fetchReport} 
-              disabled={isLoading}
-              className="bg-gradient-to-br from-primary to-accent hover:opacity-90 text-white border-none shadow-lg"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Refreshing...
-                </>
-              ) : (
-                "Refresh Data"
-              )}
-            </Button>
+            <div className="flex w-full justify-between items-center">
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={downloadCSV}
+                  disabled={!reportData || isLoading}
+                  className="bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30 hover:text-green-300"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download CSV
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={downloadPDF}
+                  disabled={!reportData || isLoading}
+                  className="bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  className="bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={fetchReport} 
+                  disabled={isLoading}
+                  className="bg-gradient-to-br from-primary to-accent hover:opacity-90 text-white border-none shadow-lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    "Refresh Data"
+                  )}
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </div>
       </DialogContent>
