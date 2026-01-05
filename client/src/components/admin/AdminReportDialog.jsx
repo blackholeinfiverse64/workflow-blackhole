@@ -685,6 +685,7 @@ export function AdminReportDialog({ open, onOpenChange }) {
                                   <TableHead className="text-white font-semibold">Name</TableHead>
                                   <TableHead className="text-white font-semibold">Email</TableHead>
                                   <TableHead className="text-white font-semibold">Start Time</TableHead>
+                                  <TableHead className="text-white font-semibold">WFH/Office</TableHead>
                                   <TableHead className="text-white font-semibold">Status</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -704,6 +705,22 @@ export function AdminReportDialog({ open, onOpenChange }) {
                                         <Clock className="h-3 w-3" />
                                         {user.startDayTime ? formatTime(user.startDayTime) : "N/A"}
                                       </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge
+                                        className={
+                                          user.workLocationType === "Home" || user.workLocationType === "Remote"
+                                            ? "text-blue-400 border-blue-500/30"
+                                            : "text-purple-400 border-purple-500/30"
+                                        }
+                                        style={{
+                                          background: user.workLocationType === "Home" || user.workLocationType === "Remote"
+                                            ? 'rgba(59, 130, 246, 0.15)'
+                                            : 'rgba(168, 85, 247, 0.15)'
+                                        }}
+                                      >
+                                        {user.workLocationType === "Home" || user.workLocationType === "Remote" ? "WFH" : "Office"}
+                                      </Badge>
                                     </TableCell>
                                     <TableCell>
                                       <Badge
