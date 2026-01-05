@@ -106,10 +106,10 @@ export function OptimizationActions({ tasks, setTasks, insights }) {
               appliedCount++;
             } else if (actionLower.includes("adjust deadlines") || actionLower.includes("extend deadlines")) {
               if (task.dueDate) {
-                const newDueDate = new Date(task.dueDate);
-                newDueDate.setDate(newDueDate.getDate() + 7);
-                await api.tasks.updateTask(task._id, { dueDate: newDueDate.toISOString() });
-                appliedCount++;
+              const newDueDate = new Date(task.dueDate);
+              newDueDate.setDate(newDueDate.getDate() + 7);
+              await api.tasks.updateTask(task._id, { dueDate: newDueDate.toISOString() });
+              appliedCount++;
               }
             }
           }

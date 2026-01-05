@@ -22,25 +22,31 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle,
-  Calendar,
+  Calendar as CalendarIcon,
   TrendingUp,
   UserCheck,
-  UserX
+  UserX,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { api } from "../../lib/api"
 import { useToast } from "../../hooks/use-toast"
-import { format } from "date-fns"
+import { format, addDays, subDays } from "date-fns"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { CreateTaskDialog } from "../tasks/create-task-dialog"
+import { Calendar } from "../ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 
 export function AdminReportDialog({ open, onOpenChange }) {
   const { toast } = useToast()
-  const [dateFilter, setDateFilter] = useState("today")
+  const [dateFilter, setDateFilter] = useState("custom")
+  const [selectedDate, setSelectedDate] = useState(new Date())
   const [reportData, setReportData] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
   const getDateRange = () => {
     const today = new Date()
@@ -59,8 +65,46 @@ export function AdminReportDialog({ open, onOpenChange }) {
         return format(weekStart, "yyyy-MM-dd")
       case "lifetime":
         return null // No date filter for lifetime
+      case "custom":
+        return format(selectedDate, "yyyy-MM-dd")
       default:
         return format(today, "yyyy-MM-dd")
+    }
+  }
+
+  // Navigate to previous date
+  const handlePreviousDate = () => {
+    setSelectedDate(prev => subDays(prev, 1))
+    setDateFilter("custom")
+  }
+
+  // Navigate to next date
+  const handleNextDate = () => {
+    const tomorrow = addDays(selectedDate, 1)
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (tomorrow <= today) {
+      setSelectedDate(tomorrow)
+      setDateFilter("custom")
+    }
+  }
+
+  // Handle date selection from calendar
+  const handleDateSelect = (date) => {
+    if (date) {
+      setSelectedDate(date)
+      setDateFilter("custom")
+      setIsCalendarOpen(false)
+    }
+  }
+
+  // Handle quick filter selection
+  const handleQuickFilter = (filter) => {
+    setDateFilter(filter)
+    if (filter === "today") {
+      setSelectedDate(new Date())
+    } else if (filter === "yesterday") {
+      setSelectedDate(subDays(new Date(), 1))
     }
   }
 
@@ -93,7 +137,7 @@ export function AdminReportDialog({ open, onOpenChange }) {
       fetchReport()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, dateFilter])
+  }, [open, dateFilter, selectedDate])
 
   // Update current time every second for real-time hours calculation
   useEffect(() => {
@@ -127,7 +171,9 @@ export function AdminReportDialog({ open, onOpenChange }) {
   // Get total hours - real-time for today if day is active, otherwise overall
   const getTotalHours = (user) => {
     // Only show real-time for "today" filter and if day hasn't ended
-    if (dateFilter === "today" && !user.endDayTime) {
+    const today = new Date()
+    const isToday = format(selectedDate, "yyyy-MM-dd") === format(today, "yyyy-MM-dd")
+    if (isToday && !user.endDayTime) {
       return calculateRealTimeHours(user.startDayTime)
     }
     // Otherwise show the stored total hours
@@ -146,8 +192,10 @@ export function AdminReportDialog({ open, onOpenChange }) {
         return "This Week"
       case "lifetime":
         return "All Time"
+      case "custom":
+        return format(selectedDate, "MMMM d, yyyy")
       default:
-        return format(new Date(), "MMMM d, yyyy")
+        return format(selectedDate, "MMMM d, yyyy")
     }
   }
 
@@ -183,73 +231,71 @@ export function AdminReportDialog({ open, onOpenChange }) {
                 </div>
               </div>
               
-              {/* Filter Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="flex flex-wrap items-center gap-2">
+              {/* Date Navigation & Filter Buttons */}
+              <div className="flex flex-col gap-3 p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                {/* Date Picker with Navigation */}
+                <div className="flex items-center justify-center gap-3">
                   <Button
-                    variant={dateFilter === "today" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setDateFilter("today")}
-                    className={dateFilter === "today" 
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/30 border-none font-medium px-4 py-2 transition-all duration-200" 
-                      : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200"
-                    }
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousDate}
+                    className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all duration-200"
                   >
-                    Today
+                    <ChevronLeft className="h-5 w-5" />
                   </Button>
+                  
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-64 justify-center bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-500/30 hover:border-blue-500/50 text-white font-semibold text-lg transition-all duration-200"
+                      >
+                        <CalendarIcon className="mr-3 h-5 w-5" />
+                        {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-gray-900 border-gray-700" align="center">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className="rounded-md bg-gray-900 text-white"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  
                   <Button
-                    variant={dateFilter === "yesterday" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setDateFilter("yesterday")}
-                    className={dateFilter === "yesterday" 
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/30 border-none font-medium px-4 py-2 transition-all duration-200" 
-                      : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200"
-                    }
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextDate}
+                    disabled={format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")}
+                    className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    Yesterday
+                    <ChevronRight className="h-5 w-5" />
                   </Button>
+                  
                   <Button
-                    variant={dateFilter === "weekly" ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => setDateFilter("weekly")}
-                    className={dateFilter === "weekly" 
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/30 border-none font-medium px-4 py-2 transition-all duration-200" 
-                      : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200"
-                    }
+                    onClick={fetchReport}
+                    disabled={isLoading}
+                    className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Weekly
-                  </Button>
-                  <Button
-                    variant={dateFilter === "lifetime" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setDateFilter("lifetime")}
-                    className={dateFilter === "lifetime" 
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/30 border-none font-medium px-4 py-2 transition-all duration-200" 
-                      : "bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200"
-                    }
-                  >
-                    Lifetime
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Refresh
+                      </>
+                    )}
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchReport}
-                  disabled={isLoading}
-                  className="bg-white/5 border-white/20 text-gray-300 hover:bg-white/10 hover:text-white hover:border-white/30 font-medium px-4 py-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Refresh
-                    </>
-                  )}
-                </Button>
               </div>
             </div>
           </DialogHeader>
@@ -359,7 +405,7 @@ export function AdminReportDialog({ open, onOpenChange }) {
 
                 <Tabs defaultValue="departments" className="w-full">
                   <TabsList 
-                    className="grid w-full grid-cols-5 border border-white/10 rounded-lg p-1"
+                    className="grid w-full grid-cols-6 border border-white/10 rounded-lg p-1"
                     style={{
                       background: 'rgba(40, 40, 40, 0.6)',
                       backdropFilter: 'blur(10px)'
@@ -367,33 +413,39 @@ export function AdminReportDialog({ open, onOpenChange }) {
                   >
                     <TabsTrigger 
                       value="departments"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
                     >
                       Departments
                     </TabsTrigger>
                     <TabsTrigger 
-                      value="users-aims"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10"
+                      value="user-info"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
                     >
-                      Users & Aims
+                      User Info
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="present"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
+                    >
+                      Present
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="absent"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
+                    >
+                      Absent
                     </TabsTrigger>
                     <TabsTrigger 
                       value="zero-tasks"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
                     >
                       Zero Tasks
                     </TabsTrigger>
                     <TabsTrigger 
                       value="progress"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10"
+                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10 text-xs md:text-sm"
                     >
                       Progress
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="work-hours"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white text-gray-300 hover:text-white hover:bg-white/10"
-                    >
-                      Work Hours
                     </TabsTrigger>
                   </TabsList>
 
@@ -489,8 +541,8 @@ export function AdminReportDialog({ open, onOpenChange }) {
                     </Card>
                   </TabsContent>
 
-                  {/* Users with Aims */}
-                  <TabsContent value="users-aims" className="space-y-4 mt-4">
+                  {/* User Info - Only users who started day */}
+                  <TabsContent value="user-info" className="space-y-4 mt-4">
                     <Card 
                       className="border border-white/10 shadow-lg rounded-xl overflow-hidden"
                       style={{
@@ -506,115 +558,272 @@ export function AdminReportDialog({ open, onOpenChange }) {
                       >
                         <CardTitle className="flex items-center gap-2 text-white">
                           <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
-                            <Target className="h-5 w-5 text-white" />
+                            <Users className="h-5 w-5 text-white" />
                           </div>
-                          All Users with Aims ({reportData.userCount} users)
+                          User Info ({reportData.usersWithStartDay?.length || 0} users started day)
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-6">
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow 
-                                className="border-b border-white/10"
-                                style={{
-                                  background: 'rgba(40, 40, 40, 0.6)'
-                                }}
-                              >
-                                <TableHead className="text-white font-semibold">Name</TableHead>
-                                <TableHead className="text-white font-semibold">Email</TableHead>
-                                <TableHead className="text-white font-semibold">Role</TableHead>
-                                <TableHead className="text-white font-semibold">Department</TableHead>
-                                <TableHead className="text-white font-semibold">Aims</TableHead>
-                                <TableHead className="text-white font-semibold">Status</TableHead>
-                                <TableHead className="text-white font-semibold">Progress</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {reportData.usersWithAims.map((user) => (
+                        {reportData.usersWithStartDay && reportData.usersWithStartDay.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
                                 <TableRow 
-                                  key={user.userId} 
-                                  className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                                  className="border-b border-white/10"
                                   style={{
-                                    background: 'rgba(50, 50, 50, 0.4)'
+                                    background: 'rgba(40, 40, 40, 0.6)'
                                   }}
                                 >
-                                  <TableCell className="font-medium text-gray-100">{user.name}</TableCell>
-                                  <TableCell className="text-gray-300">{user.email}</TableCell>
-                                  <TableCell>
-                                    <Badge 
-                                      variant="outline" 
-                                      className="text-gray-300 border-white/10"
+                                  <TableHead className="text-white font-semibold">Name</TableHead>
+                                  <TableHead className="text-white font-semibold">Aims</TableHead>
+                                  <TableHead className="text-white font-semibold">Start Time</TableHead>
+                                  <TableHead className="text-white font-semibold">End Time</TableHead>
+                                  <TableHead className="text-white font-semibold">Hours</TableHead>
+                                  <TableHead className="text-white font-semibold">Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {reportData.usersWithStartDay.map((user) => {
+                                  // Find aim for this user
+                                  const userAim = reportData.usersWithAims?.find(u => u.userId === user.userId)?.aim
+                                  return (
+                                    <TableRow 
+                                      key={user.userId} 
+                                      className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                                      style={{
+                                        background: 'rgba(50, 50, 50, 0.4)'
+                                      }}
+                                    >
+                                      <TableCell className="font-medium text-gray-100">{user.userName}</TableCell>
+                                      <TableCell>
+                                        <div className="max-w-xs">
+                                          <p className="text-sm text-gray-300">
+                                            {userAim?.aims || user.aims || "No aims set"}
+                                          </p>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex items-center gap-1 text-green-400">
+                                          <Clock className="h-3 w-3" />
+                                          {user.startDayTime ? formatTime(user.startDayTime) : "N/A"}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex items-center gap-1 text-red-400">
+                                          <Clock className="h-3 w-3" />
+                                          {user.endDayTime ? formatTime(user.endDayTime) : "Active"}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="font-semibold text-white">
+                                        {formatHours(getTotalHours(user))}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge
+                                          className={
+                                            user.workLocationType === "Home" || user.workLocationType === "Remote"
+                                              ? "text-blue-400 border-blue-500/30"
+                                              : "text-purple-400 border-purple-500/30"
+                                          }
+                                          style={{
+                                            background: user.workLocationType === "Home" || user.workLocationType === "Remote"
+                                              ? 'rgba(59, 130, 246, 0.15)'
+                                              : 'rgba(168, 85, 247, 0.15)'
+                                          }}
+                                        >
+                                          {user.workLocationType === "Home" || user.workLocationType === "Remote" ? "WFH" : "Office"}
+                                        </Badge>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <UserX className="h-12 w-12 mx-auto mb-4 text-gray-500" />
+                            <p className="text-gray-400">No users started their day on this date</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Present Users */}
+                  <TabsContent value="present" className="space-y-4 mt-4">
+                    <Card 
+                      className="border border-white/10 shadow-lg rounded-xl overflow-hidden"
+                      style={{
+                        background: 'rgba(50, 50, 50, 0.8)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      <CardHeader 
+                        className="border-b border-white/10"
+                        style={{
+                          background: 'rgba(40, 40, 40, 0.6)'
+                        }}
+                      >
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-green-600">
+                            <UserCheck className="h-5 w-5 text-white" />
+                          </div>
+                          Present Users ({reportData.usersWithStartDay?.length || 0} users)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        {reportData.usersWithStartDay && reportData.usersWithStartDay.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow 
+                                  className="border-b border-white/10"
+                                  style={{
+                                    background: 'rgba(40, 40, 40, 0.6)'
+                                  }}
+                                >
+                                  <TableHead className="text-white font-semibold">Name</TableHead>
+                                  <TableHead className="text-white font-semibold">Email</TableHead>
+                                  <TableHead className="text-white font-semibold">Start Time</TableHead>
+                                  <TableHead className="text-white font-semibold">Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {reportData.usersWithStartDay.map((user) => (
+                                  <TableRow 
+                                    key={user.userId} 
+                                    className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                                    style={{
+                                      background: 'rgba(50, 50, 50, 0.4)'
+                                    }}
+                                  >
+                                    <TableCell className="font-medium text-gray-100">{user.userName}</TableCell>
+                                    <TableCell className="text-gray-300">{user.userEmail}</TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-1 text-green-400">
+                                        <Clock className="h-3 w-3" />
+                                        {user.startDayTime ? formatTime(user.startDayTime) : "N/A"}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge
+                                        className="text-green-400 border-green-500/30"
+                                        style={{
+                                          background: 'rgba(34, 197, 94, 0.15)'
+                                        }}
+                                      >
+                                        Present
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <UserX className="h-12 w-12 mx-auto mb-4 text-gray-500" />
+                            <p className="text-gray-400">No users present on this date</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Absent Users */}
+                  <TabsContent value="absent" className="space-y-4 mt-4">
+                    <Card 
+                      className="border border-white/10 shadow-lg rounded-xl overflow-hidden"
+                      style={{
+                        background: 'rgba(50, 50, 50, 0.8)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      <CardHeader 
+                        className="border-b border-white/10"
+                        style={{
+                          background: 'rgba(40, 40, 40, 0.6)'
+                        }}
+                      >
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-red-600">
+                            <UserX className="h-5 w-5 text-white" />
+                          </div>
+                          Absent Users ({(reportData.dashboardStats?.totalUsers || 0) - (reportData.usersWithStartDay?.length || 0)} users)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        {(() => {
+                          // Get all users who did NOT start their day (absent users)
+                          const presentUserIds = new Set(reportData.usersWithStartDay?.map(u => u.userId) || [])
+                          const absentUsers = reportData.usersWithAims?.filter(u => !presentUserIds.has(u.userId)) || []
+                          
+                          if (absentUsers.length > 0) {
+                            return (
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow 
+                                      className="border-b border-white/10"
                                       style={{
                                         background: 'rgba(40, 40, 40, 0.6)'
                                       }}
                                     >
-                                      {user.role}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="text-gray-300">{user.department}</TableCell>
-                                  <TableCell>
-                                    {user.aim ? (
-                                      <div className="max-w-xs">
-                                        <p className="text-sm text-gray-300">{user.aim.aims || "No aims set"}</p>
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">No aim set</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    {user.aim ? (
-                                      <Badge
-                                        className={
-                                          user.aim.completionStatus === "Completed"
-                                            ? "text-green-400 border-green-500/30"
-                                            : "text-yellow-400 border-yellow-500/30"
-                                        }
+                                      <TableHead className="text-white font-semibold">Name</TableHead>
+                                      <TableHead className="text-white font-semibold">Email</TableHead>
+                                      <TableHead className="text-white font-semibold">Role</TableHead>
+                                      <TableHead className="text-white font-semibold">Department</TableHead>
+                                      <TableHead className="text-white font-semibold">Status</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {absentUsers.map((user) => (
+                                      <TableRow 
+                                        key={user.userId} 
+                                        className="border-b border-white/10 hover:bg-white/5 transition-colors"
                                         style={{
-                                          background: user.aim.completionStatus === "Completed"
-                                            ? 'rgba(34, 197, 94, 0.15)'
-                                            : 'rgba(234, 179, 8, 0.15)'
+                                          background: 'rgba(50, 50, 50, 0.4)'
                                         }}
                                       >
-                                        {user.aim.completionStatus || "In Progress"}
-                                      </Badge>
-                                    ) : (
-                                      <Badge 
-                                        variant="outline" 
-                                        className="text-gray-500 border-white/10"
-                                        style={{
-                                          background: 'rgba(40, 40, 40, 0.6)'
-                                        }}
-                                      >
-                                        Not Set
-                                      </Badge>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    {user.aim ? (
-                                      <div className="flex items-center gap-2">
-                                        <div 
-                                          className="w-16 rounded-full h-2"
-                                          style={{
-                                            background: 'rgba(40, 40, 40, 0.6)'
-                                          }}
-                                        >
-                                          <div
-                                            className="bg-gradient-to-r from-primary to-accent h-2 rounded-full"
-                                            style={{ width: `${user.aim.progressPercentage || 0}%` }}
-                                          />
-                                        </div>
-                                        <span className="text-sm text-gray-300">{user.aim.progressPercentage || 0}%</span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">-</span>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
+                                        <TableCell className="font-medium text-gray-100">{user.name}</TableCell>
+                                        <TableCell className="text-gray-300">{user.email}</TableCell>
+                                        <TableCell>
+                                          <Badge 
+                                            variant="outline" 
+                                            className="text-gray-300 border-white/10"
+                                            style={{
+                                              background: 'rgba(40, 40, 40, 0.6)'
+                                            }}
+                                          >
+                                            {user.role}
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-gray-300">{user.department}</TableCell>
+                                        <TableCell>
+                                          <Badge
+                                            className="text-red-400 border-red-500/30"
+                                            style={{
+                                              background: 'rgba(239, 68, 68, 0.15)'
+                                            }}
+                                          >
+                                            Absent
+                                          </Badge>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            )
+                          } else {
+                            return (
+                              <div className="text-center py-8">
+                                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-400" />
+                                <p className="text-gray-400">All users are present today!</p>
+                              </div>
+                            )
+                          }
+                        })()}
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -807,187 +1016,6 @@ export function AdminReportDialog({ open, onOpenChange }) {
                           <div className="text-center py-8">
                             <Clock className="h-12 w-12 mx-auto mb-4 text-gray-500" />
                             <p className="text-gray-400">No progress updates for this date</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* Users with Start Day and Work Hours */}
-                  <TabsContent value="work-hours" className="space-y-4 mt-4">
-                    <Card 
-                      className="border border-white/10 shadow-lg rounded-xl overflow-hidden"
-                      style={{
-                        background: 'rgba(50, 50, 50, 0.8)',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                    >
-                      <CardHeader 
-                        className="border-b border-white/10"
-                        style={{
-                          background: 'rgba(40, 40, 40, 0.6)'
-                        }}
-                      >
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
-                            <Clock className="h-5 w-5 text-white" />
-                          </div>
-                          Users Who Started Day with Work Hours ({reportData.usersWithStartDayCount} users)
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-6">
-                        {reportData.usersWithStartDay.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow 
-                                  className="border-b border-white/10"
-                                  style={{
-                                    background: 'rgba(40, 40, 40, 0.6)'
-                                  }}
-                                >
-                                  <TableHead className="text-white font-semibold">Name</TableHead>
-                                  <TableHead className="text-white font-semibold">Email</TableHead>
-                                  <TableHead className="text-white font-semibold">Role</TableHead>
-                                  <TableHead className="text-white font-semibold">Department</TableHead>
-                                  {dateFilter === "today" && (
-                                    <>
-                                      <TableHead className="text-white font-semibold">Start Day</TableHead>
-                                      <TableHead className="text-white font-semibold">Hours</TableHead>
-                                      <TableHead className="text-white font-semibold">WFH/Office</TableHead>
-                                    </>
-                                  )}
-                                  {dateFilter === "yesterday" && (
-                                    <>
-                                      <TableHead className="text-white font-semibold">Start Day</TableHead>
-                                      <TableHead className="text-white font-semibold">End Day</TableHead>
-                                      <TableHead className="text-white font-semibold">Total Hours</TableHead>
-                                      <TableHead className="text-white font-semibold">WFH/Office</TableHead>
-                                    </>
-                                  )}
-                                  {(dateFilter === "weekly" || dateFilter === "lifetime") && (
-                                    <TableHead className="text-white font-semibold">Total Hours</TableHead>
-                                  )}
-                                  <TableHead className="text-white font-semibold">Status</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {reportData.usersWithStartDay.map((user) => (
-                                  <TableRow 
-                                    key={user.userId} 
-                                    className="border-b border-white/10 hover:bg-white/5 transition-colors"
-                                    style={{
-                                      background: 'rgba(50, 50, 50, 0.4)'
-                                    }}
-                                  >
-                                    <TableCell className="font-medium text-gray-100">{user.userName}</TableCell>
-                                    <TableCell className="text-gray-300">{user.userEmail}</TableCell>
-                                    <TableCell>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="text-gray-300 border-white/10"
-                                        style={{
-                                          background: 'rgba(40, 40, 40, 0.6)'
-                                        }}
-                                      >
-                                        {user.userRole}
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-gray-300">{user.department}</TableCell>
-                                    {dateFilter === "today" && (
-                                      <>
-                                        <TableCell>
-                                          <div className="flex items-center gap-1 text-gray-300">
-                                            <Clock className="h-3 w-3" />
-                                            {user.startDayTime ? formatTime(user.startDayTime) : "N/A"}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-white">
-                                          {formatHours(getTotalHours(user))}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge
-                                            className={
-                                              user.workLocationType === "Home" || user.workLocationType === "Remote"
-                                                ? "text-blue-400 border-blue-500/30"
-                                                : "text-purple-400 border-purple-500/30"
-                                            }
-                                            style={{
-                                              background: user.workLocationType === "Home" || user.workLocationType === "Remote"
-                                                ? 'rgba(59, 130, 246, 0.15)'
-                                                : 'rgba(168, 85, 247, 0.15)'
-                                            }}
-                                          >
-                                            {user.workLocationType === "Home" || user.workLocationType === "Remote" ? "WFH" : "Office"}
-                                          </Badge>
-                                        </TableCell>
-                                      </>
-                                    )}
-                                    {dateFilter === "yesterday" && (
-                                      <>
-                                        <TableCell>
-                                          <div className="flex items-center gap-1 text-gray-300">
-                                            <Clock className="h-3 w-3" />
-                                            {user.startDayTime ? formatTime(user.startDayTime) : "N/A"}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell>
-                                          <div className="flex items-center gap-1 text-gray-300">
-                                            <Clock className="h-3 w-3" />
-                                            {user.endDayTime ? formatTime(user.endDayTime) : "N/A"}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-white">
-                                          {formatHours(user.totalHoursWorked || 0)}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge
-                                            className={
-                                              user.workLocationType === "Home" || user.workLocationType === "Remote"
-                                                ? "text-blue-400 border-blue-500/30"
-                                                : "text-purple-400 border-purple-500/30"
-                                            }
-                                            style={{
-                                              background: user.workLocationType === "Home" || user.workLocationType === "Remote"
-                                                ? 'rgba(59, 130, 246, 0.15)'
-                                                : 'rgba(168, 85, 247, 0.15)'
-                                            }}
-                                          >
-                                            {user.workLocationType === "Home" || user.workLocationType === "Remote" ? "WFH" : "Office"}
-                                          </Badge>
-                                        </TableCell>
-                                      </>
-                                    )}
-                                    {(dateFilter === "weekly" || dateFilter === "lifetime") && (
-                                      <TableCell className="font-semibold text-white">
-                                        {formatHours(user.totalHoursWorked || 0)}
-                                      </TableCell>
-                                    )}
-                                    <TableCell>
-                                      <Badge
-                                        className={
-                                          user.status === "Present"
-                                            ? "text-green-400 border-green-500/30"
-                                            : "text-gray-300 border-white/10"
-                                        }
-                                        style={{
-                                          background: user.status === "Present"
-                                            ? 'rgba(34, 197, 94, 0.15)'
-                                            : 'rgba(40, 40, 40, 0.6)'
-                                        }}
-                                      >
-                                        {user.status || "Unknown"}
-                                      </Badge>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <UserX className="h-12 w-12 mx-auto mb-4 text-gray-500" />
-                            <p className="text-gray-400">No users started their day on this date</p>
                           </div>
                         )}
                       </CardContent>

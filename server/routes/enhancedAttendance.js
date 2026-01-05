@@ -508,7 +508,7 @@ router.get('/history', auth, async (req, res) => {
 // Work days now continue indefinitely until user manually ends them
 router.post('/auto-end-day', adminAuth, async (req, res) => {
   return res.status(400).json({ 
-    success: false,
+      success: false,
     error: 'Auto end day is permanently disabled. Work days continue until manually ended by the user.',
     code: 'AUTO_END_DISABLED'
   });

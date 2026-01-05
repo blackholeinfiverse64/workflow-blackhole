@@ -61,7 +61,7 @@ export default function Optimization() {
         task = tasks.find((t) => t._id === insight.taskId || t._id.toString() === insight.taskId.toString());
         console.log("🔎 Found task by ID:", task ? task.title : "Not found");
       }
-      
+
       // If not found by ID, try by title
       if (!task && taskTitle) {
         task = tasks.find((t) => 
@@ -83,7 +83,7 @@ export default function Optimization() {
         );
         if (task) {
           console.log("✅ Found task in fresh fetch:", task.title);
-        }
+      }
       }
       
       if (!task) {
