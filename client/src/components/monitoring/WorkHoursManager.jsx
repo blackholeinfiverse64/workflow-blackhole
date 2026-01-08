@@ -35,6 +35,55 @@ export function WorkHoursManager({ employee }) {
   // Use current user if no employee prop is provided (for user dashboard)
   const currentEmployee = employee || user;
 
+  /**
+   * Handle midnight reset - work session resets at 12 AM
+   * Hours from unended sessions go to spam (pending admin validation)
+   * MUST be defined before the useEffect that references it
+   */
+  const handleMidnightReset = useCallback(() => {
+    if (!workSession || workSession.status === 'completed') {
+      return;
+    }
+
+    console.log('🕛 Midnight reset triggered for unended work session');
+    
+    // Calculate hours worked until midnight
+    const startTime = new Date(workSession.startTime);
+    const midnight = startOfDay(new Date());
+    const hoursWorked = differenceInMinutes(midnight, startTime) / 60;
+    
+    // Show warning about spam hours
+    setSpamWarning({
+      hoursWorked: Math.round(hoursWorked * 100) / 100,
+      date: format(startTime, 'MMM dd, yyyy'),
+      message: `Your ${Math.round(hoursWorked * 100) / 100}h work session was auto-ended at midnight. These hours are pending admin review (max 8h can be validated).`
+    });
+    
+    toast({
+      title: "⚠️ Work Session Auto-Ended",
+      description: `Your session from ${format(startTime, 'MMM dd')} was auto-ended at midnight. ${Math.round(hoursWorked * 100) / 100}h sent to admin for review.`,
+      variant: "destructive"
+    });
+    
+    // Clear local state
+    setWorkSession(null);
+    setFrozenProgress(null);
+    setClientBreakMinutes(0);
+    
+    // Clear localStorage
+    try {
+      const employeeId = currentEmployee?._id || currentEmployee?.id;
+      if (employeeId) {
+        const pauseStateKey = `workHoursPauseState_${employeeId}`;
+        const breakKey = `workHoursClientBreak_${employeeId}_${new Date().toISOString().slice(0, 10)}`;
+        localStorage.removeItem(pauseStateKey);
+        localStorage.removeItem(breakKey);
+      }
+    } catch (e) {
+      console.warn('Failed to clear work hours storage', e);
+    }
+  }, [workSession, currentEmployee, toast]);
+
   // Update current time every second and check for midnight reset
   useEffect(() => {
     const timer = setInterval(() => {
@@ -162,52 +211,6 @@ export function WorkHoursManager({ employee }) {
       setWorkSession(null);
     }
   };
-
-  /**
-   * Handle midnight reset - work session resets at 12 AM
-   * Hours from unended sessions go to spam (pending admin validation)
-   */
-  const handleMidnightReset = useCallback(async () => {
-    if (!workSession || workSession.status === 'completed') {
-      return;
-    }
-
-    console.log('🕛 Midnight reset triggered for unended work session');
-    
-    // Calculate hours worked until midnight
-    const startTime = new Date(workSession.startTime);
-    const midnight = startOfDay(new Date());
-    const hoursWorked = differenceInMinutes(midnight, startTime) / 60;
-    
-    // Show warning about spam hours
-    setSpamWarning({
-      hoursWorked: Math.round(hoursWorked * 100) / 100,
-      date: format(startTime, 'MMM dd, yyyy'),
-      message: `Your ${Math.round(hoursWorked * 100) / 100}h work session was auto-ended at midnight. These hours are pending admin review (max 8h can be validated).`
-    });
-    
-    toast({
-      title: "⚠️ Work Session Auto-Ended",
-      description: `Your session from ${format(startTime, 'MMM dd')} was auto-ended at midnight. ${Math.round(hoursWorked * 100) / 100}h sent to admin for review.`,
-      variant: "destructive"
-    });
-    
-    // Clear local state
-    setWorkSession(null);
-    setFrozenProgress(null);
-    setClientBreakMinutes(0);
-    
-    // Clear localStorage
-    try {
-      const employeeId = currentEmployee._id || currentEmployee.id;
-      const pauseStateKey = `workHoursPauseState_${employeeId}`;
-      const breakKey = `workHoursClientBreak_${employeeId}_${new Date().toISOString().slice(0, 10)}`;
-      localStorage.removeItem(pauseStateKey);
-      localStorage.removeItem(breakKey);
-    } catch (e) {
-      console.warn('Failed to clear work hours storage', e);
-    }
-  }, [workSession, currentEmployee, toast]);
 
   const handleStartWorkDayClick = () => {
     // Show the location popup dialog instead of directly starting
