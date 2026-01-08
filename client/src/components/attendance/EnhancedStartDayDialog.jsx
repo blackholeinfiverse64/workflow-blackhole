@@ -30,7 +30,7 @@ const OFFICE_COORDINATES = {
   latitude: 19.160122,
   longitude: 72.839720
 };
-const OFFICE_RADIUS = 500; // meters
+const OFFICE_RADIUS = 2000; // meters
 const OFFICE_ADDRESS = 'Blackhole Infiverse LLP, Road Number 3, near Hathi Circle, above Bright Connection, Kala Galli, Motilal Nagar II, Goregaon West, Mumbai, Maharashtra';
 
 const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {

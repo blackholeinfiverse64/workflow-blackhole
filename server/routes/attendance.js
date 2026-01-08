@@ -10,6 +10,10 @@ const User = require('../models/User');
 const UserTag = require('../models/UserTag');
 const auth = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
+const DailyAttendance = require('../models/DailyAttendance');
+
+// Maximum hours allowed for spam validation by admin
+const MAX_SPAM_VALIDATION_HOURS = 8;
 
 // Configure multer for Excel file uploads
 const upload = multer({
@@ -41,7 +45,7 @@ const OFFICE_COORDINATES = {
   latitude: parseFloat(process.env.OFFICE_LAT) || 19.158900,
   longitude: parseFloat(process.env.OFFICE_LNG) || 72.838645
 };
-const OFFICE_RADIUS = parseInt(process.env.OFFICE_RADIUS) || 500; // meters
+const OFFICE_RADIUS = parseInt(process.env.OFFICE_RADIUS) || 2000; // meters
 const MAX_WORKING_HOURS = parseInt(process.env.MAX_WORKING_HOURS) || 10;
 const AUTO_END_DAY_ENABLED = process.env.AUTO_END_DAY_ENABLED === 'true';
 const OFFICE_ADDRESS = 'Blackhole Infiverse LLP, Road Number 3, near Hathi Circle, above Bright Connection, Kala Galli, Motilal Nagar II, Goregaon West, Mumbai, Maharashtra';
@@ -441,12 +445,214 @@ router.post('/end-day/:userId', auth, async (req, res) => {
   }
 });
 
-// Auto end day endpoint - DISABLED
-// Work days now continue indefinitely until user manually ends them
+/**
+ * AUTO END DAY AT MIDNIGHT - NEW IMPLEMENTATION
+ * This endpoint is called by a scheduled job at midnight (12:00 AM)
+ * It auto-ends all unended work days and marks them as spam (Pending Review)
+ * Admin can later validate these records (max 8 hours)
+ */
+router.post('/auto-end-day-midnight', auth, async (req, res) => {
+  try {
+    // Only allow Admin or system to run this
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ 
+        error: 'Only Admin can trigger midnight auto-end',
+        code: 'ADMIN_REQUIRED'
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Get yesterday's date (the day that just ended at midnight)
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    
+    const yesterdayEnd = new Date(yesterday);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+
+    console.log(`🕛 Running midnight auto-end for date: ${yesterday.toISOString().split('T')[0]}`);
+
+    // Find all attendance records from yesterday that started but haven't ended
+    const activeAttendance = await Attendance.find({
+      date: {
+        $gte: yesterday,
+        $lte: yesterdayEnd
+      },
+      startDayTime: { $exists: true, $ne: null },
+      endDayTime: { $exists: false }
+    }).populate('user', 'name email');
+
+    const autoEndedUsers = [];
+    const midnightTime = today; // Midnight of the new day
+
+    for (const record of activeAttendance) {
+      try {
+        // Calculate actual hours worked (from start to midnight)
+        const startTime = new Date(record.startDayTime);
+        const hoursWorked = (midnightTime - startTime) / (1000 * 60 * 60);
+
+        // Auto end the day at midnight
+        record.endDayTime = midnightTime;
+        record.hoursWorked = Math.round(hoursWorked * 100) / 100;
+        record.autoEnded = true;
+        record.spamStatus = 'Pending Review';
+        record.spamReason = 'User did not click End Day before midnight - auto-ended by system';
+        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Max validatable: ${MAX_SPAM_VALIDATION_HOURS}h`;
+        record.employeeNotes = (record.employeeNotes || '') + ' [Auto-ended at midnight - Pending admin review]';
+
+        // Set overtime to 0 for spam records
+        record.overtimeHours = 0;
+        
+        // Mark as unverified pending review
+        record.approvalStatus = 'Pending';
+
+        await record.save();
+
+        // Also update DailyAttendance record
+        const dailyRecord = await DailyAttendance.findOne({
+          user: record.user._id,
+          date: {
+            $gte: yesterday,
+            $lte: yesterdayEnd
+          }
+        });
+
+        if (dailyRecord) {
+          dailyRecord.endDayTime = midnightTime;
+          dailyRecord.totalHoursWorked = record.hoursWorked;
+          dailyRecord.autoEnded = true;
+          dailyRecord.spamStatus = 'Pending Review';
+          dailyRecord.spamReason = 'User did not click End Day before midnight';
+          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin can validate max ${MAX_SPAM_VALIDATION_HOURS}h`;
+          await dailyRecord.save();
+        }
+
+        autoEndedUsers.push({
+          userId: record.user._id,
+          userName: record.user.name,
+          userEmail: record.user.email,
+          date: yesterday.toISOString().split('T')[0],
+          startTime: record.startDayTime,
+          hoursWorked: record.hoursWorked,
+          autoEndTime: midnightTime,
+          spamStatus: 'Pending Review'
+        });
+
+        console.log(`⚠️ Auto-ended work day for ${record.user.name} - ${record.hoursWorked}h (marked as spam)`);
+
+        // Emit socket event if available
+        if (req.io) {
+          req.io.emit('attendance:auto-ended-midnight', {
+            userId: record.user._id,
+            userName: record.user.name,
+            date: yesterday.toISOString().split('T')[0],
+            hoursWorked: record.hoursWorked,
+            reason: 'Did not end day before midnight',
+            spamStatus: 'Pending Review'
+          });
+        }
+      } catch (recordError) {
+        console.error(`Error auto-ending record for user ${record.user?.name}:`, recordError);
+      }
+    }
+
+    console.log(`✅ Midnight auto-end complete. Processed ${autoEndedUsers.length} records.`);
+
+    res.json({
+      success: true,
+      message: `Auto-ended ${autoEndedUsers.length} unfinished work day(s) at midnight`,
+      autoEndedUsers,
+      date: yesterday.toISOString().split('T')[0],
+      processedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Midnight auto-end error:', error);
+    res.status(500).json({ 
+      error: 'Failed to process midnight auto-end',
+      details: error.message 
+    });
+  }
+});
+
+/**
+ * POST /api/attendance/validate-spam-hours
+ * Admin validates spam hours - caps at 8 hours max
+ */
+router.post('/validate-spam-hours/:recordId', auth, adminAuth, async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const { hoursToValidate, reason } = req.body;
+
+    // Validate hours - max 8 hours for spam records
+    const validHours = Math.min(hoursToValidate || MAX_SPAM_VALIDATION_HOURS, MAX_SPAM_VALIDATION_HOURS);
+
+    // Find the attendance record
+    const record = await Attendance.findById(recordId).populate('user', 'name email');
+    
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+
+    if (!record.autoEnded) {
+      return res.status(400).json({ error: 'This record was not auto-ended' });
+    }
+
+    // Update record with validated hours (capped at 8)
+    record.hoursWorked = validHours;
+    record.spamStatus = 'Valid';
+    record.validatedBy = req.user.id;
+    record.validatedAt = new Date();
+    record.spamReason = reason || `Validated by admin - ${validHours} hours approved (max ${MAX_SPAM_VALIDATION_HOURS}h)`;
+    record.approvalStatus = 'Approved';
+
+    await record.save();
+
+    // Also update DailyAttendance
+    const dailyRecord = await DailyAttendance.findOne({
+      user: record.user._id,
+      date: record.date
+    });
+
+    if (dailyRecord) {
+      dailyRecord.totalHoursWorked = validHours;
+      dailyRecord.spamStatus = 'Valid';
+      dailyRecord.validatedBy = req.user.id;
+      dailyRecord.validatedAt = new Date();
+      dailyRecord.spamReason = `Validated: ${validHours}h approved by admin`;
+      await dailyRecord.save();
+    }
+
+    console.log(`✅ Admin validated spam record for ${record.user.name}: ${validHours}h (original: ${record.hoursWorked}h)`);
+
+    res.json({
+      success: true,
+      message: `Validated ${validHours} hours for ${record.user.name}`,
+      data: {
+        recordId: record._id,
+        userName: record.user.name,
+        originalHours: record.hoursWorked,
+        validatedHours: validHours,
+        maxAllowed: MAX_SPAM_VALIDATION_HOURS,
+        validatedBy: req.user.name,
+        validatedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Validate spam hours error:', error);
+    res.status(500).json({ error: 'Failed to validate spam hours', details: error.message });
+  }
+});
+
+// Legacy auto-end day endpoint - returns info about new midnight system
 router.post('/auto-end-day', auth, async (req, res) => {
   return res.status(400).json({ 
-    error: 'Auto end day is permanently disabled. Work days continue until manually ended by the user.',
-    code: 'AUTO_END_DISABLED'
+    error: 'Auto end day during work hours is disabled. Work days are auto-ended at midnight if not manually ended.',
+    code: 'AUTO_END_DISABLED',
+    info: 'Unended work days at midnight go to spam queue for admin validation (max 8 hours)'
   });
 });
 

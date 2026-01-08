@@ -11,7 +11,7 @@ const OFFICE_COORDINATES = {
   latitude: parseFloat(process.env.OFFICE_LAT) || 19.160122,
   longitude: parseFloat(process.env.OFFICE_LNG) || 72.839720
 };
-const OFFICE_RADIUS = parseInt(process.env.OFFICE_RADIUS) || 500; // meters
+const OFFICE_RADIUS = parseInt(process.env.OFFICE_RADIUS) || 2000; // meters
 const GEOFENCE_CHECK_INTERVAL = parseInt(process.env.GEOFENCE_CHECK_INTERVAL) || 30000;
 const LOCATION_UPDATE_THRESHOLD = 50; // minimum meters moved to update
 

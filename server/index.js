@@ -472,12 +472,138 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong!" });
 });
 
+// Midnight auto-end scheduler for unended work days
+const Attendance = require('./models/Attendance');
+const DailyAttendance = require('./models/DailyAttendance');
+
+const MAX_SPAM_VALIDATION_HOURS = 8; // Max hours admin can validate for spam
+
+/**
+ * Midnight Auto-End Job
+ * Runs at 12:00 AM every day to auto-end unfinished work sessions
+ * Hours go to spam queue (max 8h can be validated by admin)
+ */
+const midnightAutoEndJob = async () => {
+  try {
+    console.log('🕛 Running midnight auto-end job...');
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Get yesterday's date (the day that just ended at midnight)
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    
+    const yesterdayEnd = new Date(yesterday);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+
+    // Find all attendance records from yesterday that started but haven't ended
+    const activeAttendance = await Attendance.find({
+      date: {
+        $gte: yesterday,
+        $lte: yesterdayEnd
+      },
+      startDayTime: { $exists: true, $ne: null },
+      endDayTime: { $exists: false }
+    }).populate('user', 'name email');
+
+    const autoEndedCount = [];
+    const midnightTime = today; // Midnight of the new day
+
+    for (const record of activeAttendance) {
+      try {
+        // Calculate actual hours worked (from start to midnight)
+        const startTime = new Date(record.startDayTime);
+        const hoursWorked = (midnightTime - startTime) / (1000 * 60 * 60);
+
+        // Auto end the day at midnight
+        record.endDayTime = midnightTime;
+        record.hoursWorked = Math.round(hoursWorked * 100) / 100;
+        record.autoEnded = true;
+        record.spamStatus = 'Pending Review';
+        record.spamReason = 'User did not click End Day before midnight - auto-ended by system';
+        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Max validatable: ${MAX_SPAM_VALIDATION_HOURS}h`;
+        record.employeeNotes = (record.employeeNotes || '') + ' [Auto-ended at midnight - Pending admin review]';
+        record.overtimeHours = 0;
+        record.approvalStatus = 'Pending';
+
+        await record.save();
+
+        // Also update DailyAttendance record
+        const dailyRecord = await DailyAttendance.findOne({
+          user: record.user._id,
+          date: {
+            $gte: yesterday,
+            $lte: yesterdayEnd
+          }
+        });
+
+        if (dailyRecord) {
+          dailyRecord.endDayTime = midnightTime;
+          dailyRecord.totalHoursWorked = record.hoursWorked;
+          dailyRecord.autoEnded = true;
+          dailyRecord.spamStatus = 'Pending Review';
+          dailyRecord.spamReason = 'User did not click End Day before midnight';
+          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin can validate max ${MAX_SPAM_VALIDATION_HOURS}h`;
+          await dailyRecord.save();
+        }
+
+        autoEndedCount.push({
+          userName: record.user.name,
+          hoursWorked: record.hoursWorked
+        });
+
+        console.log(`⚠️ Auto-ended work day for ${record.user.name} - ${record.hoursWorked}h (marked as spam)`);
+
+        // Emit socket event
+        io.emit('attendance:auto-ended-midnight', {
+          userId: record.user._id,
+          userName: record.user.name,
+          date: yesterday.toISOString().split('T')[0],
+          hoursWorked: record.hoursWorked,
+          reason: 'Did not end day before midnight',
+          spamStatus: 'Pending Review'
+        });
+      } catch (recordError) {
+        console.error(`Error auto-ending record for user ${record.user?.name}:`, recordError);
+      }
+    }
+
+    console.log(`✅ Midnight auto-end complete. Processed ${autoEndedCount.length} records.`);
+    
+  } catch (error) {
+    console.error('❌ Midnight auto-end job error:', error);
+  }
+};
+
+// Schedule midnight job using setInterval
+const scheduleMidnightJob = () => {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0); // Next midnight
+  
+  const msUntilMidnight = midnight - now;
+  
+  console.log(`🕛 Next midnight auto-end scheduled in ${Math.round(msUntilMidnight / 1000 / 60)} minutes`);
+  
+  // Schedule for next midnight
+  setTimeout(() => {
+    midnightAutoEndJob();
+    // Then run every 24 hours
+    setInterval(midnightAutoEndJob, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight);
+};
+
 // Start server
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Auto-end day job: DISABLED (work days continue until manually ended)`);
-  console.log(`Max working hours: N/A (no limit - user must manually end day)`);
+  console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, max 8h can be validated)`);
+  console.log(`📊 Max validatable spam hours: ${MAX_SPAM_VALIDATION_HOURS}h`);
+  
+  // Schedule midnight auto-end job
+  scheduleMidnightJob();
   
   // Start attendance persistence cron job
   console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');

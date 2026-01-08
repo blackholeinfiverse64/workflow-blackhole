@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +11,10 @@ import {
   Timer,
   Calendar,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle
 } from 'lucide-react';
-import { format, differenceInMinutes } from 'date-fns';
+import { format, differenceInMinutes, startOfDay, isSameDay } from 'date-fns';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '../../context/auth-context';
@@ -26,19 +27,35 @@ export function WorkHoursManager({ employee }) {
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
   const [frozenProgress, setFrozenProgress] = useState(null); // freeze UI time when paused
   const [clientBreakMinutes, setClientBreakMinutes] = useState(0); // extra break tracking when backend has no session
+  const [lastCheckedDate, setLastCheckedDate] = useState(null); // track date for midnight reset
+  const [spamWarning, setSpamWarning] = useState(null); // warning for unended days
   const { toast } = useToast();
   const { user } = useAuth();
 
   // Use current user if no employee prop is provided (for user dashboard)
   const currentEmployee = employee || user;
 
-  // Update current time every second
+  // Update current time every second and check for midnight reset
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      const now = new Date();
+      setCurrentTime(now);
+      
+      // Check if we crossed midnight (date changed)
+      if (lastCheckedDate && !isSameDay(now, lastCheckedDate)) {
+        console.log('🕛 Midnight detected - resetting work session');
+        handleMidnightReset();
+      }
+      setLastCheckedDate(now);
     }, 1000);
+    
+    // Initialize lastCheckedDate
+    if (!lastCheckedDate) {
+      setLastCheckedDate(new Date());
+    }
+    
     return () => clearInterval(timer);
-  }, []);
+  }, [lastCheckedDate, handleMidnightReset]);
 
   // Fetch current work session
   useEffect(() => {
@@ -54,7 +71,6 @@ export function WorkHoursManager({ employee }) {
 
     const dateKey = new Date().toISOString().slice(0, 10);
     const breakKey = `workHoursClientBreak_${currentEmployee._id || currentEmployee.id}_${dateKey}`;
-    const pauseKey = `workHoursPauseState_${currentEmployee._id || currentEmployee.id}`;
 
     try {
       const storedBreak = localStorage.getItem(breakKey);
@@ -146,6 +162,52 @@ export function WorkHoursManager({ employee }) {
       setWorkSession(null);
     }
   };
+
+  /**
+   * Handle midnight reset - work session resets at 12 AM
+   * Hours from unended sessions go to spam (pending admin validation)
+   */
+  const handleMidnightReset = useCallback(async () => {
+    if (!workSession || workSession.status === 'completed') {
+      return;
+    }
+
+    console.log('🕛 Midnight reset triggered for unended work session');
+    
+    // Calculate hours worked until midnight
+    const startTime = new Date(workSession.startTime);
+    const midnight = startOfDay(new Date());
+    const hoursWorked = differenceInMinutes(midnight, startTime) / 60;
+    
+    // Show warning about spam hours
+    setSpamWarning({
+      hoursWorked: Math.round(hoursWorked * 100) / 100,
+      date: format(startTime, 'MMM dd, yyyy'),
+      message: `Your ${Math.round(hoursWorked * 100) / 100}h work session was auto-ended at midnight. These hours are pending admin review (max 8h can be validated).`
+    });
+    
+    toast({
+      title: "⚠️ Work Session Auto-Ended",
+      description: `Your session from ${format(startTime, 'MMM dd')} was auto-ended at midnight. ${Math.round(hoursWorked * 100) / 100}h sent to admin for review.`,
+      variant: "destructive"
+    });
+    
+    // Clear local state
+    setWorkSession(null);
+    setFrozenProgress(null);
+    setClientBreakMinutes(0);
+    
+    // Clear localStorage
+    try {
+      const employeeId = currentEmployee._id || currentEmployee.id;
+      const pauseStateKey = `workHoursPauseState_${employeeId}`;
+      const breakKey = `workHoursClientBreak_${employeeId}_${new Date().toISOString().slice(0, 10)}`;
+      localStorage.removeItem(pauseStateKey);
+      localStorage.removeItem(breakKey);
+    } catch (e) {
+      console.warn('Failed to clear work hours storage', e);
+    }
+  }, [workSession, currentEmployee, toast]);
 
   const handleStartWorkDayClick = () => {
     // Show the location popup dialog instead of directly starting
@@ -583,6 +645,40 @@ export function WorkHoursManager({ employee }) {
                 {progress.hours}h {progress.minutes}m
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Spam Warning - for unended sessions */}
+        {spamWarning && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2 text-yellow-600">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">Hours Pending Review</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {spamWarning.message}
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSpamWarning(null)}
+              className="text-xs"
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
+
+        {/* Midnight Warning when session is active late at night */}
+        {workSession && !isWorkDayCompleted && currentTime.getHours() >= 23 && (
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-orange-600">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">End Day Reminder</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Please end your day before midnight! Unended sessions are auto-closed at 12 AM and hours go to spam (max 8h can be approved by admin).
+            </p>
           </div>
         )}
 
