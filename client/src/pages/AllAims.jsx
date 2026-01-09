@@ -433,23 +433,43 @@ function AllAims() {
           <p className="text-muted-foreground">View and manage daily aims across all departments</p>
           
           {/* Stats Summary */}
-          <div className="flex items-center gap-4 mt-3 text-sm">
+          <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-md font-medium">
                 <User className="h-4 w-4" />
-                <span>Total Present: {aims.length}</span>
+                <span>Total Users: {(() => {
+                  const uniqueUsers = new Set(aims.map(aim => aim.user?._id).filter(Boolean));
+                  return uniqueUsers.size;
+                })()}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-md font-medium">
                 <CheckCircle className="h-4 w-4" />
-                <span>Aims Set: {aims.filter(aim => aim.aim && aim.aim.trim() !== '').length}</span>
+                <span>Aims Set: {(() => {
+                  const uniqueUsersWithAims = new Set();
+                  aims.forEach(aim => {
+                    if (aim.user?._id && aim.aim && aim.aim.trim() !== '') {
+                      uniqueUsersWithAims.add(aim.user._id);
+                    }
+                  });
+                  return uniqueUsersWithAims.size;
+                })()}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-md font-medium">
                 <AlertCircle className="h-4 w-4" />
-                <span>Aims Not Set: {aims.filter(aim => !aim.aim || aim.aim.trim() === '').length}</span>
+                <span>Aims Not Set: {(() => {
+                  const allUsers = new Set(aims.map(aim => aim.user?._id).filter(Boolean));
+                  const usersWithAims = new Set();
+                  aims.forEach(aim => {
+                    if (aim.user?._id && aim.aim && aim.aim.trim() !== '') {
+                      usersWithAims.add(aim.user._id);
+                    }
+                  });
+                  return allUsers.size - usersWithAims.size;
+                })()}</span>
               </div>
             </div>
           </div>
