@@ -166,8 +166,15 @@ router.post(
 
       const progress = await newProgress.save();
 
-      // Update task progress
+      // Update task progress and auto-change status to "In Progress" if pending
       taskDoc.progress = progressPercentage;
+      
+      // 🔄 AUTO STATUS UPDATE: If task is Pending, change to In Progress
+      if (taskDoc.status === 'Pending') {
+        taskDoc.status = 'In Progress';
+        console.log(`✅ Auto-updated task ${task} status: Pending → In Progress (User started working)`);
+      }
+      
       await taskDoc.save();
 
       // Update today's aim with progress information
@@ -254,10 +261,17 @@ router.put("/:id", auth, async (req, res) => {
 
     await progress.save();
 
-    // Update task progress
+    // Update task progress and auto-change status if needed
     const task = await Task.findById(progress.task);
     if (task) {
       task.progress = progressPercentage;
+      
+      // 🔄 AUTO STATUS UPDATE: If task is Pending, change to In Progress
+      if (task.status === 'Pending') {
+        task.status = 'In Progress';
+        console.log(`✅ Auto-updated task ${task._id} status: Pending → In Progress (Progress updated)`);
+      }
+      
       await task.save();
 
       // Notify via Socket.IO
@@ -267,6 +281,11 @@ router.put("/:id", auth, async (req, res) => {
           progress: progressPercentage,
           user: req.user.id,
         });
+        
+        // Emit task status update if changed
+        if (task.status === 'In Progress') {
+          req.io.emit("task-updated", task);
+        }
       }
     }
 

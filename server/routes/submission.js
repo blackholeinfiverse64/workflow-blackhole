@@ -164,11 +164,22 @@ router.post("/", auth, upload.single("document"), async (req, res) => {
     // Populate user information
     await submission.populate("user", "name")
 
-    // Update task status to "Completed" only for original submission
-    if (!originalSubmission && task.status !== "Completed") {
-      task.status = "Completed"
-      task.progress = 100
-      await task.save()
+    // 🔄 AUTO STATUS UPDATE: Update task status based on submission type
+    if (!originalSubmission) {
+      // Original submission - mark as Completed
+      if (task.status !== "Completed") {
+        task.status = "Completed"
+        task.progress = 100
+        console.log(`✅ Task ${taskId} marked as Completed (Submission received)`);
+        await task.save()
+      }
+    } else {
+      // Revision submission - if task was Pending, mark as In Progress
+      if (task.status === "Pending") {
+        task.status = "In Progress"
+        console.log(`✅ Auto-updated task ${taskId} status: Pending → In Progress (Revision submitted)`);
+        await task.save()
+      }
     }
 
     // Emit socket event for real-time updates
