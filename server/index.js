@@ -476,7 +476,8 @@ app.use((err, req, res, next) => {
 const Attendance = require('./models/Attendance');
 const DailyAttendance = require('./models/DailyAttendance');
 
-const MAX_SPAM_VALIDATION_HOURS = 8; // Max hours admin can validate for spam
+// SIMPLE RULE: Spam validation = EXACTLY 8 hours for cumulative calculation
+const SPAM_VALIDATION_HOURS = 8;
 
 /**
  * Midnight Auto-End Job
@@ -517,13 +518,19 @@ const midnightAutoEndJob = async () => {
         const startTime = new Date(record.startDayTime);
         const hoursWorked = (midnightTime - startTime) / (1000 * 60 * 60);
 
+        // Validation: Ensure hours are reasonable (max 24 hours in a day)
+        if (hoursWorked > 24 || hoursWorked < 0) {
+          console.error(`⚠️ Invalid hours calculation for ${record.user.name}: ${hoursWorked}h - Skipping`);
+          continue;
+        }
+
         // Auto end the day at midnight
         record.endDayTime = midnightTime;
         record.hoursWorked = Math.round(hoursWorked * 100) / 100;
         record.autoEnded = true;
         record.spamStatus = 'Pending Review';
         record.spamReason = 'User did not click End Day before midnight - auto-ended by system';
-        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Max validatable: ${MAX_SPAM_VALIDATION_HOURS}h`;
+        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Admin validation grants exactly ${SPAM_VALIDATION_HOURS}h`;
         record.employeeNotes = (record.employeeNotes || '') + ' [Auto-ended at midnight - Pending admin review]';
         record.overtimeHours = 0;
         record.approvalStatus = 'Pending';
@@ -545,7 +552,7 @@ const midnightAutoEndJob = async () => {
           dailyRecord.autoEnded = true;
           dailyRecord.spamStatus = 'Pending Review';
           dailyRecord.spamReason = 'User did not click End Day before midnight';
-          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin can validate max ${MAX_SPAM_VALIDATION_HOURS}h`;
+          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin validation grants exactly ${SPAM_VALIDATION_HOURS}h`;
           await dailyRecord.save();
         }
 
@@ -586,6 +593,7 @@ const scheduleMidnightJob = () => {
   const msUntilMidnight = midnight - now;
   
   console.log(`🕛 Next midnight auto-end scheduled in ${Math.round(msUntilMidnight / 1000 / 60)} minutes`);
+  console.log(`   Next run at: ${midnight.toLocaleString()}`);
   
   // Schedule for next midnight
   setTimeout(() => {
@@ -595,12 +603,28 @@ const scheduleMidnightJob = () => {
   }, msUntilMidnight);
 };
 
+// Manual trigger endpoint for testing (admin only)
+app.post('/api/admin/trigger-midnight-job', auth, adminAuth, async (req, res) => {
+  try {
+    console.log('🔧 Manually triggering midnight auto-end job...');
+    await midnightAutoEndJob();
+    res.json({ 
+      success: true, 
+      message: 'Midnight auto-end job executed successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Manual trigger error:', error);
+    res.status(500).json({ error: 'Failed to trigger midnight job', details: error.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, max 8h can be validated)`);
-  console.log(`📊 Max validatable spam hours: ${MAX_SPAM_VALIDATION_HOURS}h`);
+  console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, validation grants exactly ${SPAM_VALIDATION_HOURS}h)`);
+  console.log(`📊 Spam validation rule: EXACTLY ${SPAM_VALIDATION_HOURS} hours (not more, not less)`);
   
   // Schedule midnight auto-end job
   scheduleMidnightJob();

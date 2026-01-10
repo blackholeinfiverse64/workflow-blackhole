@@ -12,8 +12,8 @@ const auth = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
 const DailyAttendance = require('../models/DailyAttendance');
 
-// Maximum hours allowed for spam validation by admin
-const MAX_SPAM_VALIDATION_HOURS = 8;
+// SIMPLE RULE: Spam validation = EXACTLY 8 hours for cumulative calculation
+const SPAM_VALIDATION_HOURS = 8;
 
 // Configure multer for Excel file uploads
 const upload = multer({
@@ -511,7 +511,7 @@ router.post('/auto-end-day-midnight', auth, async (req, res) => {
         record.autoEnded = true;
         record.spamStatus = 'Pending Review';
         record.spamReason = 'User did not click End Day before midnight - auto-ended by system';
-        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Max validatable: ${MAX_SPAM_VALIDATION_HOURS}h`;
+        record.systemNotes = `Auto-ended at midnight. Original hours: ${record.hoursWorked}h. Admin validation grants exactly ${SPAM_VALIDATION_HOURS}h`;
         record.employeeNotes = (record.employeeNotes || '') + ' [Auto-ended at midnight - Pending admin review]';
 
         // Set overtime to 0 for spam records
@@ -537,7 +537,7 @@ router.post('/auto-end-day-midnight', auth, async (req, res) => {
           dailyRecord.autoEnded = true;
           dailyRecord.spamStatus = 'Pending Review';
           dailyRecord.spamReason = 'User did not click End Day before midnight';
-          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin can validate max ${MAX_SPAM_VALIDATION_HOURS}h`;
+          dailyRecord.systemNotes = `Auto-ended at midnight. Actual hours: ${record.hoursWorked}h. Admin validation grants exactly ${SPAM_VALIDATION_HOURS}h`;
           await dailyRecord.save();
         }
 
@@ -590,16 +590,14 @@ router.post('/auto-end-day-midnight', auth, async (req, res) => {
 });
 
 /**
- * POST /api/attendance/validate-spam-hours
- * Admin validates spam hours - caps at 8 hours max
+ * POST /api/attendance/validate-spam-hours/:recordId
+ * Admin validates spam hours - SIMPLE RULE: User gets EXACTLY 8 hours (not more, not less)
+ * These 8 hours add to cumulative hours
  */
 router.post('/validate-spam-hours/:recordId', auth, adminAuth, async (req, res) => {
   try {
     const { recordId } = req.params;
-    const { hoursToValidate, reason } = req.body;
-
-    // Validate hours - max 8 hours for spam records
-    const validHours = Math.min(hoursToValidate || MAX_SPAM_VALIDATION_HOURS, MAX_SPAM_VALIDATION_HOURS);
+    const { reason } = req.body;
 
     // Find the attendance record
     const record = await Attendance.findById(recordId).populate('user', 'name email');
@@ -612,12 +610,44 @@ router.post('/validate-spam-hours/:recordId', auth, adminAuth, async (req, res) 
       return res.status(400).json({ error: 'This record was not auto-ended' });
     }
 
-    // Update record with validated hours (capped at 8)
-    record.hoursWorked = validHours;
+    // SIMPLE LOGIC: Calculate correct hours if endDayTime is missing
+    let actualHoursWorked = record.hoursWorked;
+    
+    if (!record.endDayTime && record.startDayTime) {
+      // Record was never properly ended - calculate up to midnight of start day
+      const startTime = new Date(record.startDayTime);
+      const startDate = new Date(record.date);
+      const midnightAfterStart = new Date(startDate);
+      midnightAfterStart.setDate(midnightAfterStart.getDate() + 1);
+      midnightAfterStart.setHours(0, 0, 0, 0);
+      
+      actualHoursWorked = (midnightAfterStart - startTime) / (1000 * 60 * 60);
+      
+      // Update the record with correct end time (midnight)
+      record.endDayTime = midnightAfterStart;
+      record.hoursWorked = Math.round(actualHoursWorked * 100) / 100;
+      
+      console.log(`🔧 Fixed missing endDayTime for ${record.user.name}: Hours to midnight: ${record.hoursWorked}h`);
+    } else if (record.endDayTime && record.startDayTime) {
+      // Recalculate to ensure accuracy
+      const startTime = new Date(record.startDayTime);
+      const endTime = new Date(record.endDayTime);
+      actualHoursWorked = (endTime - startTime) / (1000 * 60 * 60);
+      record.hoursWorked = Math.round(actualHoursWorked * 100) / 100;
+    }
+
+    // Save original hours before updating
+    const originalHours = record.hoursWorked;
+
+    // SIMPLE RULE: Spam validation = EXACTLY 8 hours (not more, not less)
+    const validatedHours = 8;
+
+    // Update record with EXACTLY 8 hours
+    record.hoursWorked = validatedHours;
     record.spamStatus = 'Valid';
     record.validatedBy = req.user.id;
     record.validatedAt = new Date();
-    record.spamReason = reason || `Validated by admin - ${validHours} hours approved (max ${MAX_SPAM_VALIDATION_HOURS}h)`;
+    record.spamReason = reason || `Admin validated - User gets exactly 8 hours (actual: ${originalHours}h)`;
     record.approvalStatus = 'Approved';
 
     await record.save();
@@ -629,25 +659,25 @@ router.post('/validate-spam-hours/:recordId', auth, adminAuth, async (req, res) 
     });
 
     if (dailyRecord) {
-      dailyRecord.totalHoursWorked = validHours;
+      dailyRecord.totalHoursWorked = validatedHours;
       dailyRecord.spamStatus = 'Valid';
       dailyRecord.validatedBy = req.user.id;
       dailyRecord.validatedAt = new Date();
-      dailyRecord.spamReason = `Validated: ${validHours}h approved by admin`;
+      dailyRecord.spamReason = `Admin validated - Exactly 8 hours granted`;
       await dailyRecord.save();
     }
 
-    console.log(`✅ Admin validated spam record for ${record.user.name}: ${validHours}h (original: ${record.hoursWorked}h)`);
+    console.log(`✅ Admin validated spam record for ${record.user.name}: Granted exactly 8h (actual was: ${originalHours}h)`);
 
     res.json({
       success: true,
-      message: `Validated ${validHours} hours for ${record.user.name}`,
+      message: `Validated spam record - User gets exactly 8 hours`,
       data: {
         recordId: record._id,
         userName: record.user.name,
-        originalHours: record.hoursWorked,
-        validatedHours: validHours,
-        maxAllowed: MAX_SPAM_VALIDATION_HOURS,
+        actualHours: originalHours,
+        validatedHours: validatedHours,
+        rule: 'Spam validation always grants exactly 8 hours',
         validatedBy: req.user.name,
         validatedAt: new Date()
       }
