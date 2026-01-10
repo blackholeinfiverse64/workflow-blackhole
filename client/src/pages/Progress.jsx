@@ -506,7 +506,7 @@ function Progress() {
       });
 
       // Send with axios to handle FormData properly
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('WorkflowToken');
       const response = await axios.post(`${API_URL}/progress`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
