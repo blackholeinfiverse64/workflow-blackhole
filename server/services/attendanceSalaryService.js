@@ -180,8 +180,43 @@ class AttendanceSalaryService {
         totalPayable: 0
       };
 
-      // Process each record
+      // Get public holidays first to filter out holiday dates
+      const user = await User.findById(userId).populate('department');
+      const publicHolidays = await PublicHoliday.getHolidaysInRange(
+        new Date(startDate),
+        new Date(endDate),
+        user?.department?._id
+      );
+      
+      // Get holiday dates for filtering
+      const holidayDates = new Set(
+        publicHolidays.map(h => moment(h.date).format('YYYY-MM-DD'))
+      );
+
+      // IMPORTANT: Filter out records that fall on holidays
+      // Admin can mark days as holidays, and those hours should NOT be counted in cumulative
+      let excludedHolidayHours = 0;
+      const filteredRecords = [];
+      
       for (const record of records) {
+        const recordDate = moment(record.date).format('YYYY-MM-DD');
+        
+        if (holidayDates.has(recordDate)) {
+          // This day is a holiday - exclude its hours from cumulative
+          const hoursToExclude = record.totalHoursWorked || 0;
+          excludedHolidayHours += hoursToExclude;
+          
+          console.log(`🚫 Excluding holiday hours: ${recordDate} - ${hoursToExclude}h (${record.user?.name})`);
+          
+          // Don't add this record to filtered records (it's a holiday)
+        } else {
+          // Normal working day - include in salary calculation
+          filteredRecords.push(record);
+        }
+      }
+
+      // Process only non-holiday records
+      for (const record of filteredRecords) {
         if (record.status === 'Present' || record.status === 'Late') {
           summary.presentDays++;
           if (record.status === 'Late') summary.lateDays++;
@@ -213,14 +248,16 @@ class AttendanceSalaryService {
       summary.totalHours += paidLeaveHours;
       summary.regularHours += paidLeaveHours;
 
-      // Add public holiday hours
-      const user = await User.findById(userId).populate('department');
-      const publicHolidays = await PublicHoliday.getHolidaysInRange(
-        new Date(startDate),
-        new Date(endDate),
-        user?.department?._id
-      );
+      // Store holiday exclusion info
+      summary.holidaysMarked = publicHolidays.length;
+      summary.excludedHolidayHours = excludedHolidayHours;
+      summary.holidayDates = publicHolidays.map(h => ({
+        date: h.date,
+        name: h.name,
+        isPaidLeave: h.isPaidLeave
+      }));
       
+      // Add paid public holiday hours (standard 8h per paid holiday, not actual worked hours)
       const paidPublicHolidays = publicHolidays.filter(h => h.isPaidLeave);
       const publicHolidayHours = paidPublicHolidays.length * standardHours;
       

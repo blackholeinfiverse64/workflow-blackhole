@@ -16,7 +16,9 @@ import {
   Search,
   Download,
   Eye,
-  BarChart3
+  BarChart3,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -39,6 +41,8 @@ const AdminAimsView = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAim, setSelectedAim] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -437,6 +441,29 @@ const AdminAimsView = () => {
                               {userProgress.blockers.length > 100 && '...'}
                             </p>
                           )}
+                          {userProgress.progressImages && userProgress.progressImages.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm text-green-800 mb-2 flex items-center gap-1">
+                                <ImageIcon className="w-3 h-3" />
+                                <strong>{userProgress.progressImages.length} Image(s) Uploaded</strong>
+                              </p>
+                              <div className="flex gap-1 overflow-x-auto">
+                                {userProgress.progressImages.slice(0, 3).map((image, index) => (
+                                  <img
+                                    key={index}
+                                    src={image.url}
+                                    alt={`Progress ${index + 1}`}
+                                    className="w-16 h-16 object-cover rounded border"
+                                  />
+                                ))}
+                                {userProgress.progressImages.length > 3 && (
+                                  <div className="w-16 h-16 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-600">
+                                    +{userProgress.progressImages.length - 3}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -597,10 +624,65 @@ const AdminAimsView = () => {
                           </p>
                         </div>
                       )}
+                      {userProgress.progressImages && userProgress.progressImages.length > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" />
+                            Progress Images ({userProgress.progressImages.length})
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {userProgress.progressImages.map((image, index) => (
+                              <div 
+                                key={index} 
+                                className="relative group cursor-pointer"
+                                onClick={() => {
+                                  setSelectedImage(image.url);
+                                  setImageModalOpen(true);
+                                }}
+                              >
+                                <img
+                                  src={image.url}
+                                  alt={`Progress ${index + 1}`}
+                                  className="w-full h-32 object-cover rounded-md border hover:opacity-80 transition-opacity"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-md flex items-center justify-center">
+                                  <Eye className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
               })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Modal */}
+      <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Progress Image
+              <button
+                onClick={() => setImageModalOpen(false)}
+                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="flex items-center justify-center">
+              <img
+                src={selectedImage}
+                alt="Progress"
+                className="max-w-full max-h-[70vh] object-contain rounded-md"
+              />
             </div>
           )}
         </DialogContent>

@@ -34,6 +34,17 @@ const ProgressSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  progressImages: [{
+    url: {
+      type: String,
+      required: true
+    },
+    publicId: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   createdAt: {
     type: Date,
     default: Date.now,

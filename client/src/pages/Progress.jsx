@@ -358,7 +358,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Slider } from "../components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Loader2, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, CheckCircle2, AlertCircle, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { api, API_URL } from "../lib/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -381,6 +381,8 @@ function Progress() {
   const [achievements, setAchievements] = useState("");
   const [progressHistory, setProgressHistory] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
 
 
@@ -439,7 +441,44 @@ function Progress() {
       setNotes("");
       setBlockers("");
       setAchievements("");
+      setSelectedImages([]);
+      setImagePreviews([]);
     }
+  };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Limit to 10 images
+    if (files.length + selectedImages.length > 10) {
+      toast.error("You can upload a maximum of 10 images");
+      return;
+    }
+
+    // Validate file sizes (max 10MB per file)
+    const validFiles = files.filter(file => {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large. Maximum size is 10MB`);
+        return false;
+      }
+      return true;
+    });
+
+    // Create previews
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, { file, preview: reader.result }]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setSelectedImages(prev => [...prev, ...validFiles]);
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmitProgress = async () => {
@@ -451,17 +490,29 @@ function Progress() {
     try {
       setIsSubmitting(true);
       
-      const progressData = {
-        user: user.id,
-        task: selectedTask._id,
-        progressPercentage: progressValue,
-        notes,
-        blockers,
-        achievements,
-        date: new Date(),
-      };
+      // Create FormData for multipart/form-data submission
+      const formData = new FormData();
+      formData.append('user', user.id);
+      formData.append('task', selectedTask._id);
+      formData.append('progressPercentage', progressValue);
+      formData.append('notes', notes);
+      formData.append('blockers', blockers);
+      formData.append('achievements', achievements);
+      formData.append('date', new Date().toISOString());
 
-      await api.progress.createProgress(progressData);
+      // Append images
+      selectedImages.forEach((image) => {
+        formData.append('progressImages', image);
+      });
+
+      // Send with axios to handle FormData properly
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/progress`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'x-auth-token': token
+        }
+      });
       
       // Update the task in the local state
       const updatedTasks = tasks.map(task => 
@@ -481,8 +532,10 @@ function Progress() {
       setNotes("");
       setBlockers("");
       setAchievements("");
+      setSelectedImages([]);
+      setImagePreviews([]);
       
-      toast.success("Progress updated successfully");
+      toast.success(`Progress updated successfully${selectedImages.length > 0 ? ` with ${selectedImages.length} image(s)` : ''}`);
     } catch (error) {
       console.error("Error updating progress:", error);
       toast.error("Failed to update progress");
@@ -601,6 +654,57 @@ function Progress() {
                   onChange={(e) => setAchievements(e.target.value)}
                   rows={2}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="progressImages">Progress Images (Optional)</Label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="progressImages"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('progressImages').click()}
+                      className="w-full"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Images ({selectedImages.length}/10)
+                    </Button>
+                  </div>
+                  
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {imagePreviews.map((item, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={item.preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground">
+                    <ImageIcon className="inline h-3 w-3 mr-1" />
+                    Upload up to 10 images (max 10MB each) to show your progress
+                  </p>
+                </div>
               </div>
 
               <Button 

@@ -157,6 +157,9 @@ const biometricAttendanceRoutes = require('./routes/biometricAttendance'); // Bi
 const hourlyBasedSalaryRoutes = require('./routes/hourlyBasedSalary'); // Hourly-based salary management
 const newSalaryRoutes = require('./routes/newSalaryManagement'); // New salary management system
 const { startAttendancePersistenceCron, syncExistingAttendance } = require('./services/attendanceCronJobs'); // Attendance persistence cron
+// Middleware imports
+const auth = require('./middleware/auth');
+const adminAuth = require('./middleware/adminAuth');
 // const aiRoutePy = require('./routes/aiRoutePy')
 // Create Express app
 const app = express();

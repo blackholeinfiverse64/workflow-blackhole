@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { Loader2, Calendar, Filter, RefreshCw, Clock, Bell, ChevronLeft, ChevronRight, MapPin, TrendingUp, CheckCircle, AlertCircle, Target, User } from "lucide-react"
+import { Loader2, Calendar, Filter, RefreshCw, Clock, Bell, ChevronLeft, ChevronRight, MapPin, TrendingUp, CheckCircle, AlertCircle, Target, User, Image as ImageIcon, Eye, X } from "lucide-react"
 import { useToast } from "../hooks/use-toast"
 import { useAuth } from "../context/auth-context"
 import { api, API_URL } from "../lib/api"
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Switch } from "../components/ui/switch"
 import { Label } from "../components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog"
 import axios from "axios"
 
 function AllAims() {
@@ -26,6 +27,8 @@ function AllAims() {
   const [automateAimReminders, setAutomateAimReminders] = useState(false)
   const [automateProgressReminders, setAutomateProgressReminders] = useState(false)
   const filterCardRef = useRef(null)
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imageModalOpen, setImageModalOpen] = useState(false)
 
   const fetchData = useCallback(async () => {
     const scrollPosition = filterCardRef.current ? filterCardRef.current.getBoundingClientRect().top + window.scrollY : 0
@@ -326,6 +329,36 @@ function AllAims() {
                       Blockers: 
                     </span>
                     <span className="text-xs text-gray-700 ml-1">{entry.blockers}</span>
+                  </div>
+                )}
+
+                {entry.progressImages && entry.progressImages.length > 0 && (
+                  <div className="mt-2">
+                    <span className="text-xs font-medium text-gray-600 flex items-center gap-1 mb-1">
+                      <ImageIcon className="h-3 w-3" />
+                      {entry.progressImages.length} Image(s)
+                    </span>
+                    <div className="flex gap-1 flex-wrap">
+                      {entry.progressImages.map((image, imgIndex) => (
+                        <div
+                          key={imgIndex}
+                          className="relative group cursor-pointer"
+                          onClick={() => {
+                            setSelectedImage(image.url);
+                            setImageModalOpen(true);
+                          }}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Progress ${imgIndex + 1}`}
+                            className="w-16 h-16 object-cover rounded border hover:opacity-80 transition-opacity"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded flex items-center justify-center">
+                            <Eye className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -640,6 +673,32 @@ function AllAims() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Image Modal */}
+      <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Progress Image
+              <button
+                onClick={() => setImageModalOpen(false)}
+                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="flex items-center justify-center">
+              <img
+                src={selectedImage}
+                alt="Progress"
+                className="max-w-full max-h-[70vh] object-contain rounded-md"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

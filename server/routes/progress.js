@@ -5,6 +5,26 @@ const Progress = require("../models/Progress");
 const Task = require("../models/Task");
 const User = require("../models/User");
 const { check, validationResult } = require("express-validator");
+const multer = require("multer");
+const { uploadProgressImage } = require("../utils/cloudinary");
+
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    files: 10 // Maximum 10 files
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // @route   GET api/progress/task/:taskId
 // @desc    Get all progress updates for a task
@@ -123,11 +143,12 @@ router.get("/all", auth, async (req, res) => {
 });
 
 // @route   POST api/progress
-// @desc    Create a progress update
+// @desc    Create a progress update with optional images
 // @access  Private
 router.post(
   "/",
   auth,
+  upload.array('progressImages', 10), // Accept up to 10 images
   [
     check("task", "Task ID is required").not().isEmpty(),
     check("progressPercentage", "Progress percentage is required").isNumeric(),
@@ -153,6 +174,32 @@ router.post(
         return res.status(404).json({ msg: "Task not found" });
       }
 
+      // Upload images to Cloudinary if provided
+      const uploadedImages = [];
+      if (req.files && req.files.length > 0) {
+        console.log(`📸 Uploading ${req.files.length} progress images for user ${user}`);
+        
+        for (const file of req.files) {
+          try {
+            const imageData = await uploadProgressImage(
+              file.buffer, 
+              user, 
+              { taskId: task }
+            );
+            uploadedImages.push({
+              url: imageData.url,
+              publicId: imageData.publicId,
+              uploadedAt: new Date()
+            });
+          } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            // Continue with other images even if one fails
+          }
+        }
+        
+        console.log(`✅ Successfully uploaded ${uploadedImages.length} images`);
+      }
+
       // Create new progress
       const newProgress = new Progress({
         task,
@@ -161,6 +208,7 @@ router.post(
         notes,
         blockers,
         achievements,
+        progressImages: uploadedImages,
         date: date || new Date(),
       });
 

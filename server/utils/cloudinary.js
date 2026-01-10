@@ -300,6 +300,75 @@ async function cleanupOldViolationScreenshots(retentionDays = 90) {
 }
 
 /**
+ * Upload progress images to Cloudinary
+ */
+async function uploadProgressImage(buffer, userId, metadata = {}) {
+  try {
+    const timestamp = Date.now();
+    const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Generate secure filename
+    const hash = crypto.createHash('md5').update(buffer).digest('hex').substring(0, 8);
+    const fileName = `progress_${timestamp}_${hash}`;
+
+    // Upload to Cloudinary with organized folder structure
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          public_id: `progress-images/${userId}/${dateStr}/${fileName}`,
+          resource_type: "image",
+          folder: "progress-images",
+          format: "jpg",
+          quality: "auto:good",
+          fetch_format: "auto",
+          type: "upload",
+          tags: [
+            "progress-image",
+            `user-${userId}`,
+            `date-${dateStr}`
+          ],
+          context: {
+            user_id: userId,
+            upload_date: dateStr,
+            task_id: metadata.taskId || "general"
+          },
+          transformation: [
+            {
+              width: 1200,
+              height: 1200,
+              crop: "limit",
+              quality: "auto:good",
+              fetch_format: "auto"
+            }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+
+    console.log(`📤 Progress image uploaded to Cloudinary: ${result.public_id}`);
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      version: result.version,
+      fileSize: result.bytes,
+      format: result.format,
+      width: result.width,
+      height: result.height
+    };
+
+  } catch (error) {
+    console.error("Error uploading progress image to Cloudinary:", error);
+    throw new Error("Failed to upload progress image to Cloudinary");
+  }
+}
+
+/**
  * Get storage statistics for employee monitoring
  */
 async function getStorageStatistics() {
@@ -340,6 +409,7 @@ module.exports = {
   uploadToCloudinary,
   uploadViolationScreenshot,
   uploadRegularScreenshot,
+  uploadProgressImage,
   getViolationScreenshots,
   deleteViolationScreenshot,
   generateOptimizedScreenshotUrl,
