@@ -675,7 +675,7 @@ function Progress() {
                       className="w-full"
                     >
                       <Upload className="mr-2 h-4 w-4" />
-                      Upload Images ({selectedImages.length}/10)
+                      Upload Images
                     </Button>
                   </div>
                   
