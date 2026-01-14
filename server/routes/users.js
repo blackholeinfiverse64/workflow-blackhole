@@ -191,6 +191,98 @@ router.put("/:id/status", auth, adminAuth, async (req, res) => {
   }
 })
 
+// Update user work mode (admin only) - WFH or WFO
+// WFH employees have max 8 hours/day cap
+// WFO employees have no hour cap (can work 12, 14, 16+ hours)
+router.put("/:id/work-mode", auth, adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params
+    const { workMode } = req.body
+
+    // Validate workMode
+    if (!['WFH', 'WFO'].includes(workMode)) {
+      return res.status(400).json({ 
+        error: "workMode must be 'WFH' (Work From Home) or 'WFO' (Work From Office)" 
+      })
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id, 
+      { $set: { workMode } }, 
+      { new: true }
+    ).select("-password").populate("department", "name")
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" })
+    }
+
+    await auditLogService.log(req.user.id, 'UPDATE_USER_WORK_MODE', 'USER', user._id, {
+      newWorkMode: workMode,
+      note: workMode === 'WFH' ? 'Max 8 hours/day cap applied' : 'No hour cap (unlimited hours)'
+    });
+
+    res.json({
+      success: true,
+      message: workMode === 'WFH' 
+        ? "User set to Work From Home (8h/day max cap)" 
+        : "User set to Work From Office (no hour cap)",
+      user,
+      rules: {
+        workMode,
+        maxHoursPerDay: workMode === 'WFH' ? 8 : 'Unlimited',
+        overtimeAllowed: workMode === 'WFO',
+        description: workMode === 'WFH' 
+          ? 'WFH employees are capped at 8 hours per calendar day. Sessions spanning midnight are auto-ended.'
+          : 'WFO employees can work unlimited hours (12, 14, 16+ hours). No automatic capping.'
+      }
+    })
+  } catch (error) {
+    console.error("Error updating user work mode:", error)
+    res.status(500).json({ error: "Server error" })
+  }
+})
+
+// Bulk update work mode for multiple users (admin only)
+router.put("/bulk/work-mode", auth, adminAuth, async (req, res) => {
+  try {
+    const { userIds, workMode } = req.body
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ error: "userIds must be a non-empty array" })
+    }
+
+    if (!['WFH', 'WFO'].includes(workMode)) {
+      return res.status(400).json({ 
+        error: "workMode must be 'WFH' (Work From Home) or 'WFO' (Work From Office)" 
+      })
+    }
+
+    const result = await User.updateMany(
+      { _id: { $in: userIds } },
+      { $set: { workMode } }
+    )
+
+    await auditLogService.log(req.user.id, 'BULK_UPDATE_WORK_MODE', 'USER', null, {
+      userCount: userIds.length,
+      newWorkMode: workMode
+    });
+
+    res.json({
+      success: true,
+      message: `Updated ${result.modifiedCount} users to ${workMode}`,
+      modifiedCount: result.modifiedCount,
+      rules: {
+        workMode,
+        maxHoursPerDay: workMode === 'WFH' ? 8 : 'Unlimited',
+        overtimeAllowed: workMode === 'WFO'
+      }
+    })
+  } catch (error) {
+    console.error("Error bulk updating work mode:", error)
+    res.status(500).json({ error: "Server error" })
+  }
+})
+
 // Get all users including exited ones (admin only) - SHOW ALL USERS
 router.get("/admin/all", auth, adminAuth, async (req, res) => {
   try {

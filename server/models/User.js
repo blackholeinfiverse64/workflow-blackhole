@@ -78,6 +78,15 @@ const UserSchema = new mongoose.Schema({
   resetPasswordExpires: {
     type: Date,
   },
+  // Work Mode - WFH (Work From Home) or WFO (Work From Office)
+  // WFH employees have max 8 hours/day cap
+  // WFO employees have no hour cap (can work 12, 14, 16+ hours)
+  workMode: {
+    type: String,
+    enum: ['WFH', 'WFO'],
+    default: 'WFO', // Default to Work From Office (no cap)
+    index: true,
+  },
 })
 
 // Update the updatedAt field before saving

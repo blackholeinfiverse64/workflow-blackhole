@@ -254,8 +254,11 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// WFH Maximum Hours Cap - ONLY applies to WFH employees
+const WFH_MAX_HOURS_PER_DAY = 8;
+
 // Pre-save middleware to calculate hours worked and detect discrepancies
-attendanceSchema.pre('save', function(next) {
+attendanceSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
   
   // Calculate hours worked
@@ -267,7 +270,42 @@ attendanceSchema.pre('save', function(next) {
     this.hoursWorked = Math.max(0, (timeDiff / (1000 * 60 * 60)) - (this.breakTime / 60));
   }
   
+  // ============================================
+  // WFH HOUR CAPPING LOGIC - ONLY FOR WFH EMPLOYEES
+  // WFO employees can work unlimited hours (12, 14, 16+)
+  // ============================================
+  try {
+    // Check if this record is for a WFH employee
+    const isWFH = this.workPattern === 'Remote' || 
+                  (this.populated('user') && this.user?.workMode === 'WFH');
+    
+    // If user not populated, try to fetch workMode
+    if (!isWFH && this.user && !this.populated('user')) {
+      const User = require('./User');
+      const userDoc = await User.findById(this.user).select('workMode').lean();
+      if (userDoc?.workMode === 'WFH') {
+        // Apply WFH cap: max 8 hours per calendar day
+        if (this.hoursWorked > WFH_MAX_HOURS_PER_DAY) {
+          // Store original hours for audit
+          this.systemNotes = (this.systemNotes || '') + 
+            ` [WFH Cap Applied: ${this.hoursWorked.toFixed(2)}h → ${WFH_MAX_HOURS_PER_DAY}h]`;
+          this.hoursWorked = WFH_MAX_HOURS_PER_DAY;
+        }
+      }
+    } else if (isWFH && this.hoursWorked > WFH_MAX_HOURS_PER_DAY) {
+      // Apply WFH cap: max 8 hours per calendar day
+      this.systemNotes = (this.systemNotes || '') + 
+        ` [WFH Cap Applied: ${this.hoursWorked.toFixed(2)}h → ${WFH_MAX_HOURS_PER_DAY}h]`;
+      this.hoursWorked = WFH_MAX_HOURS_PER_DAY;
+    }
+  } catch (err) {
+    console.error('Error checking WFH status in pre-save:', err.message);
+    // Continue without capping if error occurs
+  }
+  
   // Calculate overtime (assuming 8 hours is standard)
+  // For WFH: overtimeHours will always be 0 due to cap
+  // For WFO: overtimeHours can be positive (12h work = 4h overtime)
   this.overtimeHours = Math.max(0, this.hoursWorked - 8);
   
   // Detect discrepancies

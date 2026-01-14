@@ -310,8 +310,11 @@ const dailyAttendanceSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// WFH Maximum Hours Cap - ONLY applies to WFH employees
+const WFH_MAX_HOURS_PER_DAY = 8;
+
 // Pre-save middleware to calculate hours and detect discrepancies
-dailyAttendanceSchema.pre('save', function(next) {
+dailyAttendanceSchema.pre('save', async function(next) {
   this.updatedAt = Date.now();
   
   // Calculate total hours worked
@@ -331,10 +334,46 @@ dailyAttendanceSchema.pre('save', function(next) {
   
   if (startTime && endTime) {
     const timeDiff = endTime.getTime() - startTime.getTime();
-    const totalHours = Math.max(0, (timeDiff / (1000 * 60 * 60)) - (this.breakTime / 60));
+    let totalHours = Math.max(0, (timeDiff / (1000 * 60 * 60)) - (this.breakTime / 60));
+    
+    // ============================================
+    // WFH HOUR CAPPING LOGIC - ONLY FOR WFH EMPLOYEES
+    // WFO employees can work unlimited hours (12, 14, 16+)
+    // ============================================
+    let isWFH = false;
+    try {
+      // Check if work location type indicates WFH
+      if (this.workLocationType === 'Home' || this.workLocationType === 'Remote') {
+        isWFH = true;
+      }
+      
+      // Also check user's workMode setting
+      if (!isWFH && this.user && !this.populated('user')) {
+        const User = require('./User');
+        const userDoc = await User.findById(this.user).select('workMode').lean();
+        if (userDoc?.workMode === 'WFH') {
+          isWFH = true;
+        }
+      } else if (this.populated('user') && this.user?.workMode === 'WFH') {
+        isWFH = true;
+      }
+      
+      // Apply WFH cap if applicable
+      if (isWFH && totalHours > WFH_MAX_HOURS_PER_DAY) {
+        // Store original hours for audit
+        this.systemNotes = (this.systemNotes || '') + 
+          ` [WFH Cap Applied: ${totalHours.toFixed(2)}h → ${WFH_MAX_HOURS_PER_DAY}h]`;
+        totalHours = WFH_MAX_HOURS_PER_DAY;
+      }
+    } catch (err) {
+      console.error('Error checking WFH status in DailyAttendance pre-save:', err.message);
+      // Continue without capping if error occurs
+    }
     
     this.totalHoursWorked = Math.round(totalHours * 100) / 100;
     this.regularHours = Math.min(totalHours, 8);
+    // For WFH: overtimeHours will always be 0 due to cap
+    // For WFO: overtimeHours can be positive (12h work = 4h overtime)
     this.overtimeHours = Math.max(0, totalHours - 8);
     
     // Allocate hours based on work location type

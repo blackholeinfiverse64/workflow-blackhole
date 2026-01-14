@@ -478,14 +478,19 @@ app.use((err, req, res, next) => {
 // Midnight auto-end scheduler for unended work days
 const Attendance = require('./models/Attendance');
 const DailyAttendance = require('./models/DailyAttendance');
+const User = require('./models/User');
 
 // SIMPLE RULE: Spam validation = EXACTLY 8 hours for cumulative calculation
 const SPAM_VALIDATION_HOURS = 8;
+// WFH Maximum Hours Cap - ONLY applies to WFH employees
+const WFH_MAX_HOURS_PER_DAY = 8;
 
 /**
  * Midnight Auto-End Job
  * Runs at 12:00 AM every day to auto-end unfinished work sessions
- * Hours go to spam queue (max 8h can be validated by admin)
+ * - WFH employees: Hours capped at 8 hours max per calendar day
+ * - WFO employees: NO cap, can work unlimited hours (12, 14, 16+)
+ * Hours go to spam queue (WFH max 8h, WFO actual hours can be validated by admin)
  */
 const midnightAutoEndJob = async () => {
   try {
@@ -519,7 +524,7 @@ const midnightAutoEndJob = async () => {
       try {
         // Calculate actual hours worked (from start to midnight)
         const startTime = new Date(record.startDayTime);
-        const hoursWorked = (midnightTime - startTime) / (1000 * 60 * 60);
+        let hoursWorked = (midnightTime - startTime) / (1000 * 60 * 60);
 
         // Validation: Ensure hours are reasonable (max 24 hours in a day)
         if (hoursWorked > 24 || hoursWorked < 0) {
@@ -527,25 +532,61 @@ const midnightAutoEndJob = async () => {
           continue;
         }
 
+        // ============================================
+        // WFH HOUR CAPPING LOGIC - ONLY FOR WFH EMPLOYEES
+        // WFO employees have NO cap - they can work unlimited hours
+        // ============================================
+        let isWFH = false;
+        const originalHours = hoursWorked;
+        
+        // Check if user is WFH by workMode or workPattern
+        if (record.workPattern === 'Remote') {
+          isWFH = true;
+        } else if (record.user?._id) {
+          const userDoc = await User.findById(record.user._id).select('workMode').lean();
+          if (userDoc?.workMode === 'WFH') {
+            isWFH = true;
+          }
+        }
+        
+        // Apply WFH cap ONLY for WFH employees
+        // WFO employees keep their actual hours (no cap)
+        if (isWFH && hoursWorked > WFH_MAX_HOURS_PER_DAY) {
+          hoursWorked = WFH_MAX_HOURS_PER_DAY;
+          console.log(`📍 WFH Cap Applied for ${record.user.name}: ${originalHours.toFixed(2)}h → ${hoursWorked}h`);
+        }
+
         // MIDNIGHT SPAN LOGIC: Session spans from one day to next
         const spanType = 'MIDNIGHT_SPAN';
+        
+        // Determine fixed hours based on work mode
+        const fixedHours = isWFH ? WFH_MAX_HOURS_PER_DAY : SPAM_VALIDATION_HOURS;
         
         // Auto end the day at midnight
         record.endDayTime = midnightTime;
         record.hoursWorked = Math.round(hoursWorked * 100) / 100;
         record.autoEnded = true;
         record.spamStatus = 'Pending Review';
-        record.spamReason = 'Session spans midnight - auto-ended by system';
+        record.spamReason = isWFH 
+          ? 'WFH session spans midnight - auto-ended with 8h cap'
+          : 'Session spans midnight - auto-ended by system';
         record.spanType = spanType; // Mark as midnight span
         record.spanDetails = {
           startDate: yesterday.toISOString().split('T')[0],
           endDate: today.toISOString().split('T')[0],
-          actualHours: Math.round(hoursWorked * 100) / 100,
-          fixedHours: SPAM_VALIDATION_HOURS
+          actualHours: Math.round(originalHours * 100) / 100,
+          fixedHours: fixedHours,
+          splitRequired: Boolean(!isWFH && originalHours > 24), // Only split for WFO multi-day sessions
+          isWFH: isWFH
         };
-        record.systemNotes = `Midnight span detected. Hours: ${record.hoursWorked}h. Admin validation grants ${SPAM_VALIDATION_HOURS}h fixed`;
-        record.employeeNotes = (record.employeeNotes || '') + ' [Auto-ended at midnight - Span session pending admin review]';
-        record.overtimeHours = 0;
+        record.systemNotes = isWFH 
+          ? `WFH Midnight span: ${originalHours.toFixed(2)}h actual → ${hoursWorked}h (8h max cap applied)`
+          : `WFO Midnight span: ${originalHours.toFixed(2)}h actual. Admin validation grants ${fixedHours}h fixed`;
+        record.employeeNotes = (record.employeeNotes || '') + 
+          (isWFH 
+            ? ' [WFH Auto-ended at midnight - 8h cap applied]'
+            : ' [Auto-ended at midnight - Span session pending admin review]');
+        record.overtimeHours = isWFH ? 0 : Math.max(0, hoursWorked - 8); // WFH has no overtime
         record.approvalStatus = 'Pending';
 
         await record.save();
@@ -564,19 +605,26 @@ const midnightAutoEndJob = async () => {
           dailyRecord.totalHoursWorked = record.hoursWorked;
           dailyRecord.autoEnded = true;
           dailyRecord.spamStatus = 'Pending Review';
-          dailyRecord.spamReason = 'Session spans midnight - requires validation';
+          dailyRecord.spamReason = isWFH 
+            ? 'WFH session spans midnight - 8h cap applied'
+            : 'Session spans midnight - requires validation';
           dailyRecord.spanType = 'MIDNIGHT_SPAN';
           dailyRecord.spanDetails = record.spanDetails;
-          dailyRecord.systemNotes = `Midnight span: ${record.hoursWorked}h actual → ${SPAM_VALIDATION_HOURS}h fixed on validation`;
+          dailyRecord.systemNotes = isWFH
+            ? `WFH Midnight span: ${originalHours.toFixed(2)}h actual → ${record.hoursWorked}h (8h cap)`
+            : `WFO Midnight span: ${originalHours.toFixed(2)}h actual → ${SPAM_VALIDATION_HOURS}h fixed on validation`;
+          dailyRecord.overtimeHours = isWFH ? 0 : Math.max(0, record.hoursWorked - 8);
           await dailyRecord.save();
         }
 
         autoEndedCount.push({
           userName: record.user.name,
-          hoursWorked: record.hoursWorked
+          hoursWorked: record.hoursWorked,
+          isWFH: isWFH,
+          originalHours: originalHours
         });
 
-        console.log(`⚠️ Auto-ended work day for ${record.user.name} - ${record.hoursWorked}h (marked as spam)`);
+        console.log(`⚠️ Auto-ended work day for ${record.user.name} - ${record.hoursWorked}h${isWFH ? ' (WFH capped)' : ' (WFO)'} (marked as spam)`);
 
         // Emit socket event
         io.emit('attendance:auto-ended-midnight', {

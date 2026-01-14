@@ -203,9 +203,9 @@ const LiveAttendanceDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Professional SaaS Header */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <motion.div
@@ -217,10 +217,10 @@ const LiveAttendanceDashboard = () => {
                 <Activity className="w-6 h-6 text-white" />
               </div>
         <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Live Attendance Dashboard
                 </h1>
-                <p className="text-sm text-gray-600 mt-0.5 flex items-center gap-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 flex items-center gap-2">
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -241,7 +241,7 @@ const LiveAttendanceDashboard = () => {
                 onClick={() => fetchLiveAttendance(true)}
             variant="outline"
             size="sm"
-                className="border-gray-300 hover:bg-gray-50 shadow-sm"
+                className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 shadow-sm"
                 disabled={refreshing}
           >
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
@@ -282,11 +282,11 @@ const LiveAttendanceDashboard = () => {
                 transition={{ delay: idx * 0.05 }}
                 whileHover={{ y: -4 }}
         >
-                <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
                   <CardContent className="p-5">
               <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 truncate">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 truncate">
                           {stat.label}
                         </p>
                         <p className={`text-2xl font-bold ${stat.textColor} leading-none`}>
@@ -309,16 +309,16 @@ const LiveAttendanceDashboard = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
             <CardContent className="p-5">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                   <Input
                     placeholder="Search employees by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-11 bg-white border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="pl-12 h-11 bg-white dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
@@ -374,9 +374,9 @@ const LiveAttendanceDashboard = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
-                <Card className="bg-white border border-gray-200 shadow-sm">
-                  <CardHeader className="pb-4 border-b border-gray-100">
-                    <CardTitle className="flex items-center gap-3 text-gray-900">
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-700">
+                    <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white\">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <PieChart className="w-5 h-5 text-blue-600" />
                       </div>
@@ -386,12 +386,12 @@ const LiveAttendanceDashboard = () => {
                   <CardContent className="pt-6 space-y-6">
                     <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Present</span>
-                        <span className="text-sm font-semibold text-gray-900">{stats.presentToday}/{stats.totalEmployees}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Present</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.presentToday}/{stats.totalEmployees}</span>
                   </div>
                   <Progress
                         value={stats.totalEmployees > 0 ? (stats.presentToday / stats.totalEmployees) * 100 : 0}
-                        className="h-2.5 bg-gray-200"
+                        className="h-2.5 bg-gray-200 dark:bg-gray-700"
                   />
                     </div>
 
@@ -420,9 +420,9 @@ const LiveAttendanceDashboard = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
-                <Card className="bg-white border border-gray-200 shadow-sm">
-                  <CardHeader className="pb-4 border-b border-gray-100">
-                    <CardTitle className="flex items-center gap-3 text-gray-900">
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-700">
+                    <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <Zap className="w-5 h-5 text-green-600" />
                       </div>
@@ -444,7 +444,7 @@ const LiveAttendanceDashboard = () => {
                               exit={{ opacity: 0, x: 20 }}
                               transition={{ delay: index * 0.05 }}
                               whileHover={{ x: 4 }}
-                              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all cursor-pointer"
+                              className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-blue-200 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all cursor-pointer"
                       >
                               <Avatar className="w-10 h-10 ring-2 ring-white shadow-sm">
                           <AvatarImage src={record.user.avatar} />
@@ -453,10 +453,10 @@ const LiveAttendanceDashboard = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                             {record.user.name}
                           </p>
-                                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                <p className="text-xs text-gray-500 dark:text-gray-300 flex items-center gap-1 mt-0.5">
                                   <Clock className="w-3 h-3" />
                                   Started at {new Date(record.startDayTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
@@ -487,11 +487,11 @@ const LiveAttendanceDashboard = () => {
         {/* Employee Grid Tab */}
           <TabsContent value="grid" className="space-y-6 mt-6">
             {filteredAttendance.length === 0 ? (
-              <Card className="bg-white border border-gray-200 shadow-sm">
+              <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
                 <CardContent className="py-16 text-center">
-                  <UserX className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-semibold text-gray-700 mb-2">No employees found</p>
-                  <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
+                  <UserX className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-500" />
+                  <p className="text-lg font-semibold text-gray-700 dark:text-white mb-2">No employees found</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Try adjusting your search or filter criteria</p>
                 </CardContent>
               </Card>
             ) : (
@@ -511,7 +511,7 @@ const LiveAttendanceDashboard = () => {
                         transition={{ delay: index * 0.03 }}
                         whileHover={{ y: -4 }}
                   >
-                        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-full">
+                        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-full">
                           <CardContent className="p-5">
                             {/* Header with Avatar */}
                             <div className="flex items-start justify-between mb-5">
@@ -530,10 +530,10 @@ const LiveAttendanceDashboard = () => {
                                   />
                             </div>
                             <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-gray-900 truncate text-base leading-tight">
+                                  <h3 className="font-bold text-gray-900 dark:text-white truncate text-base leading-tight">
                                 {record.user.name}
                               </h3>
-                                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                                  <p className="text-xs text-gray-500 dark:text-gray-300 truncate mt-0.5">
                                 {record.user.email}
                               </p>
                             </div>
@@ -556,7 +556,7 @@ const LiveAttendanceDashboard = () => {
                             {/* Status and Info */}
                             <div className="space-y-3.5">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium text-gray-600">Status</span>
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</span>
                             <Badge
                                   variant={getStatusBadgeVariant(record)}
                                   className="text-xs font-semibold"
@@ -566,12 +566,12 @@ const LiveAttendanceDashboard = () => {
                           </div>
 
                           {record.startDayTime && (
-                                <div className="flex items-center justify-between text-sm py-1.5 border-b border-gray-100">
-                                  <span className="text-gray-600 flex items-center gap-1.5">
+                                <div className="flex items-center justify-between text-sm py-1.5 border-b border-gray-100 dark:border-gray-700">
+                                  <span className="text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
                                     <Clock className="w-3.5 h-3.5" />
                                     Start:
                                   </span>
-                                  <span className="font-semibold text-gray-900">
+                                  <span className="font-semibold text-gray-900 dark:text-white">
                                 {new Date(record.startDayTime).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit'
@@ -581,12 +581,12 @@ const LiveAttendanceDashboard = () => {
                           )}
 
                           {record.endDayTime && (
-                                <div className="flex items-center justify-between text-sm py-1.5 border-b border-gray-100">
-                                  <span className="text-gray-600 flex items-center gap-1.5">
+                                <div className="flex items-center justify-between text-sm py-1.5 border-b border-gray-100 dark:border-gray-700">
+                                  <span className="text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
                                     <CheckCircle className="w-3.5 h-3.5" />
                                     End:
                                   </span>
-                                  <span className="font-semibold text-gray-900">
+                                  <span className="font-semibold text-gray-900 dark:text-white">
                                 {new Date(record.endDayTime).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit'
@@ -596,21 +596,21 @@ const LiveAttendanceDashboard = () => {
                           )}
 
                               <div className="flex items-center justify-between text-sm pt-1">
-                                <span className="text-gray-600 font-medium">Hours Worked</span>
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">Hours Worked</span>
                                 <span className={`font-bold text-lg ${workingHours >= 8 ? 'text-green-600' : workingHours >= 6 ? 'text-orange-600' : 'text-red-600'}`}>
                               {workingHours.toFixed(1)}h
                             </span>
                           </div>
 
                               {record.isPresent && !record.endDayTime && (
-                                <div className="mt-4 pt-3 border-t border-gray-100">
-                                  <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
                                     <span className="font-medium">Daily Progress</span>
                                     <span className="font-bold">{progress.toFixed(0)}%</span>
                               </div>
                               <Progress
                                     value={progress}
-                                    className="h-2 bg-gray-200"
+                                    className="h-2 bg-gray-200 dark:bg-gray-700"
                               />
                             </div>
                           )}
@@ -628,9 +628,9 @@ const LiveAttendanceDashboard = () => {
         {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6 mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-white border border-gray-200 shadow-sm">
-                <CardHeader className="border-b border-gray-100">
-                  <CardTitle className="flex items-center gap-3 text-gray-900">
+              <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <CardHeader className="border-b border-gray-100 dark:border-gray-700">
+                  <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <BarChart3 className="w-5 h-5 text-blue-600" />
                     </div>
@@ -639,17 +639,17 @@ const LiveAttendanceDashboard = () => {
                   <CardDescription className="mt-2">Weekly attendance patterns</CardDescription>
               </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="text-center py-16 text-gray-500">
+                  <div className="text-center py-16 text-gray-500 dark:text-gray-400">
                     <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                    <p className="font-medium text-gray-700">Analytics charts coming soon</p>
-                    <p className="text-sm mt-2 text-gray-500">Visual insights will be displayed here</p>
+                    <p className="font-medium text-gray-700 dark:text-white">Analytics charts coming soon</p>
+                    <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">Visual insights will be displayed here</p>
                 </div>
               </CardContent>
             </Card>
 
-              <Card className="bg-white border border-gray-200 shadow-sm">
-                <CardHeader className="border-b border-gray-100">
-                  <CardTitle className="flex items-center gap-3 text-gray-900">
+              <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <CardHeader className="border-b border-gray-100 dark:border-gray-700">
+                  <CardTitle className="flex items-center gap-3 text-gray-900 dark:text-white">
                     <div className="p-2 bg-purple-100 rounded-lg">
                       <PieChart className="w-5 h-5 text-purple-600" />
                     </div>
@@ -658,10 +658,10 @@ const LiveAttendanceDashboard = () => {
                   <CardDescription className="mt-2">Attendance by department</CardDescription>
               </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="text-center py-16 text-gray-500">
+                  <div className="text-center py-16 text-gray-500 dark:text-gray-400">
                     <PieChart className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                    <p className="font-medium text-gray-700">Department analytics coming soon</p>
-                    <p className="text-sm mt-2 text-gray-500">Detailed breakdowns will be available here</p>
+                    <p className="font-medium text-gray-700 dark:text-gray-300">Department analytics coming soon</p>
+                    <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">Detailed breakdowns will be available here</p>
                 </div>
               </CardContent>
             </Card>
