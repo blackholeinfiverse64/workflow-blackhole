@@ -216,17 +216,27 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
           resolve(coords);
         },
         (error) => {
-          // If high accuracy fails, try with lower accuracy
-          console.warn('High accuracy GPS failed, trying lower accuracy...', error);
+          // Log the error details for debugging (but don't show to user yet)
+          // This GeolocationPositionError is expected when GPS fails - we'll use IP fallback
+          console.log('📍 GPS Error (this is normal - switching to IP fallback):', {
+            code: error.code,
+            message: error.message,
+            type: 'GeolocationPositionError',
+            note: 'IP-based location will be used automatically'
+          });
+          
+          // If high accuracy fails, try with lower accuracy first
+          console.log('📍 Trying lower accuracy GPS...');
           
           navigator.geolocation.getCurrentPosition(
             (position) => {
               if (!position || !position.coords) {
                 // Fallback to IP-based location
-                console.log('Lower accuracy GPS failed, trying IP-based location...');
+                console.log('📍 Lower accuracy GPS failed, trying IP-based location...');
                 getLocationFromIP()
                   .then((ipLocation) => {
                     setLoading(false);
+                    console.log('✅ Using IP-based location (GPS unavailable)');
                     resolve(ipLocation);
                   })
                   .catch(() => {
@@ -246,26 +256,38 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
                 source: 'GPS_LOW'
               };
               setLoading(false);
+              console.log('✅ Using lower accuracy GPS');
               resolve(coords);
             },
             (retryError) => {
-              // If both GPS attempts fail, try IP-based location as last resort
-              console.warn('GPS location failed, trying IP-based location as fallback...', retryError);
+              // If both GPS attempts fail, automatically try IP-based location
+              // This is the expected behavior - GPS failed, so we use IP
+              console.log('📍 GPS unavailable (this is OK - using IP location automatically):', {
+                code: retryError.code,
+                message: retryError.message,
+                action: 'Switching to IP-based location...'
+              });
+              
+              // Automatically use IP fallback - don't reject immediately
+              // This is the normal flow when GPS fails
               getLocationFromIP()
                 .then((ipLocation) => {
                   setLoading(false);
-                  console.log('✅ Using IP-based location as fallback');
-                  resolve(ipLocation);
+                  console.log('✅ Successfully using IP-based location (GPS was unavailable - this is normal)');
+                  resolve(ipLocation); // Resolve with IP location instead of rejecting
                 })
-                .catch(() => {
+                .catch((ipError) => {
                   setLoading(false);
-                  // Ensure error has code property
-                  if (!retryError.code && retryError.message) {
-                    retryError.code = retryError.message.includes('permission') ? 1 : 
-                                    retryError.message.includes('unavailable') ? 2 : 
-                                    retryError.message.includes('timeout') ? 3 : 0;
-                  }
-                  reject(retryError);
+                  // Only reject if IP also fails (rare case)
+                  console.error('❌ Both GPS and IP location failed (unusual):', ipError);
+                  const finalError = new Error(
+                    retryError.code === 1 ? 'Location permission denied. Please enable location access.' :
+                    retryError.code === 2 ? 'Location unavailable. Please check your GPS/WiFi settings.' :
+                    retryError.code === 3 ? 'Location request timed out. IP-based location also failed. Please check your internet connection.' :
+                    'Unable to get your location. Please check your internet connection.'
+                  );
+                  finalError.code = retryError.code || 0;
+                  reject(finalError);
                 });
             },
             {
@@ -320,31 +342,38 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
       setStep('validation');
       
     } catch (error) {
-      console.error('Location error:', error);
+      // Log error details for debugging (but don't show raw error to user)
+      console.log('📍 Location Error Details:', {
+        code: error.code,
+        message: error.message,
+        type: error.constructor?.name || 'Error'
+      });
+      
       let errorMessage = 'Unable to get your location. ';
       let errorTitle = 'Location Error';
       
       // Handle GeolocationPositionError
+      // Note: The IP fallback should have already been tried automatically
       if (error.code !== undefined) {
         switch (error.code) {
           case 1: // PERMISSION_DENIED
           case error.PERMISSION_DENIED:
             errorTitle = 'Location Permission Denied';
-            errorMessage = 'Location access is denied. Please enable location permission in your browser settings and try again.';
+            errorMessage = 'Location access is denied. Please enable location permission in your browser settings. The system tried to use IP-based location as a fallback, but it also failed.';
             break;
           case 2: // POSITION_UNAVAILABLE
           case error.POSITION_UNAVAILABLE:
             errorTitle = 'Location Unavailable';
-            errorMessage = 'Your location could not be determined. Please check your GPS/WiFi settings and try again.';
+            errorMessage = 'Your location could not be determined. The system automatically tried IP-based location, but it also failed. Please check your internet connection.';
             break;
           case 3: // TIMEOUT
           case error.TIMEOUT:
             errorTitle = 'Location Timeout';
-            errorMessage = 'Location request timed out. Please check your internet connection and try again.';
+            errorMessage = 'GPS location timed out. The system automatically tried IP-based location, but it also failed. Please check your internet connection and try again.';
             break;
           default:
             errorTitle = 'Location Error';
-            errorMessage = error.message || 'Unable to get your location. Please try again.';
+            errorMessage = error.message || 'Unable to get your location. The system tried both GPS and IP-based location, but both failed. Please check your internet connection and try again.';
             break;
         }
       } else if (error.message) {

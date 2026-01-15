@@ -50,6 +50,65 @@ const upload = multer({
   },
 })
 
+// Get overdue tasks
+router.get("/overdue", auth, async (req, res) => {
+  try {
+    const now = new Date()
+    
+    // Find tasks that are overdue (dueDate < now) and not completed
+    const tasks = await Task.find({
+      dueDate: { $lt: now },
+      status: { $ne: "Completed" }
+    })
+      .populate("department", "name color")
+      .populate("dependencies", "title status")
+      .sort({ dueDate: 1 }) // Sort by due date (oldest first)
+
+    // Handle assignee population manually
+    const tasksWithAssignees = await Promise.all(tasks.map(async (task) => {
+      const taskObj = task.toObject()
+      
+      if (!task.assignee) {
+        taskObj.assignee = null
+        return taskObj
+      }
+
+      const actualUser = await User.findById(task.assignee).select("name avatar email stillExist")
+      
+      if (!actualUser) {
+        taskObj.assignee = null
+        return taskObj
+      }
+
+      const isActive = actualUser.stillExist === 1
+      const isBlackhole = actualUser.email.toLowerCase().startsWith('blackhole')
+
+      taskObj.assignee = {
+        _id: actualUser._id,
+        name: actualUser.name,
+        avatar: actualUser.avatar,
+        email: actualUser.email,
+        stillExist: actualUser.stillExist,
+        isActive,
+        isBlackhole,
+        status: !isActive ? 'inactive' : !isBlackhole ? 'non-blackhole' : 'active'
+      }
+
+      // Calculate days overdue
+      const dueDate = new Date(task.dueDate)
+      const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))
+      taskObj.daysOverdue = daysOverdue
+
+      return taskObj
+    }))
+
+    res.json(tasksWithAssignees)
+  } catch (error) {
+    console.error("Error fetching overdue tasks:", error)
+    res.status(500).json({ error: "Server error" })
+  }
+})
+
 // Get all tasks - SHOW ALL EXISTING ASSIGNEES
 router.get("/", auth, async (req, res) => {
   try {

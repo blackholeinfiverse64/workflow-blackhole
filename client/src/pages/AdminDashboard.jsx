@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Building2, Users, Plus, Trash2, RefreshCw, Search, Edit, UserPlus, UserCog, KeyRound, Eye, EyeOff, Target } from "lucide-react"
+import { Building2, Users, Plus, Trash2, RefreshCw, Search, Edit, UserPlus, UserCog, KeyRound, Eye, EyeOff, Target, AlertCircle } from "lucide-react"
 import AdminChatbot from "@/components/admin/admin-chatbot"
 import LiveAttendanceAdminPanel from "@/components/admin/LiveAttendanceAdminPanel"
 import SetAimsPanel from "@/components/admin/SetAimsPanel"
+import OverdueTasks from "@/components/admin/OverdueTasks"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -620,7 +621,7 @@ const AdminDashboard = () => {
 
       {/* Premium Tabs */}
       <Tabs defaultValue="departments" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className={`w-full mx-auto ${isAdminOrManager ? 'max-w-6xl grid-cols-5' : 'max-w-md grid-cols-2'} grid bg-muted/50 p-1 rounded-lg`}>
+        <TabsList className={`w-full mx-auto ${isAdminOrManager ? 'max-w-7xl grid-cols-6' : 'max-w-md grid-cols-2'} grid bg-muted/50 p-1 rounded-lg`}>
           <TabsTrigger value="departments" className="text-sm font-medium rounded-md data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
             <Building2 className="mr-2 h-4 w-4" /> Departments
           </TabsTrigger>
@@ -629,6 +630,9 @@ const AdminDashboard = () => {
           </TabsTrigger>
           {isAdminOrManager && (
             <>
+              <TabsTrigger value="overdue-tasks" className="text-sm font-medium rounded-md data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
+                <AlertCircle className="mr-2 h-4 w-4" /> Overdue Tasks
+              </TabsTrigger>
               <TabsTrigger value="set-aims" className="text-sm font-medium rounded-md data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
                 <Target className="mr-2 h-4 w-4" /> Set Aims
               </TabsTrigger>
@@ -1145,6 +1149,12 @@ const AdminDashboard = () => {
             {isAdminOrManager && (
               <TabsContent value="set-aims" className="mt-6">
                 <SetAimsPanel />
+              </TabsContent>
+            )}
+
+            {isAdminOrManager && (
+              <TabsContent value="overdue-tasks" className="mt-6">
+                <OverdueTasks />
               </TabsContent>
             )}
 
