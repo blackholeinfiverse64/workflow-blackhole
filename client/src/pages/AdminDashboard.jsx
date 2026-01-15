@@ -65,6 +65,12 @@ const AdminDashboard = () => {
   
   // Check if user is Admin or Manager
   const isAdminOrManager = currentUser && (currentUser.role === "Admin" || currentUser.role === "Manager")
+  
+  // Debug: Log user role
+  useEffect(() => {
+    console.log('Current User:', currentUser)
+    console.log('Is Admin or Manager:', isAdminOrManager)
+  }, [currentUser, isAdminOrManager])
 
   // Department form state
   const [newDepartment, setNewDepartment] = useState({
@@ -99,6 +105,7 @@ const AdminDashboard = () => {
   const [passwordSearchTerm, setPasswordSearchTerm] = useState("")
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showOverdueTasksDialog, setShowOverdueTasksDialog] = useState(false)
 
   // Set auth header for all requests
   useEffect(() => {
@@ -482,7 +489,8 @@ const AdminDashboard = () => {
           <h1 className="text-3xl font-heading font-bold tracking-tight text-foreground">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">Manage departments and users</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap items-center">
+          {/* Button 1 */}
           <Button
             variant="outline"
             onClick={() => {
@@ -492,6 +500,19 @@ const AdminDashboard = () => {
             className="border-border hover:bg-primary/5 hover:text-primary transition-all duration-300"
           >
             <RefreshCw className="mr-2 h-4 w-4" /> Refresh Data
+          </Button>
+          
+          {/* Button 5 - Overdue Tasks (Red Button) - Visible for Admin/Manager */}
+          <Button
+            onClick={() => {
+              console.log('Overdue Tasks button clicked')
+              setShowOverdueTasksDialog(true)
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <AlertCircle className="h-4 w-4" /> 
+            <span>Overdue Tasks</span>
           </Button>
         </div>
       </div>
@@ -621,7 +642,7 @@ const AdminDashboard = () => {
 
       {/* Premium Tabs */}
       <Tabs defaultValue="departments" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className={`w-full mx-auto ${isAdminOrManager ? 'max-w-7xl grid-cols-6' : 'max-w-md grid-cols-2'} grid bg-muted/50 p-1 rounded-lg`}>
+        <TabsList className={`w-full mx-auto ${isAdminOrManager ? 'max-w-6xl grid-cols-5' : 'max-w-md grid-cols-2'} grid bg-muted/50 p-1 rounded-lg`}>
           <TabsTrigger value="departments" className="text-sm font-medium rounded-md data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
             <Building2 className="mr-2 h-4 w-4" /> Departments
           </TabsTrigger>
@@ -630,9 +651,6 @@ const AdminDashboard = () => {
           </TabsTrigger>
           {isAdminOrManager && (
             <>
-              <TabsTrigger value="overdue-tasks" className="text-sm font-medium rounded-md data-[state=active]:bg-red-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
-                <AlertCircle className="mr-2 h-4 w-4" /> Overdue Tasks
-              </TabsTrigger>
               <TabsTrigger value="set-aims" className="text-sm font-medium rounded-md data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
                 <Target className="mr-2 h-4 w-4" /> Set Aims
               </TabsTrigger>
@@ -1153,17 +1171,19 @@ const AdminDashboard = () => {
             )}
 
             {isAdminOrManager && (
-              <TabsContent value="overdue-tasks" className="mt-6">
-                <OverdueTasks />
-              </TabsContent>
-            )}
-
-            {isAdminOrManager && (
               <TabsContent value="live-attendance" className="mt-6">
                 <LiveAttendanceAdminPanel />
               </TabsContent>
             )}
           </Tabs>
+
+      {/* Overdue Tasks Dialog */}
+      {isAdminOrManager && (
+        <OverdueTasks 
+          open={showOverdueTasksDialog} 
+          onOpenChange={setShowOverdueTasksDialog} 
+        />
+      )}
 
       {/* Change Password Dialog with Show/Hide Password (Admin/Manager Only) */}
       {isAdminOrManager && (

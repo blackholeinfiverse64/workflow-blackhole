@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip"
-import { Plus, Loader2, Mail, FileText, Target, Bell } from 'lucide-react'
+import { Plus, Loader2, Mail, FileText, Target, Bell, AlertCircle } from 'lucide-react'
 import { CreateTaskDialog } from "../components/tasks/create-task-dialog"
 import { DepartmentStats } from "../components/dashboard/department-stats"
 import { DepartmentDetails } from "../components/departments/DepartmentDetails"
@@ -17,6 +17,7 @@ import { useToast } from "../hooks/use-toast"
 import { useAuth } from "../context/auth-context"
 import AdminChatbot from "../components/admin/admin-chatbot"
 import { AdminReportDialog } from "../components/admin/AdminReportDialog"
+import OverdueTasks from "../components/admin/OverdueTasks"
 
 
 
@@ -39,6 +40,7 @@ function Dashboard() {
   const [isSendingAimReminders, setIsSendingAimReminders] = useState(false)
   const [selectedDepartment, setSelectedDepartment] = useState(null)
   const [showReportDialog, setShowReportDialog] = useState(false)
+  const [showOverdueTasksDialog, setShowOverdueTasksDialog] = useState(false)
 
   const isAdmin = user && (user.role === "Admin" || user.role === "Manager")
 
@@ -204,6 +206,15 @@ function Dashboard() {
               >
                   <FileText className="mr-2 h-4 w-4" />
                 Generate Reports
+              </Button>
+
+              {/* Button 5 - Overdue Tasks (Red Button) */}
+              <Button
+                onClick={() => setShowOverdueTasksDialog(true)}
+                className="bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Overdue Tasks
               </Button>
             </>
           )}
@@ -389,6 +400,14 @@ function Dashboard() {
       
       {/* Admin Chatbot - Available for all users */}
       {isAdmin && <AdminChatbot />}
+      
+      {/* Overdue Tasks Dialog */}
+      {isAdmin && (
+        <OverdueTasks 
+          open={showOverdueTasksDialog} 
+          onOpenChange={setShowOverdueTasksDialog} 
+        />
+      )}
     </div>
   )
 }

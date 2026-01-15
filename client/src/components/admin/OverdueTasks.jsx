@@ -7,17 +7,24 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { AlertCircle, Search, Calendar, User, Building2 } from "lucide-react"
+import { AlertCircle, Search, Calendar, User, Building2, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { API_URL } from "@/lib/api"
 import { format } from "date-fns"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // Configure axios with base URL
 const api = axios.create({
   baseURL: `${API_URL}`,
 })
 
-const OverdueTasks = () => {
+const OverdueTasks = ({ open, onOpenChange }) => {
   const { toast } = useToast()
   const [overdueTasks, setOverdueTasks] = useState([])
   const [filteredTasks, setFilteredTasks] = useState([])
@@ -31,8 +38,10 @@ const OverdueTasks = () => {
       api.defaults.headers.common["x-auth-token"] = token
     }
     
-    fetchOverdueTasks()
-  }, [])
+    if (open) {
+      fetchOverdueTasks()
+    }
+  }, [open])
 
   useEffect(() => {
     // Filter tasks based on search query
@@ -160,134 +169,136 @@ const OverdueTasks = () => {
   }
 
   return (
-    <Card className="border-l-4 border-l-red-500 shadow-xl">
-      <CardHeader className="bg-gradient-to-r from-red-500/5 to-transparent">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <CardTitle className="text-2xl font-heading font-bold tracking-tight flex items-center gap-2">
-              <AlertCircle className="h-6 w-6 text-red-500" />
-              Overdue Tasks
-            </CardTitle>
-            <CardDescription className="mt-2">
-              {filteredTasks.length} overdue task{filteredTasks.length !== 1 ? 's' : ''} found
-            </CardDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-red-500/5 to-transparent">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex-1">
+              <DialogTitle className="text-2xl font-heading font-bold tracking-tight flex items-center gap-2">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+                Overdue Tasks
+              </DialogTitle>
+              <DialogDescription className="mt-2">
+                {filteredTasks.length} overdue task{filteredTasks.length !== 1 ? 's' : ''} found
+              </DialogDescription>
+            </div>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by user name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full"
+              />
+            </div>
           </div>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by user name, email, or task..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full"
-            />
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-red-500 border-t-transparent mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading overdue tasks...</p>
-          </div>
-        ) : filteredTasks.length === 0 ? (
-          <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-lg font-semibold text-foreground">
-              {searchQuery ? "No tasks found matching your search" : "No overdue tasks"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {searchQuery
-                ? "Try adjusting your search query"
-                : "All tasks are up to date!"}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">User</TableHead>
-                  <TableHead>Task Title</TableHead>
-                  <TableHead>Assignee</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Days Overdue</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTasks.map((task) => (
-                  <TableRow key={task._id} className="hover:bg-red-50/50 dark:hover:bg-red-950/20">
-                    <TableCell>
-                      {task.assignee ? (
-                        <Avatar className="h-8 w-8">
-                          {task.assignee.avatar ? (
-                            <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
-                          ) : (
-                            <AvatarFallback className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
-                              {getInitials(task.assignee.name)}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                      ) : (
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-gray-100 text-gray-500">
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium max-w-[300px]">
-                      <div className="truncate" title={task.title}>
-                        {task.title}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {task.assignee ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium">{task.assignee.name}</span>
-                          <span className="text-xs text-muted-foreground">{task.assignee.email}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {task.department ? (
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${task.department.color || "bg-gray-500"}`}></div>
-                          <span>{task.department.name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No department</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {task.dueDate ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {format(new Date(task.dueDate), "MMM dd, yyyy")}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No due date</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {getDaysOverdueBadge(task.daysOverdue || 0)}
-                    </TableCell>
-                    <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                    <TableCell>{getStatusBadge(task.status)}</TableCell>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-red-500 border-t-transparent mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading overdue tasks...</p>
+            </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <p className="text-lg font-semibold text-foreground">
+                {searchQuery ? "No tasks found matching your search" : "No overdue tasks"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {searchQuery
+                  ? "Try adjusting your search query"
+                  : "All tasks are up to date!"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">User</TableHead>
+                    <TableHead>Task Title</TableHead>
+                    <TableHead>Assignee</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Days Overdue</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredTasks.map((task) => (
+                    <TableRow key={task._id} className="hover:bg-red-50/50 dark:hover:bg-red-950/20">
+                      <TableCell>
+                        {task.assignee ? (
+                          <Avatar className="h-8 w-8">
+                            {task.assignee.avatar ? (
+                              <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
+                            ) : (
+                              <AvatarFallback className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                                {getInitials(task.assignee.name)}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                        ) : (
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-gray-100 text-gray-500">
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium max-w-[300px]">
+                        <div className="truncate" title={task.title}>
+                          {task.title}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {task.assignee ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium">{task.assignee.name}</span>
+                            <span className="text-xs text-muted-foreground">{task.assignee.email}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Unassigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {task.department ? (
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${task.department.color || "bg-gray-500"}`}></div>
+                            <span>{task.department.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No department</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {task.dueDate ? (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {format(new Date(task.dueDate), "MMM dd, yyyy")}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No due date</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {getDaysOverdueBadge(task.daysOverdue || 0)}
+                      </TableCell>
+                      <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                      <TableCell>{getStatusBadge(task.status)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
