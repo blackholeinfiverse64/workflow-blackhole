@@ -105,31 +105,180 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
+  // Fallback: Get location from IP address (works when GPS fails)
+  const getLocationFromIP = () => {
+    return new Promise((resolve, reject) => {
+      // Try multiple free IP geolocation services
+      const services = [
+        'https://ipapi.co/json/',
+        'https://ip-api.com/json/',
+        'https://freeipapi.com/api/json/'
+      ];
+      
+      let attempts = 0;
+      
+      const tryService = (index) => {
+        if (index >= services.length) {
+          reject(new Error('All IP geolocation services failed'));
+          return;
+        }
+        
+        fetch(services[index], { timeout: 10000 })
+          .then(response => {
+            if (!response.ok) throw new Error('Service unavailable');
+            return response.json();
+          })
+          .then(data => {
+            let lat, lng;
+            
+            // Parse response based on service format
+            if (data.latitude && data.longitude) {
+              lat = parseFloat(data.latitude);
+              lng = parseFloat(data.longitude);
+            } else if (data.lat && data.lon) {
+              lat = parseFloat(data.lat);
+              lng = parseFloat(data.lon);
+            } else if (data.query && data.lat && data.lon) {
+              // ip-api.com format
+              lat = parseFloat(data.lat);
+              lng = parseFloat(data.lon);
+            } else {
+              throw new Error('Invalid response format');
+            }
+            
+            if (isNaN(lat) || isNaN(lng)) {
+              throw new Error('Invalid coordinates');
+            }
+            
+            resolve({
+              latitude: lat,
+              longitude: lng,
+              accuracy: 5000, // IP-based location is less accurate (~5km radius)
+              timestamp: Date.now(),
+              source: 'IP'
+            });
+          })
+          .catch(error => {
+            console.warn(`IP geolocation service ${index + 1} failed:`, error);
+            tryService(index + 1); // Try next service
+          });
+      };
+      
+      tryService(0);
+    });
+  };
+
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser'));
+        // Fallback to IP-based location if geolocation not supported
+        console.log('Geolocation not supported, using IP-based location...');
+        getLocationFromIP()
+          .then(resolve)
+          .catch(() => {
+            const error = new Error('Geolocation is not supported and IP location failed');
+            error.code = 'NOT_SUPPORTED';
+            reject(error);
+          });
         return;
       }
 
       setLoading(true);
+      
+      // Try with high accuracy first
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!position || !position.coords) {
+            // Fallback to IP-based location
+            console.log('Invalid GPS data, trying IP-based location...');
+            getLocationFromIP()
+              .then((ipLocation) => {
+                setLoading(false);
+                resolve(ipLocation);
+              })
+              .catch(() => {
+                setLoading(false);
+                const error = new Error('Invalid location data received');
+                error.code = 'INVALID_DATA';
+                reject(error);
+              });
+            return;
+          }
+          
           const coords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            timestamp: position.timestamp
+            accuracy: position.coords.accuracy || 0,
+            timestamp: position.timestamp,
+            source: 'GPS'
           };
+          setLoading(false);
           resolve(coords);
         },
         (error) => {
-          reject(error);
+          // If high accuracy fails, try with lower accuracy
+          console.warn('High accuracy GPS failed, trying lower accuracy...', error);
+          
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              if (!position || !position.coords) {
+                // Fallback to IP-based location
+                console.log('Lower accuracy GPS failed, trying IP-based location...');
+                getLocationFromIP()
+                  .then((ipLocation) => {
+                    setLoading(false);
+                    resolve(ipLocation);
+                  })
+                  .catch(() => {
+                    setLoading(false);
+                    const enhancedError = new Error(error.message || 'Unable to get location');
+                    enhancedError.code = error.code || 0;
+                    reject(enhancedError);
+                  });
+                return;
+              }
+              
+              const coords = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy || 1000, // Lower accuracy
+                timestamp: position.timestamp,
+                source: 'GPS_LOW'
+              };
+              setLoading(false);
+              resolve(coords);
+            },
+            (retryError) => {
+              // If both GPS attempts fail, try IP-based location as last resort
+              console.warn('GPS location failed, trying IP-based location as fallback...', retryError);
+              getLocationFromIP()
+                .then((ipLocation) => {
+                  setLoading(false);
+                  console.log('✅ Using IP-based location as fallback');
+                  resolve(ipLocation);
+                })
+                .catch(() => {
+                  setLoading(false);
+                  // Ensure error has code property
+                  if (!retryError.code && retryError.message) {
+                    retryError.code = retryError.message.includes('permission') ? 1 : 
+                                    retryError.message.includes('unavailable') ? 2 : 
+                                    retryError.message.includes('timeout') ? 3 : 0;
+                  }
+                  reject(retryError);
+                });
+            },
+            {
+              enableHighAccuracy: false, // Lower accuracy for retry
+              timeout: 15000,
+              maximumAge: 300000 // Accept location up to 5 minutes old
+            }
+          );
         },
         {
           enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 60000
+          timeout: 20000, // 20 seconds
+          maximumAge: 0 // Always get fresh location
         }
       );
     });
@@ -173,23 +322,53 @@ const EnhancedStartDayDialog = ({ isOpen, onClose, onSuccess }) => {
     } catch (error) {
       console.error('Location error:', error);
       let errorMessage = 'Unable to get your location. ';
+      let errorTitle = 'Location Error';
       
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage += 'Please enable location permission and try again.';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage += 'Location information is unavailable.';
-          break;
-        case error.TIMEOUT:
-          errorMessage += 'Location request timed out. Please try again.';
-          break;
-        default:
-          errorMessage += error.message;
-          break;
+      // Handle GeolocationPositionError
+      if (error.code !== undefined) {
+        switch (error.code) {
+          case 1: // PERMISSION_DENIED
+          case error.PERMISSION_DENIED:
+            errorTitle = 'Location Permission Denied';
+            errorMessage = 'Location access is denied. Please enable location permission in your browser settings and try again.';
+            break;
+          case 2: // POSITION_UNAVAILABLE
+          case error.POSITION_UNAVAILABLE:
+            errorTitle = 'Location Unavailable';
+            errorMessage = 'Your location could not be determined. Please check your GPS/WiFi settings and try again.';
+            break;
+          case 3: // TIMEOUT
+          case error.TIMEOUT:
+            errorTitle = 'Location Timeout';
+            errorMessage = 'Location request timed out. Please check your internet connection and try again.';
+            break;
+          default:
+            errorTitle = 'Location Error';
+            errorMessage = error.message || 'Unable to get your location. Please try again.';
+            break;
+        }
+      } else if (error.message) {
+        // Handle other error types
+        if (error.message.includes('not supported')) {
+          errorTitle = 'Geolocation Not Supported';
+          errorMessage = 'Your browser does not support geolocation. Please use a modern browser.';
+        } else if (error.message.includes('permission')) {
+          errorTitle = 'Permission Required';
+          errorMessage = 'Please allow location access to start your day.';
+        } else {
+          errorMessage = error.message;
+        }
       }
       
-      setLocationError(errorMessage);
+      setLocationError(`${errorTitle}: ${errorMessage}`);
+      toast.error(`${errorTitle}: ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: '#fee2e2',
+          color: '#991b1b',
+          border: '1px solid #fecaca',
+        },
+      });
     } finally {
       setLoading(false);
     }

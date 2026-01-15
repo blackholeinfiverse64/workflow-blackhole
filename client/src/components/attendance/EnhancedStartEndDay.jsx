@@ -82,27 +82,220 @@ const EnhancedStartEndDay = () => {
     }
   };
 
+  // Fallback: Get location from IP address (works when GPS fails - NO SOFTWARE NEEDED!)
+  const getLocationFromIP = () => {
+    return new Promise((resolve, reject) => {
+      const services = [
+        'https://ipapi.co/json/',
+        'https://ip-api.com/json/',
+        'https://freeipapi.com/api/json/'
+      ];
+      
+      const tryService = (index) => {
+        if (index >= services.length) {
+          reject(new Error('All IP geolocation services failed'));
+          return;
+        }
+        
+        fetch(services[index], { timeout: 10000 })
+          .then(response => {
+            if (!response.ok) throw new Error('Service unavailable');
+            return response.json();
+          })
+          .then(data => {
+            let lat, lng;
+            
+            if (data.latitude && data.longitude) {
+              lat = parseFloat(data.latitude);
+              lng = parseFloat(data.longitude);
+            } else if (data.lat && data.lon) {
+              lat = parseFloat(data.lat);
+              lng = parseFloat(data.lon);
+            } else if (data.query && data.lat && data.lon) {
+              lat = parseFloat(data.lat);
+              lng = parseFloat(data.lon);
+            } else {
+              throw new Error('Invalid response format');
+            }
+            
+            if (isNaN(lat) || isNaN(lng)) {
+              throw new Error('Invalid coordinates');
+            }
+            
+            resolve({
+              latitude: lat,
+              longitude: lng,
+              accuracy: 5000,
+              timestamp: Date.now(),
+              source: 'IP'
+            });
+          })
+          .catch(error => {
+            console.warn(`IP geolocation service ${index + 1} failed:`, error);
+            tryService(index + 1);
+          });
+      };
+      
+      tryService(0);
+    });
+  };
+
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported'));
+        // Fallback to IP-based location (NO SOFTWARE NEEDED!)
+        console.log('📍 GPS not available, using IP-based location (no software needed)...');
+        getLocationFromIP()
+          .then(async (ipLocation) => {
+            // Get address for IP location
+            const token = localStorage.getItem("WorkflowToken");
+            const API_URL = import.meta.env.VITE_API_URL || 
+              (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                ? 'https://blackholeworkflow.onrender.com/api'
+                : typeof window !== 'undefined' 
+                  ? `${window.location.origin}/api`
+                  : 'http://localhost:5000/api');
+            
+            let address = `${ipLocation.latitude.toFixed(6)}, ${ipLocation.longitude.toFixed(6)}`;
+            
+            try {
+              const geocodeResponse = await fetch(
+                `${API_URL}/attendance/reverse-geocode?latitude=${ipLocation.latitude}&longitude=${ipLocation.longitude}`,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'x-auth-token': token })
+                  }
+                }
+              );
+              
+              if (geocodeResponse.ok) {
+                const geocodeData = await geocodeResponse.json();
+                if (geocodeData.success && geocodeData.data) {
+                  address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                }
+              }
+            } catch (geocodeError) {
+              console.warn('Reverse geocoding failed:', geocodeError);
+            }
+            
+            const locationData = {
+              ...ipLocation,
+              address
+            };
+            
+            setLocation(locationData);
+            setLocationLoading(false);
+            resolve(locationData);
+          })
+          .catch(() => {
+            const error = new Error('Geolocation is not supported and IP location failed');
+            error.code = 'NOT_SUPPORTED';
+            setLocationLoading(false);
+            reject(error);
+          });
         return;
       }
 
       setLocationLoading(true);
+      
+      // Try with high accuracy first
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          if (!position || !position.coords) {
+            // Fallback to IP-based location
+            console.log('📍 Invalid GPS data, trying IP-based location...');
+            try {
+              const ipLocation = await getLocationFromIP();
+              const token = localStorage.getItem("WorkflowToken");
+              const API_URL = import.meta.env.VITE_API_URL || 
+                (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                  ? 'https://blackholeworkflow.onrender.com/api'
+                  : typeof window !== 'undefined' 
+                    ? `${window.location.origin}/api`
+                    : 'http://localhost:5000/api');
+              
+              let address = `${ipLocation.latitude.toFixed(6)}, ${ipLocation.longitude.toFixed(6)}`;
+              
+              try {
+                const geocodeResponse = await fetch(
+                  `${API_URL}/attendance/reverse-geocode?latitude=${ipLocation.latitude}&longitude=${ipLocation.longitude}`,
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(token && { 'x-auth-token': token })
+                    }
+                  }
+                );
+                
+                if (geocodeResponse.ok) {
+                  const geocodeData = await geocodeResponse.json();
+                  if (geocodeData.success && geocodeData.data) {
+                    address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                  }
+                }
+              } catch (geocodeError) {
+                console.warn('Reverse geocoding failed:', geocodeError);
+              }
+              
+              const locationData = {
+                ...ipLocation,
+                address
+              };
+              
+              setLocation(locationData);
+              setLocationLoading(false);
+              resolve(locationData);
+            } catch (ipError) {
+              setLocationLoading(false);
+              const error = new Error('Invalid location data received');
+              error.code = 'INVALID_DATA';
+              reject(error);
+            }
+            return;
+          }
+          
           const { latitude, longitude, accuracy } = position.coords;
           
           try {
-            // Get address from coordinates (you can use a geocoding service)
-            const address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            // Get address from coordinates using backend API
+            const token = localStorage.getItem("WorkflowToken");
+            const API_URL = import.meta.env.VITE_API_URL || 
+              (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                ? 'https://blackholeworkflow.onrender.com/api'
+                : typeof window !== 'undefined' 
+                  ? `${window.location.origin}/api`
+                  : 'http://localhost:5000/api');
+            
+            let address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            
+            try {
+              const geocodeResponse = await fetch(
+                `${API_URL}/attendance/reverse-geocode?latitude=${latitude}&longitude=${longitude}`,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'x-auth-token': token })
+                  }
+                }
+              );
+              
+              if (geocodeResponse.ok) {
+                const geocodeData = await geocodeResponse.json();
+                if (geocodeData.success && geocodeData.data) {
+                  address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                }
+              }
+            } catch (geocodeError) {
+              console.warn('Reverse geocoding failed, using coordinates:', geocodeError);
+            }
             
             const locationData = {
               latitude,
               longitude,
-              accuracy,
-              address
+              accuracy: accuracy || 0,
+              address,
+              source: 'GPS'
             };
             
             setLocation(locationData);
@@ -114,13 +307,177 @@ const EnhancedStartEndDay = () => {
           }
         },
         (error) => {
-          setLocationLoading(false);
-          reject(error);
+          // If high accuracy fails, try with lower accuracy
+          console.warn('📍 High accuracy GPS failed, trying lower accuracy...', error);
+          
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              if (!position || !position.coords) {
+                // Fallback to IP-based location
+                console.log('📍 Lower accuracy GPS failed, trying IP-based location...');
+                try {
+                  const ipLocation = await getLocationFromIP();
+                  const token = localStorage.getItem("WorkflowToken");
+                  const API_URL = import.meta.env.VITE_API_URL || 
+                    (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                      ? 'https://blackholeworkflow.onrender.com/api'
+                      : typeof window !== 'undefined' 
+                        ? `${window.location.origin}/api`
+                        : 'http://localhost:5000/api');
+                  
+                  let address = `${ipLocation.latitude.toFixed(6)}, ${ipLocation.longitude.toFixed(6)}`;
+                  
+                  try {
+                    const geocodeResponse = await fetch(
+                      `${API_URL}/attendance/reverse-geocode?latitude=${ipLocation.latitude}&longitude=${ipLocation.longitude}`,
+                      {
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(token && { 'x-auth-token': token })
+                        }
+                      }
+                    );
+                    
+                    if (geocodeResponse.ok) {
+                      const geocodeData = await geocodeResponse.json();
+                      if (geocodeData.success && geocodeData.data) {
+                        address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                      }
+                    }
+                  } catch (geocodeError) {
+                    console.warn('Reverse geocoding failed:', geocodeError);
+                  }
+                  
+                  const locationData = {
+                    ...ipLocation,
+                    address
+                  };
+                  
+                  setLocation(locationData);
+                  setLocationLoading(false);
+                  resolve(locationData);
+                } catch (ipError) {
+                  setLocationLoading(false);
+                  const enhancedError = new Error(error.message || 'Unable to get location');
+                  enhancedError.code = error.code || 0;
+                  reject(enhancedError);
+                }
+                return;
+              }
+              
+              const { latitude, longitude, accuracy } = position.coords;
+              
+              const token = localStorage.getItem("WorkflowToken");
+              const API_URL = import.meta.env.VITE_API_URL || 
+                (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                  ? 'https://blackholeworkflow.onrender.com/api'
+                  : typeof window !== 'undefined' 
+                    ? `${window.location.origin}/api`
+                    : 'http://localhost:5000/api');
+              
+              let address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+              
+              try {
+                const geocodeResponse = await fetch(
+                  `${API_URL}/attendance/reverse-geocode?latitude=${latitude}&longitude=${longitude}`,
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(token && { 'x-auth-token': token })
+                    }
+                  }
+                );
+                
+                if (geocodeResponse.ok) {
+                  const geocodeData = await geocodeResponse.json();
+                  if (geocodeData.success && geocodeData.data) {
+                    address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                  }
+                }
+              } catch (geocodeError) {
+                console.warn('Reverse geocoding failed:', geocodeError);
+              }
+              
+              const locationData = {
+                latitude,
+                longitude,
+                accuracy: accuracy || 1000,
+                address,
+                source: 'GPS_LOW'
+              };
+              
+              setLocation(locationData);
+              setLocationLoading(false);
+              resolve(locationData);
+            },
+            (retryError) => {
+              // If both GPS attempts fail, try IP-based location as last resort
+              console.warn('📍 GPS location failed, trying IP-based location as fallback (NO SOFTWARE NEEDED!)...', retryError);
+              getLocationFromIP()
+                .then(async (ipLocation) => {
+                  const token = localStorage.getItem("WorkflowToken");
+                  const API_URL = import.meta.env.VITE_API_URL || 
+                    (typeof window !== 'undefined' && window.location.origin.includes('vercel.app')
+                      ? 'https://blackholeworkflow.onrender.com/api'
+                      : typeof window !== 'undefined' 
+                        ? `${window.location.origin}/api`
+                        : 'http://localhost:5000/api');
+                  
+                  let address = `${ipLocation.latitude.toFixed(6)}, ${ipLocation.longitude.toFixed(6)}`;
+                  
+                  try {
+                    const geocodeResponse = await fetch(
+                      `${API_URL}/attendance/reverse-geocode?latitude=${ipLocation.latitude}&longitude=${ipLocation.longitude}`,
+                      {
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...(token && { 'x-auth-token': token })
+                        }
+                      }
+                    );
+                    
+                    if (geocodeResponse.ok) {
+                      const geocodeData = await geocodeResponse.json();
+                      if (geocodeData.success && geocodeData.data) {
+                        address = geocodeData.data.formattedAddress || geocodeData.data.fullAddress || address;
+                      }
+                    }
+                  } catch (geocodeError) {
+                    console.warn('Reverse geocoding failed:', geocodeError);
+                  }
+                  
+                  const locationData = {
+                    ...ipLocation,
+                    address
+                  };
+                  
+                  console.log('✅ Using IP-based location as fallback (NO SOFTWARE NEEDED!)');
+                  setLocation(locationData);
+                  setLocationLoading(false);
+                  resolve(locationData);
+                })
+                .catch(() => {
+                  setLocationLoading(false);
+                  // Ensure error has code property
+                  if (!retryError.code && retryError.message) {
+                    retryError.code = retryError.message.includes('permission') ? 1 : 
+                                    retryError.message.includes('unavailable') ? 2 : 
+                                    retryError.message.includes('timeout') ? 3 : 0;
+                  }
+                  reject(retryError);
+                });
+            },
+            {
+              enableHighAccuracy: false, // Lower accuracy for retry
+              timeout: 15000,
+              maximumAge: 300000 // Accept location up to 5 minutes old
+            }
+          );
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
+          timeout: 20000, // 20 seconds
+          maximumAge: 0 // Always get fresh location
         }
       );
     });
@@ -155,28 +512,96 @@ const EnhancedStartEndDay = () => {
     try {
       setActionLoading(true);
       
-      // Get current location (optional for end day)
-      let locationData = {};
+      // Get current location (MANDATORY for end day)
+      let locationData = null;
       try {
         locationData = await getCurrentLocation();
       } catch (locError) {
-        console.warn('Could not get location for end day:', locError);
+        console.error('Location error at end day:', locError);
+        let errorMessage = 'Unable to get your location. ';
+        let errorTitle = 'Location Error';
+        
+        // Handle GeolocationPositionError
+        if (locError.code !== undefined) {
+          switch (locError.code) {
+            case 1: // PERMISSION_DENIED
+              errorTitle = 'Location Permission Denied';
+              errorMessage = 'Location access is denied. Please enable location permission in your browser settings and try again.';
+              break;
+            case 2: // POSITION_UNAVAILABLE
+              errorTitle = 'Location Unavailable';
+              errorMessage = 'Your location could not be determined. Please check your GPS/WiFi settings and try again.';
+              break;
+            case 3: // TIMEOUT
+              errorTitle = 'Location Timeout';
+              errorMessage = 'Location request timed out. Please check your internet connection and try again.';
+              break;
+            default:
+              errorTitle = 'Location Error';
+              errorMessage = locError.message || 'Unable to get your location. Please try again.';
+              break;
+          }
+        } else if (locError.message) {
+          if (locError.message.includes('not supported')) {
+            errorTitle = 'Geolocation Not Supported';
+            errorMessage = 'Your browser does not support geolocation. Please use a modern browser.';
+          } else if (locError.message.includes('permission')) {
+            errorTitle = 'Permission Required';
+            errorMessage = 'Please allow location access to end your day.';
+          } else {
+            errorMessage = locError.message;
+          }
+        }
+        
+        toast.error(`${errorTitle}: ${errorMessage}`, {
+          duration: 6000,
+          style: {
+            background: '#fee2e2',
+            color: '#991b1b',
+            border: '1px solid #fecaca',
+          },
+        });
+        setActionLoading(false);
+        return; // Don't proceed without location
       }
       
-      const response = await api.post('/enhanced-attendance/end-day', {
-        ...locationData,
-        deviceInfo,
+      if (!locationData) {
+        toast.error('Location is required to end your day. Please try again.');
+        setActionLoading(false);
+        return;
+      }
+      
+      const response = await api.post('/attendance/end-day/' + user.id, {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        address: locationData.address,
+        accuracy: locationData.accuracy,
         notes: '' // You can add a notes input field if needed
       });
 
-      if (response.data.success) {
-        toast.success(response.data.message);
+      if (response.data?.success || response.success) {
+        toast.success(response.data?.message || response.message || 'Day ended successfully');
         await fetchTodayStatus();
       }
     } catch (error) {
       console.error('Error ending day:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to end day';
-      toast.error(errorMessage);
+      const errorData = error.response?.data || error;
+      let errorMessage = errorData?.error || error.message || 'Failed to end day';
+      
+      if (errorData?.code === 'DAY_NOT_STARTED') {
+        errorMessage = 'You need to start your day first before ending it.';
+      } else if (errorData?.code === 'DAY_ALREADY_ENDED') {
+        errorMessage = 'Your day has already been ended.';
+      }
+      
+      toast.error(errorMessage, {
+        duration: 5000,
+        style: {
+          background: '#fee2e2',
+          color: '#991b1b',
+          border: '1px solid #fecaca',
+        },
+      });
     } finally {
       setActionLoading(false);
     }
