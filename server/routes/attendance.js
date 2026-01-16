@@ -5,6 +5,7 @@ const ExcelJS = require('exceljs');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const geolib = require('geolib');
+const mongoose = require('mongoose');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const UserTag = require('../models/UserTag');
@@ -55,7 +56,7 @@ const OFFICE_ADDRESS = 'Blackhole Infiverse LLP, Road Number 3, near Hathi Circl
 router.post('/start-day/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
+    let { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
     
     // Verify user authorization
     if (req.user.id !== userId && req.user.role !== 'Admin') {
@@ -96,21 +97,24 @@ router.post('/start-day/:userId', auth, async (req, res) => {
       locationValidated = true;
       
       // If address is not provided or is generic, reverse geocode to get exact address
-      if (!address || address === 'Work From Home' || address.toLowerCase().includes('work from home')) {
+      let wfhAddress = address;
+      if (!wfhAddress || wfhAddress === 'Work From Home' || wfhAddress.toLowerCase().includes('work from home')) {
         try {
           const geocodeResult = await reverseGeocode(latitude, longitude);
           // Always use the full address from geocoding result
-          address = geocodeResult.fullAddress || geocodeResult.displayName || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-          console.log(`📍 User ${userId} starting work from home at: ${address} (${latitude}, ${longitude})`);
+          wfhAddress = geocodeResult.fullAddress || geocodeResult.displayName || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          console.log(`📍 User ${userId} starting work from home at: ${wfhAddress} (${latitude}, ${longitude})`);
         } catch (error) {
           console.warn(`⚠️ Reverse geocoding failed for WFH location: ${error.message}`);
           // Always provide coordinates as fallback address
-          address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-          console.log(`📍 User ${userId} starting work from home at coordinates: ${address}`);
+          wfhAddress = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          console.log(`📍 User ${userId} starting work from home at coordinates: ${wfhAddress}`);
         }
       } else {
-        console.log(`📍 User ${userId} starting work from home at: ${address} (${latitude}, ${longitude})`);
+        console.log(`📍 User ${userId} starting work from home at: ${wfhAddress} (${latitude}, ${longitude})`);
       }
+      // Update address variable for later use
+      address = wfhAddress;
     } else {
       // Check if user is within office radius
       const distance = geolib.getDistance(
@@ -246,22 +250,27 @@ router.post('/start-day/:userId', auth, async (req, res) => {
     await dailyRecord.save();
     
     // Update today's aim with work location if it exists (don't create default aims)
-    const Aim = require('../models/Aim');
-    let todayAim = await Aim.findOne({
-      user: userId,
-      date: {
-        $gte: today,
-        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+    try {
+      const Aim = require('../models/Aim');
+      let todayAim = await Aim.findOne({
+        user: userId,
+        date: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        }
+      });
+      
+      if (todayAim) {
+        // Update existing aim with work location
+        todayAim.workLocation = workLocationType;
+        await todayAim.save();
+        console.log(`🏢 Updated aim work location to ${workLocationType} for user ${userId}`);
+      } else {
+        console.log(`📝 No aim found for user ${userId} - user should set their own aim`);
       }
-    });
-    
-    if (todayAim) {
-      // Update existing aim with work location
-      todayAim.workLocation = workLocationType;
-      await todayAim.save();
-      console.log(`🏢 Updated aim work location to ${workLocationType} for user ${userId}`);
-    } else {
-      console.log(`📝 No aim found for user ${userId} - user should set their own aim`);
+    } catch (aimError) {
+      // Don't fail start-day if aim update fails
+      console.warn(`⚠️ Failed to update aim work location for user ${userId}:`, aimError.message);
     }
     
     // Emit socket event
@@ -287,10 +296,12 @@ router.post('/start-day/:userId', auth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Start day error:', error);
+    console.error('❌ Start day error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to start day',
-      details: error.message 
+      details: error.message,
+      code: 'START_DAY_ERROR'
     });
   }
 });
@@ -596,10 +607,12 @@ router.post('/end-day/:userId', auth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('End day error:', error);
+    console.error('❌ End day error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to end day',
-      details: error.message 
+      details: error.message,
+      code: 'END_DAY_ERROR'
     });
   }
 });
