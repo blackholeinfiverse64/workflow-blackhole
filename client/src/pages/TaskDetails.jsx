@@ -582,6 +582,8 @@ import {
   BarChart3,
   FileCode,
   Layers,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
@@ -591,6 +593,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { TaskSubmissionDialog } from "../components/tasks/task-submission-dialog"
 import { Skeleton } from "../components/ui/skeleton"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog"
+import { Label } from "../components/ui/label"
+import { Textarea } from "../components/ui/textarea"
 import { API_URL } from "@/lib/api"
 
 function TaskDetails() {
@@ -602,6 +607,8 @@ function TaskDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmissionDialogOpen, setIsSubmissionDialogOpen] = useState(false)
   const [submission, setSubmission] = useState(null)
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false)
+  const [reviewData, setReviewData] = useState({ status: "Pending", feedback: "" })
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
@@ -769,7 +776,7 @@ function TaskDetails() {
 
         toast({
           title: "Success",
-          description: "Your submission has been updated",
+          description: "Your submission has been updated and will be reviewed again",
         })
       } else {
         const response = await axios.post(`${API_URL}/submissions`, submissionData, config)
@@ -793,6 +800,55 @@ function TaskDetails() {
       toast({
         title: "Error",
         description: error?.response?.data?.error || "Failed to submit task",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleReviewSubmission = async () => {
+    if (!submission) return
+
+    try {
+      const token = localStorage.getItem("WorkflowToken")
+      const storedUser = JSON.parse(localStorage.getItem("WorkflowUser"))
+      
+      if (!token || !storedUser) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      await axios.put(
+        `${API_URL}/submissions/${submission._id}/review`,
+        {
+          status: reviewData.status,
+          feedback: reviewData.feedback,
+          reviewedBy: storedUser.id,
+        },
+        { headers: { "x-auth-token": token } }
+      )
+
+      toast({
+        title: "Success",
+        description: `Submission ${reviewData.status.toLowerCase()} successfully`,
+      })
+
+      // Refresh submission data
+      const submissionResponse = await axios.get(`${API_URL}/submissions/task/${id}`, {
+        headers: { "x-auth-token": token },
+      })
+      setSubmission(submissionResponse.data)
+
+      setIsReviewDialogOpen(false)
+      setReviewData({ status: "Pending", feedback: "" })
+    } catch (error) {
+      console.error("Error reviewing submission:", error)
+      toast({
+        title: "Error",
+        description: error?.response?.data?.error || "Failed to review submission",
         variant: "destructive",
       })
     }
@@ -940,10 +996,29 @@ function TaskDetails() {
                 {submission ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium">Submission Details</h3>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-medium">Submission Details</h3>
+                        <Badge className={
+                          submission.status === "Approved" 
+                            ? "bg-green-500/10 text-green-500" 
+                            : submission.status === "Rejected"
+                            ? "bg-red-500/10 text-red-500"
+                            : "bg-amber-500/10 text-amber-500"
+                        }>
+                          {submission.status}
+                        </Badge>
+                      </div>
                       {isAssignedToCurrentUser && (
-                        <Button variant="outline" size="sm" onClick={() => setIsSubmissionDialogOpen(true)}>
-                          Edit Submission
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => setIsSubmissionDialogOpen(true)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Update Submission
                         </Button>
                       )}
                     </div>
@@ -1011,9 +1086,57 @@ function TaskDetails() {
                           <h4 className="text-sm font-medium mb-2">Review Feedback</h4>
                           <p className="text-sm text-muted-foreground whitespace-pre-line">{submission.feedback}</p>
                           <div className="mt-2">
-                            <Badge className={submission.status === "Approved" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}>
+                            <Badge className={submission.status === "Approved" ? "bg-green-500/10 text-green-500" : submission.status === "Rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}>
                               {submission.status}
                             </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {/* Admin Review Controls */}
+                    {user?.role === "Admin" && submission && (
+                      <Card className="border-2 border-blue-200 dark:border-blue-800">
+                        <CardHeader>
+                          <CardTitle className="text-base">Admin Review</CardTitle>
+                          <CardDescription>Approve, reject, or set submission to pending</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex gap-2">
+                            <Button
+                              variant={submission.status === "Approved" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                setReviewData({ status: "Approved", feedback: submission.feedback || "" })
+                                setIsReviewDialogOpen(true)
+                              }}
+                              className={submission.status === "Approved" ? "bg-green-600 hover:bg-green-700" : ""}
+                            >
+                              <ThumbsUp className="h-4 w-4 mr-2" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant={submission.status === "Rejected" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                setReviewData({ status: "Rejected", feedback: submission.feedback || "" })
+                                setIsReviewDialogOpen(true)
+                              }}
+                              className={submission.status === "Rejected" ? "bg-red-600 hover:bg-red-700" : ""}
+                            >
+                              <ThumbsDown className="h-4 w-4 mr-2" />
+                              Reject
+                            </Button>
+                            <Button
+                              variant={submission.status === "Pending" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                setReviewData({ status: "Pending", feedback: submission.feedback || "" })
+                                setIsReviewDialogOpen(true)
+                              }}
+                              className={submission.status === "Pending" ? "bg-amber-600 hover:bg-amber-700" : ""}
+                            >
+                              Set Pending
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -1133,6 +1256,71 @@ function TaskDetails() {
         onSubmit={handleSubmitTask}
         existingSubmission={submission}
       />
+
+      {/* Admin Review Dialog */}
+      {user?.role === "Admin" && (
+        <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Review Submission</DialogTitle>
+              <DialogDescription>
+                Update the submission status and provide feedback
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Review Decision</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={reviewData.status === "Approved" ? "default" : "outline"}
+                    onClick={() => setReviewData({ ...reviewData, status: "Approved" })}
+                    className={reviewData.status === "Approved" ? "bg-green-600 hover:bg-green-700" : ""}
+                  >
+                    <ThumbsUp className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={reviewData.status === "Rejected" ? "default" : "outline"}
+                    onClick={() => setReviewData({ ...reviewData, status: "Rejected" })}
+                    className={reviewData.status === "Rejected" ? "bg-red-600 hover:bg-red-700" : ""}
+                  >
+                    <ThumbsDown className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={reviewData.status === "Pending" ? "default" : "outline"}
+                    onClick={() => setReviewData({ ...reviewData, status: "Pending" })}
+                    className={reviewData.status === "Pending" ? "bg-amber-600 hover:bg-amber-700" : ""}
+                  >
+                    Pending
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="feedback">Feedback (Optional)</Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Provide feedback for the submission..."
+                  value={reviewData.feedback}
+                  onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsReviewDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleReviewSubmission}>
+                Submit Review
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

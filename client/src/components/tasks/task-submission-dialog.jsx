@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -26,6 +26,22 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
   const [documentFile, setDocumentFile] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+
+  // Update form data when existingSubmission changes
+  useEffect(() => {
+    if (existingSubmission) {
+      setFormData({
+        githubLink: existingSubmission.githubLink || "",
+        notes: existingSubmission.notes || "",
+      })
+    } else {
+      setFormData({
+        githubLink: "",
+        notes: "",
+      })
+    }
+    setDocumentFile(null)
+  }, [existingSubmission, open])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -201,17 +217,28 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
               disabled={isSubmitting}
               className="flex-1 sm:flex-none h-12 px-8 rounded-xl gradient-primary text-primary-foreground hover:shadow-xl hover:shadow-primary/30 dark:hover:shadow-primary/20 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none font-bold"
             >
-              {isSubmitting ? (
+                  {isSubmitting ? (
                 <span className="flex items-center gap-2.5">
                   <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
-                  Submitting...
+                  {existingSubmission ? "Updating..." : "Submitting..."}
                 </span>
               ) : (
                 <span className="flex items-center gap-2.5">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Submit Task
+                  {existingSubmission ? (
+                    <>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Update Submission
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Submit Task
+                    </>
+                  )}
                 </span>
               )}
             </Button>

@@ -239,7 +239,7 @@ router.put("/:id", auth, upload.single("document"), async (req, res) => {
       fileType = req.file.mimetype
     }
 
-    // Update submission
+    // Update submission - Reset status to "Pending" when user updates (so admin can review again)
     const updatedSubmission = await TaskSubmission.findByIdAndUpdate(
       req.params.id,
       {
@@ -248,6 +248,8 @@ router.put("/:id", auth, upload.single("document"), async (req, res) => {
           notes: notes || "",
           documentLink,
           fileType,
+          status: "Pending", // Reset to Pending when user updates
+          feedback: "", // Clear previous feedback
           updatedAt: Date.now(),
         },
       },
@@ -269,13 +271,14 @@ router.put("/:id", auth, upload.single("document"), async (req, res) => {
   }
 })
 
-// Review submission
+// Review submission - Admin can approve, reject, or set to pending
 router.put("/:id/review", auth, async (req, res) => {
   try {
     const { status, feedback, reviewedBy } = req.body
 
-    if (!status || !["Approved", "Rejected"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" })
+    // Allow Approved, Rejected, or Pending status
+    if (!status || !["Approved", "Rejected", "Pending"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status. Must be Approved, Rejected, or Pending" })
     }
 
     const submission = await TaskSubmission.findById(req.params.id)
@@ -295,8 +298,8 @@ router.put("/:id/review", auth, async (req, res) => {
       return res.status(400).json({ error: "Reviewer ID is required" })
     }
 
-    // Add current review to history
-    if (submission.status !== "Pending") {
+    // Add current review to history (only if status is changing from non-Pending)
+    if (submission.status !== "Pending" && submission.status !== status) {
       submission.reviewHistory.push({
         status: submission.status,
         feedback: submission.feedback,
