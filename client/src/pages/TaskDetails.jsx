@@ -854,6 +854,53 @@ function TaskDetails() {
     }
   }
 
+  // Quick status change for admin (without dialog)
+  const handleQuickStatusChange = async (newStatus) => {
+    if (!submission) return
+
+    try {
+      const token = localStorage.getItem("WorkflowToken")
+      const storedUser = JSON.parse(localStorage.getItem("WorkflowUser"))
+      
+      if (!token || !storedUser) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      await axios.put(
+        `${API_URL}/submissions/${submission._id}/review`,
+        {
+          status: newStatus,
+          feedback: submission.feedback || "",
+          reviewedBy: storedUser.id,
+        },
+        { headers: { "x-auth-token": token } }
+      )
+
+      toast({
+        title: "Success",
+        description: `Submission status changed to ${newStatus.toLowerCase()}`,
+      })
+
+      // Refresh submission data
+      const submissionResponse = await axios.get(`${API_URL}/submissions/task/${id}`, {
+        headers: { "x-auth-token": token },
+      })
+      setSubmission(submissionResponse.data)
+    } catch (error) {
+      console.error("Error changing status:", error)
+      toast({
+        title: "Error",
+        description: error?.response?.data?.error || "Failed to change status",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-4 md:p-6">
@@ -1073,10 +1120,17 @@ function TaskDetails() {
                           </div>
                         )}
                         <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
-                          <span>Submitted on {new Date(submission.createdAt).toLocaleDateString()}</span>
-                          {submission.updatedAt !== submission.createdAt && (
-                            <span>Updated on {new Date(submission.updatedAt).toLocaleDateString()}</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span>Submitted on {new Date(submission.createdAt).toLocaleDateString()}</span>
+                            {submission.updatedAt !== submission.createdAt && (
+                              <>
+                                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                                  Updated
+                                </Badge>
+                                <span>Updated on {new Date(submission.updatedAt).toLocaleDateString()}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -1097,19 +1151,16 @@ function TaskDetails() {
                     {user?.role === "Admin" && submission && (
                       <Card className="border-2 border-blue-200 dark:border-blue-800">
                         <CardHeader>
-                          <CardTitle className="text-base">Admin Review</CardTitle>
-                          <CardDescription>Approve, reject, or set submission to pending</CardDescription>
+                          <CardTitle className="text-base">Admin Review Controls</CardTitle>
+                          <CardDescription>Quick status change or detailed review with feedback</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="flex gap-2">
+                        <CardContent className="space-y-3">
+                          <div className="flex gap-2 flex-wrap">
                             <Button
                               variant={submission.status === "Approved" ? "default" : "outline"}
                               size="sm"
-                              onClick={() => {
-                                setReviewData({ status: "Approved", feedback: submission.feedback || "" })
-                                setIsReviewDialogOpen(true)
-                              }}
-                              className={submission.status === "Approved" ? "bg-green-600 hover:bg-green-700" : ""}
+                              onClick={() => handleQuickStatusChange("Approved")}
+                              className={submission.status === "Approved" ? "bg-green-600 hover:bg-green-700 text-white" : ""}
                             >
                               <ThumbsUp className="h-4 w-4 mr-2" />
                               Approve
@@ -1117,11 +1168,8 @@ function TaskDetails() {
                             <Button
                               variant={submission.status === "Rejected" ? "default" : "outline"}
                               size="sm"
-                              onClick={() => {
-                                setReviewData({ status: "Rejected", feedback: submission.feedback || "" })
-                                setIsReviewDialogOpen(true)
-                              }}
-                              className={submission.status === "Rejected" ? "bg-red-600 hover:bg-red-700" : ""}
+                              onClick={() => handleQuickStatusChange("Rejected")}
+                              className={submission.status === "Rejected" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
                             >
                               <ThumbsDown className="h-4 w-4 mr-2" />
                               Reject
@@ -1129,13 +1177,23 @@ function TaskDetails() {
                             <Button
                               variant={submission.status === "Pending" ? "default" : "outline"}
                               size="sm"
-                              onClick={() => {
-                                setReviewData({ status: "Pending", feedback: submission.feedback || "" })
-                                setIsReviewDialogOpen(true)
-                              }}
-                              className={submission.status === "Pending" ? "bg-amber-600 hover:bg-amber-700" : ""}
+                              onClick={() => handleQuickStatusChange("Pending")}
+                              className={submission.status === "Pending" ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}
                             >
                               Set Pending
+                            </Button>
+                          </div>
+                          <div className="pt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setReviewData({ status: submission.status, feedback: submission.feedback || "" })
+                                setIsReviewDialogOpen(true)
+                              }}
+                              className="w-full"
+                            >
+                              Review with Feedback
                             </Button>
                           </div>
                         </CardContent>

@@ -264,6 +264,19 @@ router.put("/:id", auth, upload.single("document"), async (req, res) => {
       req.io.emit("submission-updated", updatedSubmission)
     }
 
+    // Notify admins that submission was updated
+    const admins = await User.find({ role: "Admin", stillExist: 1 })
+    const task = await Task.findById(updatedSubmission.task)
+    for (const admin of admins) {
+      await Notification.create({
+        recipient: admin._id,
+        type: "submission_updated",
+        title: "Submission Updated",
+        message: `${user.name} has updated their submission for task: '${task?.title || 'Unknown Task'}'. Please review the changes.`,
+        task: updatedSubmission.task,
+      })
+    }
+
     res.json(updatedSubmission)
   } catch (error) {
     console.error("Error updating submission:", error)

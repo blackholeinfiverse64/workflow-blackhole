@@ -687,8 +687,26 @@ function UserDashboard() {
                       <TableBody>
                         {submissions.map((submission) => (
                           <TableRow key={submission._id} className="hover:bg-muted/50">
-                            <TableCell className="font-medium">{submission.task?.title || "Unknown Task"}</TableCell>
-                            <TableCell>{new Date(submission.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {submission.task?.title || "Unknown Task"}
+                                {submission.updatedAt && submission.updatedAt !== submission.createdAt && (
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 text-xs">
+                                    Updated
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span>{new Date(submission.createdAt).toLocaleDateString()}</span>
+                                {submission.updatedAt && submission.updatedAt !== submission.createdAt && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Updated: {new Date(submission.updatedAt).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>{getSubmissionStatusBadge(submission.status)}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
@@ -701,6 +719,20 @@ function UserDashboard() {
                                   }}
                                 >
                                   View
+                                </Button>
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigate(`/tasks/${submission.task?._id || submission.task}`)
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                  Update
                                 </Button>
                                 {submission.status === "Rejected" && (
                                   <Button
