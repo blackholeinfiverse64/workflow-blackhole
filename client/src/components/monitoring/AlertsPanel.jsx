@@ -331,6 +331,24 @@ export function AlertsPanel({ employee }) {
                             {alert.description}
                           </p>
                           
+                          {/* Show website URL for unauthorized_website alerts */}
+                          {alert.alert_type === 'unauthorized_website' && alert.data?.website_url && (
+                            <div className="flex items-center gap-2 mb-2 p-2 bg-red-500/10 rounded-md border border-red-500/30">
+                              <Globe className="h-4 w-4 text-red-500 flex-shrink-0" />
+                              <span className="text-sm font-mono text-red-600 dark:text-red-400 truncate">
+                                {alert.data.website_url}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Show application name if available */}
+                          {alert.alert_type === 'unauthorized_website' && alert.data?.application_name && (
+                            <div className="text-xs text-muted-foreground mb-2">
+                              <span className="font-medium">App:</span> {alert.data.application_name}
+                              {alert.data.website_title && ` - ${alert.data.website_title}`}
+                            </div>
+                          )}
+                          
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -384,6 +402,31 @@ export function AlertsPanel({ employee }) {
               <div>
                 <h3 className="font-semibold text-foreground mb-2">{selectedAlert.title}</h3>
                 <p className="text-muted-foreground">{selectedAlert.description}</p>
+                
+                {/* Show website details prominently for unauthorized_website */}
+                {selectedAlert.alert_type === 'unauthorized_website' && selectedAlert.data?.website_url && (
+                  <div className="mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                    <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">
+                      Disallowed Website Accessed:
+                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Globe className="h-5 w-5 text-red-500" />
+                      <span className="font-mono text-red-700 dark:text-red-300 break-all">
+                        {selectedAlert.data.website_url}
+                      </span>
+                    </div>
+                    {selectedAlert.data.website_title && (
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium">Page Title:</span> {selectedAlert.data.website_title}
+                      </p>
+                    )}
+                    {selectedAlert.data.application_name && (
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium">Browser/Application:</span> {selectedAlert.data.application_name}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm">
