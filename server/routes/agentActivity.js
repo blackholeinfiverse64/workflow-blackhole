@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-
-// Activity data model (simple in-memory storage for now)
-// In production, you should create a proper MongoDB model
-const activityLogs = [];
+const EmployeeActivity = require('../models/EmployeeActivity');
 
 /**
  * POST /api/agent/activity/ingest
  * Receive activity data from desktop agent
+ * IMPORTANT: Only accepts data when employee has an active workday
  */
 router.post('/activity/ingest', auth, async (req, res) => {
   try {
@@ -30,28 +28,57 @@ router.post('/activity/ingest', auth, async (req, res) => {
       });
     }
 
-    // Create activity log entry
-    const activityLog = {
-      userId: req.user.id,
-      attendanceId,
-      timestamp: timestamp || new Date(),
-      mouseEvents: mouseEvents || 0,
-      keyboardEvents: keyboardEvents || 0,
-      idleSeconds: idleSeconds || 0,
-      activeApp: activeApp || 'Unknown',
-      intervalDuration: intervalDuration || 30,
-      createdAt: new Date()
-    };
+    // CRITICAL: Verify day is started before accepting activity data
+    const Attendance = require('../models/Attendance');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const activeDay = await Attendance.findOne({
+      user: req.user.id,
+      date: { $gte: today, $lt: tomorrow },
+      startTime: { $exists: true },
+      endTime: { $exists: false }
+    });
 
-    // Store in memory (in production, save to database)
-    activityLogs.push(activityLog);
-
-    // Keep only last 1000 entries to prevent memory issues
-    if (activityLogs.length > 1000) {
-      activityLogs.shift();
+    if (!activeDay) {
+      return res.status(403).json({ 
+        success: false,
+        error: 'Cannot accept activity data: workday not started',
+        code: 'DAY_NOT_ACTIVE',
+        hint: 'Employee must start their day first from the dashboard'
+      });
     }
 
-    console.log(`📊 Activity data received from user ${req.user.email}:`, {
+    // Calculate mouse activity score (0-100 based on events per minute)
+    const mouseActivityScore = Math.min(100, Math.round((mouseEvents / (intervalDuration / 60)) * 2));
+    
+    // Create EmployeeActivity document
+    const activityData = new EmployeeActivity({
+      employee: req.user.id,
+      timestamp: timestamp || new Date(),
+      keystroke_count: keyboardEvents || 0,
+      mouse_activity_score: mouseActivityScore,
+      idle_duration: idleSeconds || 0,
+      active_application: {
+        name: activeApp || 'Unknown',
+        title: activeApp || 'Unknown'
+      },
+      session_id: attendanceId,
+      work_hours: {
+        start: activeDay.startTime,
+        end: null
+      }
+    });
+
+    // Calculate productivity score
+    activityData.calculateProductivityScore();
+
+    // Save to MongoDB
+    await activityData.save();
+
+    console.log(`📊 Activity data saved to MongoDB for user ${req.user.email}:`, {
       mouseEvents,
       keyboardEvents,
       idleSeconds,
@@ -74,7 +101,7 @@ router.post('/activity/ingest', auth, async (req, res) => {
 
 /**
  * GET /api/agent/activity/summary/:userId
- * Get activity summary for a user
+ * Get activity summary for a user (fetches from MongoDB)
  */
 router.get('/activity/summary/:userId', auth, async (req, res) => {
   try {
@@ -85,16 +112,28 @@ router.get('/activity/summary/:userId', auth, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    // Filter logs for this user
-    const userLogs = activityLogs.filter(log => log.userId === userId);
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Fetch activity data from MongoDB
+    const activities = await EmployeeActivity.find({
+      employee: userId,
+      timestamp: { $gte: today, $lt: tomorrow }
+    }).sort({ timestamp: -1 });
 
     // Calculate summary
     const summary = {
-      totalLogs: userLogs.length,
-      totalMouseEvents: userLogs.reduce((sum, log) => sum + log.mouseEvents, 0),
-      totalKeyboardEvents: userLogs.reduce((sum, log) => sum + log.keyboardEvents, 0),
-      totalIdleSeconds: userLogs.reduce((sum, log) => sum + log.idleSeconds, 0),
-      recentLogs: userLogs.slice(-10) // Last 10 entries
+      totalLogs: activities.length,
+      totalKeystrokes: activities.reduce((sum, a) => sum + a.keystroke_count, 0),
+      totalMouseActivity: activities.reduce((sum, a) => sum + a.mouse_activity_score, 0),
+      totalIdleSeconds: activities.reduce((sum, a) => sum + a.idle_duration, 0),
+      avgProductivityScore: activities.length > 0 
+        ? Math.round(activities.reduce((sum, a) => sum + a.productivity_score, 0) / activities.length)
+        : 0,
+      recentLogs: activities.slice(0, 10) // Most recent 10 entries
     };
 
     res.json({ success: true, summary });

@@ -237,13 +237,38 @@ class ApiService {
   }
 
   /**
+   * Check attendance status for today (POLLING ENDPOINT)
+   * This is called every 30 seconds by the attendance poller
+   * @returns {Promise<Object>} - { dayStarted, attendanceId, startTime, workLocation }
+   */
+  async checkAttendanceStatus() {
+    try {
+      const response = await this.client.get('/api/attendance/status');
+      
+      return {
+        dayStarted: response.data.dayStarted || false,
+        attendanceId: response.data.attendanceId || null,
+        startTime: response.data.startTime || null,
+        workLocation: response.data.workLocation || null
+      };
+    } catch (error) {
+      console.error('❌ Failed to check attendance status:', error.response?.data || error.message);
+      return { 
+        dayStarted: false,
+        attendanceId: null,
+        startTime: null
+      };
+    }
+  }
+
+  /**
    * Send activity data to the backend
    * @param {Object} activityData - Activity tracking data
    * @returns {Promise<Object>} - { success, error }
    */
   async ingestActivity(activityData) {
     try {
-      const response = await this.client.post('/api/activity/ingest', activityData);
+      const response = await this.client.post('/api/agent/activity/ingest', activityData);
       
       if (response.data && (response.data.success || response.status === 200)) {
         return {
@@ -253,15 +278,15 @@ class ApiService {
 
       return {
         success: false,
-        error: response.data?.message || 'Failed to ingest activity'
+        error: response.data?.error || response.data?.message || 'Failed to ingest activity'
       };
     } catch (error) {
       // If the server rejects activity (e.g., day not started), log but don't crash
-      console.error('Activity ingestion failed:', error.response?.data?.message || error.message);
+      console.error('Activity ingestion failed:', error.response?.data?.error || error.message);
       
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Failed to ingest activity'
+        error: error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to ingest activity'
       };
     }
   }

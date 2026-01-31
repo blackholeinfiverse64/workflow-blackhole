@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
 const ActivityTracker = require('./managers/activityTracker');
+const AttendanceStatusPoller = require('./managers/attendancePoller');
 const ApiService = require('./services/apiService');
 
 // Initialize store for persistent data
@@ -11,6 +12,7 @@ const store = new Store();
 let tray = null;
 let mainWindow = null;
 let activityTracker = null;
+let attendancePoller = null;
 let apiService = null;
 
 // App state
@@ -151,6 +153,10 @@ ipcMain.handle('login', async (event, credentials) => {
       appState.user = result.user;
       store.set('authToken', result.token);
       apiService.setAuthToken(result.token);
+      
+      // Start polling backend for attendance status
+      startAttendancePoller();
+      
       updateTrayMenu();
     }
     
@@ -161,6 +167,11 @@ ipcMain.handle('login', async (event, credentials) => {
 });
 
 ipcMain.handle('logout', () => {
+  // Stop polling
+  if (attendancePoller) {
+    attendancePoller.stop();
+  }
+  
   // Stop tracking if active
   if (appState.isDayStarted) {
     activityTracker.stop();
@@ -240,7 +251,8 @@ app.whenReady().then(() => {
   const savedToken = store.get('authToken');
   if (savedToken) {
     apiService.setAuthToken(savedToken);
-    // TODO: Validate token with backend
+    // Start polling if already logged in
+    startAttendancePoller();
   }
   
   createWindow();
@@ -262,7 +274,59 @@ app.on('before-quit', () => {
   if (activityTracker) {
     activityTracker.stop();
   }
+  if (attendancePoller) {
+    attendancePoller.stop();
+  }
 });
+
+/**
+ * Start polling backend for attendance status
+ * This enables automatic start/stop tracking based on Vercel dashboard actions
+ */
+function startAttendancePoller() {
+  if (!attendancePoller) {
+    attendancePoller = new AttendanceStatusPoller(apiService);
+    
+    // Listen for day-started event
+    attendancePoller.on('day-started', (data) => {
+      console.log('🟢 Workday started! Attendance ID:', data.attendanceId);
+      appState.isDayStarted = true;
+      
+      // Start activity tracking
+      if (activityTracker) {
+        activityTracker.start(data.attendanceId);
+      }
+      
+      updateTrayMenu();
+      
+      // Notify UI
+      if (mainWindow) {
+        mainWindow.webContents.send('day-status-changed', { dayStarted: true });
+      }
+    });
+    
+    // Listen for day-ended event
+    attendancePoller.on('day-ended', () => {
+      console.log('🔴 Workday ended! Stopping tracking...');
+      appState.isDayStarted = false;
+      
+      // Stop activity tracking
+      if (activityTracker) {
+        activityTracker.stop();
+      }
+      
+      updateTrayMenu();
+      
+      // Notify UI
+      if (mainWindow) {
+        mainWindow.webContents.send('day-status-changed', { dayStarted: false });
+      }
+    });
+  }
+  
+  // Start polling
+  attendancePoller.start();
+}
 
 // Handle uncaught errors
 process.on('uncaughtException', (error) => {
