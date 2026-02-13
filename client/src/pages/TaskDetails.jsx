@@ -582,6 +582,7 @@ import {
   BarChart3,
   FileCode,
   Layers,
+  RefreshCw,
 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
@@ -1003,6 +1004,19 @@ function TaskDetails() {
                             <span>Updated on {new Date(submission.updatedAt).toLocaleDateString()}</span>
                           )}
                         </div>
+                        {/* Update Task Button */}
+                        {isAssignedToCurrentUser && (
+                          <div className="pt-4 border-t mt-4">
+                            <Button 
+                              onClick={() => setIsSubmissionDialogOpen(true)}
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Update Submission
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                     {submission.feedback && (
