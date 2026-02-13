@@ -105,7 +105,7 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
       }
 
       await onSubmit(submissionData);
-      toast.success(existingSubmission ? "Submission updated successfully" : "Task submitted successfully");
+      toast.success(existingSubmission ? "Task updated and resubmitted to admin for review" : "Task submitted successfully");
     } catch (error) {
       console.error("Error submitting task:", error)
       toast.error("Failed to submit task")
@@ -227,7 +227,7 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
               {isSubmitting ? (
                 <span className="flex items-center gap-2.5">
                   <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
-                  {existingSubmission ? "Updating..." : "Submitting..."}
+                  {existingSubmission ? "Resubmitting..." : "Submitting..."}
                 </span>
               ) : (
                 <span className="flex items-center gap-2.5">
@@ -238,7 +238,7 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
                   )}
-                  {existingSubmission ? "Update Submission" : "Submit Task"}
+                  {existingSubmission ? "Update & Resubmit" : "Submit Task"}
                 </span>
               )}
             </Button>

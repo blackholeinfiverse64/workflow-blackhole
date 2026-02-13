@@ -145,7 +145,7 @@ function MyTasks() {
         await axios.put(`${API_URL}/submissions/${existingSubmission._id}`, submissionData, config)
         toast({
           title: "Success",
-          description: "Your submission has been updated",
+          description: "Your submission has been updated and resubmitted to admin for review",
         })
       } else {
         await axios.post(`${API_URL}/submissions`, submissionData, config)
