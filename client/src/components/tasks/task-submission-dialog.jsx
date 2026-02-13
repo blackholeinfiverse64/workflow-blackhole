@@ -160,6 +160,17 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
               Document or Photo
             </Label>
             <div className="space-y-2">
+              {/* Show existing document when updating */}
+              {existingSubmission?.documentLink && !documentFile && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2.5 font-medium">
+                    <FileText className="h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">Current file attached</span>
+                    <span className="text-xs bg-blue-200 dark:bg-blue-800 px-2 py-0.5 rounded-full ml-auto">Existing</span>
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Upload a new file below to replace it</p>
+                </div>
+              )}
               <Input
                 id="document"
                 type="file"
@@ -172,7 +183,7 @@ export function TaskSubmissionDialog({ open, onOpenChange, onSubmit, existingSub
                   <p className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2.5 font-medium">
                     <FileText className="h-5 w-5 text-accent flex-shrink-0" />
                     <span className="truncate">{documentFile.name}</span>
-                    <span className="text-xs text-accent bg-accent/20 px-2 py-0.5 rounded-full ml-auto">Attached</span>
+                    <span className="text-xs text-accent bg-accent/20 px-2 py-0.5 rounded-full ml-auto">New File</span>
                   </p>
                 </div>
               )}
