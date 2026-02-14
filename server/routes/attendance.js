@@ -260,9 +260,8 @@ router.post('/start-day/:userId', auth, async (req, res) => {
       existingRecord.startDayTime = startTime;
       existingRecord.endDayTime = undefined; // Clear end time for new work session
       existingRecord.startDayLocation = { latitude, longitude, address: finalAddress, accuracy };
-      existingRecord.workLocationType = workLocationType;
-      existingRecord.locationValidated = locationValidated;
       existingRecord.isPresent = true;
+      existingRecord.source = 'StartDay';
       existingRecord.spamStatus = 'Valid';
       existingRecord.autoEnded = false;
       attendanceRecord = existingRecord;
@@ -273,9 +272,8 @@ router.post('/start-day/:userId', auth, async (req, res) => {
         date: today,
         startDayTime: startTime,
         startDayLocation: { latitude, longitude, address: finalAddress, accuracy },
-        workLocationType: workLocationType,
-        locationValidated: locationValidated,
         isPresent: true,
+        source: 'StartDay',
         spamStatus: 'Valid',
         autoEnded: false
       });

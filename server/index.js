@@ -477,8 +477,17 @@ app.use('/api/new-salary', newSalaryRoutes); // New salary management system
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  console.error('❌ Global error handler caught error:');
+  console.error('Error message:', err.message);
+  console.error('Error stack:', err.stack);
+  console.error('Request URL:', req.url);
+  console.error('Request method:', req.method);
+  
+  res.status(err.status || 500).json({ 
+    error: "Something went wrong!",
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    path: req.url
+  });
 });
 
 // Midnight auto-end scheduler for unended work days
