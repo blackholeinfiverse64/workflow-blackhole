@@ -147,7 +147,7 @@ router.post('/start', auth, async (req, res) => {
 router.post('/start-day/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
+    let { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
     
     // Verify user authorization
     if (req.user.id !== userId && req.user.role !== 'Admin') {

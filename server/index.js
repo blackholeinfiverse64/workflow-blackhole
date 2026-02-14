@@ -238,13 +238,6 @@ app.use(express.json());
 // Connect to MongoDB
 require('dotenv').config();  // Add this line at the top
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-
 // Socket.IO connection
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
@@ -699,20 +692,45 @@ app.post('/api/admin/trigger-midnight-job', auth, adminAuth, async (req, res) =>
 
 // Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, validation grants exactly ${SPAM_VALIDATION_HOURS}h)`);
-  console.log(`📊 Spam validation rule: EXACTLY ${SPAM_VALIDATION_HOURS} hours (not more, not less)`);
-  
-  // Schedule midnight auto-end job
-  scheduleMidnightJob();
-  
-  // Start attendance persistence cron job
-  console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');
-  startAttendancePersistenceCron();
-  
-  // Sync existing attendance data for the last 30 days
-  console.log('📊 Syncing historical attendance data for the last 30 days...');
-  await syncExistingAttendance();
-  console.log('✅ Server initialization complete');
-});
+
+// Connect to MongoDB and start server
+async function startServer() {
+  try {
+    // Connect to MongoDB first
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("✅ Connected to MongoDB");
+    
+    // Initialize EMS email templates after MongoDB is connected
+    const emsAutomation = require('./services/emsAutomation');
+    if (!emsAutomation.templatesInitialized) {
+      await emsAutomation.initializeDefaultTemplates();
+      emsAutomation.templatesInitialized = true;
+      console.log('📧 EMS email templates initialized');
+    }
+    
+    // Start HTTP server
+    server.listen(PORT, async () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, validation grants exactly ${SPAM_VALIDATION_HOURS}h)`);
+      console.log(`📊 Spam validation rule: EXACTLY ${SPAM_VALIDATION_HOURS} hours (not more, not less)`);
+      
+      // Schedule midnight auto-end job
+      scheduleMidnightJob();
+      
+      // Start attendance persistence cron job
+      console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');
+      startAttendancePersistenceCron();
+      
+      // Sync existing attendance data for the last 30 days
+      console.log('📊 Syncing historical attendance data for the last 30 days...');
+      await syncExistingAttendance();
+      console.log('✅ Server initialization complete');
+    });
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
