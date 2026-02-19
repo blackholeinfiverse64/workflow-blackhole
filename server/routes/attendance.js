@@ -11,6 +11,7 @@ const UserTag = require('../models/UserTag');
 const auth = require('../middleware/auth');
 const adminAuth = require('../middleware/adminAuth');
 const DailyAttendance = require('../models/DailyAttendance');
+const { reverseGeocode } = require('../utils/reverseGeocode');
 
 // SIMPLE RULE: Spam validation = EXACTLY 8 hours for cumulative calculation
 const SPAM_VALIDATION_HOURS = 8;
@@ -50,11 +51,103 @@ const MAX_WORKING_HOURS = parseInt(process.env.MAX_WORKING_HOURS) || 10;
 const AUTO_END_DAY_ENABLED = process.env.AUTO_END_DAY_ENABLED === 'true';
 const OFFICE_ADDRESS = 'Blackhole Infiverse LLP, Road Number 3, near Hathi Circle, above Bright Connection, Kala Galli, Motilal Nagar II, Goregaon West, Mumbai, Maharashtra';
 
+// Simple start day route for backward compatibility (used by test and simple clients)
+router.post('/start', auth, async (req, res) => {
+  try {
+    const userId = req.user.id; // Get userId from auth token
+    const { location, notes, latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
+    
+    // Extract coordinates - support both direct and nested location formats
+    const finalLatitude = latitude || (location && location.latitude);
+    const finalLongitude = longitude || (location && location.longitude);
+    const finalAddress = address || (location && location.address) || 'Location not specified';
+    const isWorkFromHome = workFromHome || (location && location.type === 'home');
+    
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Check if user has already started day
+    let existingRecord = await Attendance.findOne({
+      user: userId,
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    // Only block if day is started AND not ended yet
+    if (existingRecord && existingRecord.startDayTime && !existingRecord.endDayTime) {
+      return res.status(400).json({
+        error: 'Day already started',
+        startTime: existingRecord.startDayTime,
+        code: 'DAY_ALREADY_STARTED'
+      });
+    }
+
+    const startTime = new Date();
+    const workLocation = isWorkFromHome ? 'Home' : 'Office';
+
+    if (existingRecord) {
+      // Update existing record (restart after end-day)
+      existingRecord.startDayTime = startTime;
+      existingRecord.endDayTime = null;
+      existingRecord.startDayLocation = { 
+        latitude: finalLatitude, 
+        longitude: finalLongitude, 
+        address: finalAddress, 
+        accuracy 
+      };
+      existingRecord.workLocation = workLocation;
+      existingRecord.notes = notes || existingRecord.notes;
+      await existingRecord.save();
+    } else {
+      // Create new record
+      existingRecord = new Attendance({
+        user: userId,
+        date: today,
+        startDayTime: startTime,
+        startDayLocation: {
+          latitude: finalLatitude,
+          longitude: finalLongitude, 
+          address: finalAddress,
+          accuracy
+        },
+        workLocation,
+        notes,
+        officeHours: 0,
+        remoteHours: 0,
+        activities: [{
+          type: 'StartDay',
+          timestamp: startTime,
+          location: { latitude: finalLatitude, longitude: finalLongitude, address: finalAddress },
+          source: 'StartDay'
+        }]
+      });
+      await existingRecord.save();
+    }
+
+    console.log(`✅ User ${userId} started work day at ${startTime} (${workLocation})`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Work day started successfully',
+      attendance: existingRecord,
+      startTime: existingRecord.startDayTime
+    });
+  } catch (error) {
+    console.error('Simple start route error:', error);
+    return res.status(500).json({
+      error: 'Failed to start work day',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // Enhanced start day with geolocation validation and work from home option
 router.post('/start-day/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
+    let { latitude, longitude, address, accuracy, workFromHome, homeLocation } = req.body;
     
     // Verify user authorization
     if (req.user.id !== userId && req.user.role !== 'Admin') {
@@ -150,8 +243,13 @@ router.post('/start-day/:userId', auth, async (req, res) => {
         console.log(`📍 User ${userId} location geocoded: ${finalAddress} (${latitude}, ${longitude})`);
       } catch (error) {
         console.warn(`⚠️ Reverse geocoding failed: ${error.message}`);
-        finalAddress = finalAddress || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        // Fallback to coordinates if geocoding fails
+        finalAddress = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        console.log(`📍 User ${userId} using coordinates as address fallback: ${finalAddress}`);
       }
+    } else {
+      // Use provided address as-is
+      console.log(`📍 User ${userId} using provided address: ${finalAddress}`);
     }
     
     // Create or update attendance record
@@ -162,9 +260,8 @@ router.post('/start-day/:userId', auth, async (req, res) => {
       existingRecord.startDayTime = startTime;
       existingRecord.endDayTime = undefined; // Clear end time for new work session
       existingRecord.startDayLocation = { latitude, longitude, address: finalAddress, accuracy };
-      existingRecord.workLocationType = workLocationType;
-      existingRecord.locationValidated = locationValidated;
       existingRecord.isPresent = true;
+      existingRecord.source = 'StartDay';
       existingRecord.spamStatus = 'Valid';
       existingRecord.autoEnded = false;
       attendanceRecord = existingRecord;
@@ -175,9 +272,8 @@ router.post('/start-day/:userId', auth, async (req, res) => {
         date: today,
         startDayTime: startTime,
         startDayLocation: { latitude, longitude, address: finalAddress, accuracy },
-        workLocationType: workLocationType,
-        locationValidated: locationValidated,
         isPresent: true,
+        source: 'StartDay',
         spamStatus: 'Valid',
         autoEnded: false
       });
@@ -266,10 +362,12 @@ router.post('/start-day/:userId', auth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Start day error:', error);
+    console.error('❌ Start day error for user', userId, ':', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Failed to start day',
-      details: error.message 
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      code: 'START_DAY_FAILED'
     });
   }
 });
@@ -377,8 +475,22 @@ router.post('/end-day/:userId', auth, async (req, res) => {
     const totalMinutes = Math.floor(totalMilliseconds / (1000 * 60));
     const hoursWorked = totalMilliseconds / (1000 * 60 * 60);
 
+    // 🔧 FETCH WORK SESSION TO GET BREAK TIME
+    const WorkSession = require('../models/WorkSession');
+    const workSession = await WorkSession.findOne({
+      employee: userId,
+      date: { $gte: today, $lt: tomorrow }
+    });
+    
+    let breakTimeMinutes = 0;
+    if (workSession && workSession.totalBreakTime) {
+      breakTimeMinutes = workSession.totalBreakTime;
+      console.log(`⏸️ Found ${breakTimeMinutes} minutes of break time for user ${userId}`);
+    }
+
     // Update attendance record with calculated values
     attendanceRecord.hoursWorked = Math.round(hoursWorked * 100) / 100;
+    attendanceRecord.breakTime = breakTimeMinutes; // Set break time from work session
     attendanceRecord.isPresent = true;
     
     // Calculate overtime if applicable
@@ -415,6 +527,7 @@ router.post('/end-day/:userId', auth, async (req, res) => {
         };
       }
       dailyRecord.totalHoursWorked = Math.round(hoursWorked * 100) / 100;
+      dailyRecord.breakTime = breakTimeMinutes; // Set break time from work session
       dailyRecord.isPresent = true;
       dailyRecord.status = 'Present';
       dailyRecord.dailyProgressCompleted = true;
@@ -1019,7 +1132,17 @@ router.get('/live', adminAuth, async (req, res) => {
 
     console.log(`📊 Found ${attendance.length} attendance records for today`);
 
-    // Create a map of user attendance
+    // Fetch work sessions for today to include pause/resume status
+    const WorkSession = require('../models/WorkSession');
+    const workSessions = await WorkSession.find({
+      date: { $gte: startOfDay, $lte: endOfDay }
+    })
+      .select('employee status pausedAt resumedAt totalBreakTime targetHours startTime endTime')
+      .lean();
+
+    console.log(`📊 Found ${workSessions.length} work sessions for today`);
+
+    // Create a map of user attendance and work sessions
     const attendanceMap = new Map();
     attendance.forEach(record => {
       if (record.user && record.user._id) {
@@ -1027,10 +1150,18 @@ router.get('/live', adminAuth, async (req, res) => {
       }
     });
 
+    const workSessionMap = new Map();
+    workSessions.forEach(session => {
+      if (session.employee) {
+        workSessionMap.set(session.employee.toString(), session);
+      }
+    });
+
     // Build complete attendance list with all users
     const completeAttendance = allUsers.map(user => {
       const userId = user._id.toString();
       const attendanceRecord = attendanceMap.get(userId);
+      const workSession = workSessionMap.get(userId);
       
       if (attendanceRecord) {
         // User has attendance record
@@ -1038,7 +1169,8 @@ router.get('/live', adminAuth, async (req, res) => {
           ...attendanceRecord,
           status: attendanceRecord.isPresent ? 
             (attendanceRecord.isLate ? 'late' : 'present') :
-            (attendanceRecord.isLeave ? 'on-leave' : 'absent')
+            (attendanceRecord.isLeave ? 'on-leave' : 'absent'),
+          workSession: workSession || null // Include work session info
         };
       } else {
         // User has no attendance - mark as absent
@@ -1055,7 +1187,8 @@ router.get('/live', adminAuth, async (req, res) => {
           endDayTime: null,
           hoursWorked: 0,
           workPattern: null,
-          source: null
+          source: null,
+          workSession: workSession || null // Include work session info even for absent users
         };
       }
     });
@@ -1081,6 +1214,8 @@ router.get('/live', adminAuth, async (req, res) => {
     const onTimeToday = presentToday - lateToday;
     const dayStartedCount = completeAttendance.filter(a => a.startDayTime).length;
     const dayEndedCount = completeAttendance.filter(a => a.endDayTime).length;
+    const pausedCount = completeAttendance.filter(a => a.workSession && a.workSession.status === 'paused').length;
+    const activeWorkingCount = completeAttendance.filter(a => a.workSession && a.workSession.status === 'active').length;
 
     const totalHoursToday = completeAttendance.reduce((sum, a) => sum + (a.hoursWorked || 0), 0);
     const avgHoursToday = presentToday > 0 ? Math.round((totalHoursToday / presentToday) * 100) / 100 : 0;
@@ -1094,6 +1229,8 @@ router.get('/live', adminAuth, async (req, res) => {
       onTimeToday,
       dayStartedCount,
       dayEndedCount,
+      pausedCount,
+      activeWorkingCount,
       presentPercentage: totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100 * 10) / 10 : 0,
       absentPercentage: totalEmployees > 0 ? Math.round((absentToday / totalEmployees) * 100 * 10) / 10 : 0,
       onTimePercentage: presentToday > 0 ? Math.round((onTimeToday / presentToday) * 100 * 10) / 10 : 0,

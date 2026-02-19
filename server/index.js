@@ -145,6 +145,9 @@ const notificationRoutes = require('./routes/notifications'); // Add this line
 const aimRoutes = require('./routes/aims_universal');
 const pushRoutes = require('./routes/push'); // Add this line
 const attendanceRoutes = require('./routes/attendance'); // New attendance routes
+const enhancedAttendanceRoutes = require('./routes/enhancedAttendance'); // Enhanced attendance routes
+const attendanceStatusRoutes = require('./routes/attendanceStatus'); // Attendance status routes for polling  
+const agentActivityRoutes = require('./routes/agentActivity'); // Agent activity routes
 const leaveRoutes = require('./routes/leave'); // New leave routes
 const enhancedSalaryRoutes = require('./routes/enhancedSalary'); // Enhanced salary with live attendance
 const enhancedAimsRoutes = require('./routes/enhancedAims'); // Enhanced aims routes
@@ -234,13 +237,6 @@ app.use(express.json());
 
 // Connect to MongoDB
 require('dotenv').config();  // Add this line at the top
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
 
 // Socket.IO connection
 io.on("connection", (socket) => {
@@ -372,6 +368,9 @@ app.use('/api/user-notifications', userNotificationRoutes);
 app.use("/api/push", pushRoutes) // Added push routes use
 app.use("/api/monitoring", require("./routes/monitoring")); // Employee monitoring routes
 app.use("/api/attendance", attendanceRoutes); // Attendance management routes
+app.use("/api/enhanced-attendance", enhancedAttendanceRoutes); // Enhanced attendance routes
+app.use("/api/attendance", attendanceStatusRoutes); // Electron agent polling endpoint (/api/attendance/status)
+app.use("/api/agent", agentActivityRoutes); // Desktop agent activity ingestion
 app.use("/api/attendance-dashboard", require("./routes/attendanceDashboard")); // Live attendance dashboard routes
 app.use("/api/leave", leaveRoutes); // Leave management routes
 app.use("/api/enhanced-salary", enhancedSalaryRoutes); // Enhanced salary with live attendance and WFH tracking
@@ -471,8 +470,17 @@ app.use('/api/new-salary', newSalaryRoutes); // New salary management system
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  console.error('❌ Global error handler caught error:');
+  console.error('Error message:', err.message);
+  console.error('Error stack:', err.stack);
+  console.error('Request URL:', req.url);
+  console.error('Request method:', req.method);
+  
+  res.status(err.status || 500).json({ 
+    error: "Something went wrong!",
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    path: req.url
+  });
 });
 
 // Midnight auto-end scheduler for unended work days
@@ -684,20 +692,45 @@ app.post('/api/admin/trigger-midnight-job', auth, adminAuth, async (req, res) =>
 
 // Start server
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, validation grants exactly ${SPAM_VALIDATION_HOURS}h)`);
-  console.log(`📊 Spam validation rule: EXACTLY ${SPAM_VALIDATION_HOURS} hours (not more, not less)`);
-  
-  // Schedule midnight auto-end job
-  scheduleMidnightJob();
-  
-  // Start attendance persistence cron job
-  console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');
-  startAttendancePersistenceCron();
-  
-  // Sync existing attendance data for the last 30 days
-  console.log('📊 Syncing historical attendance data for the last 30 days...');
-  await syncExistingAttendance();
-  console.log('✅ Server initialization complete');
-});
+
+// Connect to MongoDB and start server
+async function startServer() {
+  try {
+    // Connect to MongoDB first
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("✅ Connected to MongoDB");
+    
+    // Initialize EMS email templates after MongoDB is connected
+    const emsAutomation = require('./services/emsAutomation');
+    if (!emsAutomation.templatesInitialized) {
+      await emsAutomation.initializeDefaultTemplates();
+      emsAutomation.templatesInitialized = true;
+      console.log('📧 EMS email templates initialized');
+    }
+    
+    // Start HTTP server
+    server.listen(PORT, async () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🕛 Midnight Auto-End: ENABLED (unended days go to spam, validation grants exactly ${SPAM_VALIDATION_HOURS}h)`);
+      console.log(`📊 Spam validation rule: EXACTLY ${SPAM_VALIDATION_HOURS} hours (not more, not less)`);
+      
+      // Schedule midnight auto-end job
+      scheduleMidnightJob();
+      
+      // Start attendance persistence cron job
+      console.log('🕐 Starting attendance persistence cron job (runs daily at 11:59 PM)...');
+      startAttendancePersistenceCron();
+      
+      // Sync existing attendance data for the last 30 days
+      console.log('📊 Syncing historical attendance data for the last 30 days...');
+      await syncExistingAttendance();
+      console.log('✅ Server initialization complete');
+    });
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();

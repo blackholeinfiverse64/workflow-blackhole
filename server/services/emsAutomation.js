@@ -9,7 +9,8 @@ class EMSAutomation {
   constructor() {
     this.transporter = this.createTransporter();
     this.defaultTemplates = this.getDefaultTemplates();
-    this.initializeDefaultTemplates();
+    // Don't initialize templates in constructor - let it be done after MongoDB connects
+    this.templatesInitialized = false;
   }
 
   createTransporter() {
