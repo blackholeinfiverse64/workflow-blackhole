@@ -192,8 +192,6 @@ const io = socketIo(server, {
 });
 
 // CORS Configuration
-const cors = require('cors');
-
 const corsOptions = {
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
