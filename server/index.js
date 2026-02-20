@@ -192,47 +192,40 @@ const io = socketIo(server, {
 });
 
 // CORS Configuration
+const cors = require('cors');
+
 const corsOptions = {
-  origin: (origin, callback) => {
-    const allowed = [
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Define allowed origins
+    const allowedOrigins = [
+      'https://niyantran.blackholeinfiverse.com',
       'https://blackhole-workflow.vercel.app',
       'https://main-workflow.vercel.app',
-      'https://blackholeworkflow.onrender.com',
-      process.env.FRONTEND_URL,
-    ].filter(Boolean);
-    const isLocalhost = origin && /^http:\/\/localhost:\d+$/.test(origin);
-    if (!origin || isLocalhost || allowed.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:8080',
+      'http://localhost:8081',
+      'http://127.0.0.1:3000',
+      'http://192.168.1.2:5173'
+    ];
+    
+    // Check if the origin is in the allowed list
+    const isAllowed = allowedOrigins.includes(origin);
+    callback(null, isAllowed);
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'x-auth-token', 'Authorization']
 };
+
 app.use(cors(corsOptions));
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    'https://blackhole-workflow.vercel.app',
-    'https://main-workflow.vercel.app',
-    'https://blackholeworkflow.onrender.com',
-    process.env.FRONTEND_URL
-  ].filter(Boolean);
-  
-  if (origin && /^http:\/\/localhost:\d+$/.test(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Vary', 'Origin');
-  } else if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Vary', 'Origin');
-  }
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-auth-token');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
 
 app.use(express.json());
 
@@ -379,6 +372,7 @@ app.use("/api/enhanced-aims", enhancedAimsRoutes); // Enhanced aims with progres
 app.use('/api/consent', consentRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/ems', emsRoutes); // EMS automation routes
+app.use('/api/ems-signals', require('./routes/emsSignals')); // EMS real-time signal collection (mouse, keystroke, idle tracking)
 app.use('/api/procurement', procurementRoutes); // Procurement routes
 app.use('/api/chatbot', chatbotRoutes); // Admin chatbot routes
 app.use('/api/biometric', biometricAttendanceRoutes); // Biometric attendance and salary management routes
