@@ -173,6 +173,7 @@ const io = socketIo(server, {
   cors: {
     origin: (origin, callback) => {
       const allowed = [
+        'https://niyantran.blackholeinfiverse.com',
         'https://blackhole-workflow.vercel.app',
         'https://main-workflow.vercel.app',
         'https://blackholeworkflow.onrender.com',
